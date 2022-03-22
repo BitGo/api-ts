@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "Generate an OpenAPI specification from an io-ts-http contract",
   "author": "Patrick McLaughlin <patrickmclaughlin@bitgo.com>",
-  "private": true,
   "license": "UNLICENSED",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -46,5 +45,8 @@
       }
     },
     "timeout": "30s"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
