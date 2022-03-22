@@ -19,6 +19,8 @@
   ],
   "scripts": {
     "build": "tsc --build --incremental --verbose .",
+    "clean": "npm run --workspaces clean",
+    "distclean": "rm -rf node_modules packages/*/node_modules",
     "lint-staged": "lint-staged",
     "test": "npm run --workspaces test"
   },
