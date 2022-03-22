@@ -1,0 +1,15 @@
+{
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["dist", "node_modules"],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "composite": true,
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "references": [
+    {
+      "path": "../io-ts-response"
+    }
+  ]
+}
