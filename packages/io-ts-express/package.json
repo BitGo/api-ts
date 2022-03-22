@@ -1,45 +1,47 @@
 {
-    "name": "@bitgo/io-ts-express",
-    "version": "0.1.0",
-    "description": "Implement an HTTP specification with Express",
-    "author": "Eric Crosson <ericcrosson@bitgo.com>",
-    "license": "UNLICENSED",
-    "private": true,
-    "main": "dist/src/index.js",
-    "types": "dist/src/index.d.ts",
-    "files": [
-        "dist/src/"
-    ],
-    "scripts": {
-        "build": "tsc --build --incremental --verbose .",
-        "clean": "rm -rf -- dist",
-        "lint-staged": "lint-staged",
-        "test": "ava"
-    },
-    "dependencies": {
-        "@bitgo/io-ts-http": "0.2.2",
-        "express": "4.17.2",
-        "fp-ts": "2.11.8",
-        "io-ts": "2.2.16"
-    },
-    "devDependencies": {
-        "@ava/typescript": "3.0.1",
-        "@bitgo/superagent-codec-adapter": "0.1.0",
-        "@types/express": "4.17.13",
-        "@types/node": "16.11.7",
-        "ava": "4.0.1",
-        "ts-node": "10.4.0",
-        "typescript": "4.5.5"
-    },
-    "ava": {
-        "typescript": {
-            "compile": false,
-            "extensions": [
-                "ts"
-            ],
-            "rewritePaths": {
-                "test/": "dist/test/"
-            }
-        }
+  "name": "@bitgo/io-ts-express",
+  "version": "0.1.0",
+  "description": "Implement an HTTP specification with Express",
+  "author": "Eric Crosson <ericcrosson@bitgo.com>",
+  "license": "UNLICENSED",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "dist/src/"
+  ],
+  "scripts": {
+    "build": "tsc --build --incremental --verbose .",
+    "clean": "rm -rf -- dist",
+    "lint-staged": "lint-staged",
+    "test": "ava"
+  },
+  "dependencies": {
+    "@bitgo/io-ts-http": "0.2.2",
+    "express": "4.17.2",
+    "fp-ts": "2.11.8",
+    "io-ts": "2.2.16"
+  },
+  "devDependencies": {
+    "@ava/typescript": "3.0.1",
+    "@bitgo/superagent-codec-adapter": "0.1.0",
+    "@types/express": "4.17.13",
+    "@types/node": "16.11.7",
+    "ava": "4.0.1",
+    "ts-node": "10.4.0",
+    "typescript": "4.5.5"
+  },
+  "ava": {
+    "typescript": {
+      "compile": false,
+      "extensions": [
+        "ts"
+      ],
+      "rewritePaths": {
+        "test/": "dist/test/"
+      }
     }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

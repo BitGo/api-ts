@@ -3,7 +3,6 @@
   "version": "0.2.2",
   "description": "Types for (de)serializing HTTP requests from both the client and server side",
   "author": "Patrick McLaughlin <patrickmclaughlin@bitgo.com>",
-  "private": true,
   "license": "UNLICENSED",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -35,5 +34,8 @@
     "nyc": "15.1.0",
     "ts-node": "10.4.0",
     "typescript": "4.5.5"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
