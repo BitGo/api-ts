@@ -19,12 +19,12 @@
   ],
   "scripts": {
     "build": "tsc --build --incremental --verbose .",
-    "lint-staged-packages": "npm run --workspaces lint-staged",
+    "lint-staged": "lint-staged",
     "test": "npm run --workspaces test"
   },
-  "pre-commit": "lint-staged-packages",
+  "pre-commit": "lint-staged",
   "devDependencies": {
-    "lint-staged": "12.1.7",
+    "lint-staged": "12.3.7",
     "pre-commit": "1.2.2",
     "prettier": "2.5.1",
     "typescript": "4.5.5"
