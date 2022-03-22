@@ -16,7 +16,7 @@
     "test": "ava"
   },
   "dependencies": {
-    "@bitgo/io-ts-http": "0.2.2",
+    "@bitgo/io-ts-http": "0.1.0",
     "express": "4.17.2",
     "fp-ts": "2.11.8",
     "io-ts": "2.2.16"

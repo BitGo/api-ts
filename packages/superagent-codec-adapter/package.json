@@ -16,7 +16,7 @@
     "test": "nyc --reporter=lcov --reporter=text --reporter=json-summary mocha test/**/*.test.ts --require ts-node/register --exit"
   },
   "dependencies": {
-    "@bitgo/io-ts-http": "0.2.2",
+    "@bitgo/io-ts-http": "0.1.0",
     "fp-ts": "2.11.8",
     "io-ts": "2.2.16",
     "superagent": "3.8.3",

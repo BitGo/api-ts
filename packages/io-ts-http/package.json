@@ -1,6 +1,6 @@
 {
   "name": "@bitgo/io-ts-http",
-  "version": "0.2.2",
+  "version": "0.1.0",
   "description": "Types for (de)serializing HTTP requests from both the client and server side",
   "author": "Patrick McLaughlin <patrickmclaughlin@bitgo.com>",
   "license": "UNLICENSED",
