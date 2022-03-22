@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "allowUnreachableCode": false,
+    "composite": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["es2021"],
+    "module": "commonjs",
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "skipLibCheck": false,
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2021"
+  },
+  "include": ["src/**/*.ts", "test/**/*.json", "test/**/*.ts"]
+}
