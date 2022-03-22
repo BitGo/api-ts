@@ -1,0 +1,20 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "io-ts-express"
+    },
+    {
+      "path": "io-ts-http"
+    },
+    {
+      "path": "io-ts-openapi"
+    },
+    {
+      "path": "io-ts-response"
+    },
+    {
+      "path": "superagent-codec-adapter"
+    }
+  ]
+}
