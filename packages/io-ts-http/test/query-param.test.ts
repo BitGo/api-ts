@@ -1,4 +1,3 @@
-
 import { assert } from 'chai';
 import { flow } from 'fp-ts/lib/function';
 import * as E from 'fp-ts/Either';
@@ -9,19 +8,19 @@ import { arrayFromQueryParam, nonEmptyArrayFromQueryParam } from '../src/query-p
 import { NumberFromString } from 'io-ts-types';
 
 describe('nonEmptyArrayFromQueryParam combinations', () => {
-
   const TestType = t.exact(
     t.partial({
-    fruit: nonEmptyArrayFromQueryParam(t.string),
-    veggies: nonEmptyArrayFromQueryParam(t.string),
-  }));
+      fruit: nonEmptyArrayFromQueryParam(t.string),
+      veggies: nonEmptyArrayFromQueryParam(t.string),
+    }),
+  );
   type TestType = t.TypeOf<typeof TestType>;
 
   const convertParams = flow(
     TestType.decode,
-    E.getOrElseW(
-      (e) => { throw new Error(`failed to parse bliss ${ PathReporter.report(E.left(e)) }`); }
-    ),
+    E.getOrElseW((e) => {
+      throw new Error(`failed to parse bliss ${PathReporter.report(E.left(e))}`);
+    }),
   );
 
   it('nonEmptyArrayFromQueryParam - no values', () => {
@@ -40,7 +39,7 @@ describe('nonEmptyArrayFromQueryParam combinations', () => {
         fruit: 'raspberry',
       }),
       {
-        fruit: [ 'raspberry' ],
+        fruit: ['raspberry'],
       },
       'should match single value',
     );
@@ -52,7 +51,7 @@ describe('nonEmptyArrayFromQueryParam combinations', () => {
         fruit: 'raspberry,strawberry',
       }),
       {
-        fruit: [ 'raspberry', 'strawberry' ],
+        fruit: ['raspberry', 'strawberry'],
       },
       'should match comma delimited values',
     );
@@ -61,10 +60,10 @@ describe('nonEmptyArrayFromQueryParam combinations', () => {
   it('nonEmptyArrayFromQueryParam - multiple values', () => {
     assert.deepEqual(
       convertParams({
-        fruit: [ 'raspberry', 'strawberry' ],
+        fruit: ['raspberry', 'strawberry'],
       }),
       {
-        fruit: [ 'raspberry', 'strawberry' ],
+        fruit: ['raspberry', 'strawberry'],
       },
       'should match multiple values',
     );
@@ -73,12 +72,12 @@ describe('nonEmptyArrayFromQueryParam combinations', () => {
   it('nonEmptyArrayFromQueryParam - fruits and veggies', () => {
     assert.deepEqual(
       convertParams({
-        fruit: [ 'raspberry', 'strawberry' ],
+        fruit: ['raspberry', 'strawberry'],
         veggies: 'carrots,potatoes',
       }),
       {
-        fruit: [ 'raspberry', 'strawberry' ],
-        veggies: [ 'carrots', 'potatoes' ],
+        fruit: ['raspberry', 'strawberry'],
+        veggies: ['carrots', 'potatoes'],
       },
       'should match fruits and veggies',
     );
@@ -86,19 +85,18 @@ describe('nonEmptyArrayFromQueryParam combinations', () => {
 });
 
 describe('nonEmptyArrayFromQueryParam parsed combinations', () => {
-
   const TestType = t.exact(
     t.partial({
       num: nonEmptyArrayFromQueryParam(NumberFromString),
-    })
+    }),
   );
   type TestType = t.TypeOf<typeof TestType>;
 
   const convertParams = flow(
     TestType.decode,
-    E.getOrElseW(
-      (e) => { throw new Error(PathReporter.report(E.left(e)).join('\n')); }
-    ),
+    E.getOrElseW((e) => {
+      throw new Error(PathReporter.report(E.left(e)).join('\n'));
+    }),
   );
 
   it('nonEmptyArrayFromQueryParam - no values', () => {
@@ -114,10 +112,10 @@ describe('nonEmptyArrayFromQueryParam parsed combinations', () => {
   it('nonEmptyArrayFromQueryParam - single value', () => {
     assert.deepEqual(
       convertParams({
-        num: '1'
+        num: '1',
       }),
       {
-        num: [1]
+        num: [1],
       },
       'should be single item array',
     );
@@ -126,10 +124,10 @@ describe('nonEmptyArrayFromQueryParam parsed combinations', () => {
   it('nonEmptyArrayFromQueryParam - comma-delimited string', () => {
     assert.deepEqual(
       convertParams({
-        num: '1,2'
+        num: '1,2',
       }),
       {
-        num: [1, 2]
+        num: [1, 2],
       },
       'should be array',
     );
@@ -138,10 +136,10 @@ describe('nonEmptyArrayFromQueryParam parsed combinations', () => {
   it('nonEmptyArrayFromQueryParam - array', () => {
     assert.deepEqual(
       convertParams({
-        num: ['1', '2']
+        num: ['1', '2'],
       }),
       {
-        num: [1, 2]
+        num: [1, 2],
       },
       'should be array',
     );
@@ -149,19 +147,19 @@ describe('nonEmptyArrayFromQueryParam parsed combinations', () => {
 });
 
 describe('arrayFromQueryParam combinations', () => {
-
   const TestType = t.exact(
     t.partial({
-    fruit: arrayFromQueryParam(t.string),
-    veggies: arrayFromQueryParam(t.string),
-  }));
+      fruit: arrayFromQueryParam(t.string),
+      veggies: arrayFromQueryParam(t.string),
+    }),
+  );
   type TestType = t.TypeOf<typeof TestType>;
 
   const convertParams = flow(
     TestType.decode,
-    E.getOrElseW(
-      (e) => { throw new Error(PathReporter.report(E.left(e)).join('\n')); }
-    ),
+    E.getOrElseW((e) => {
+      throw new Error(PathReporter.report(E.left(e)).join('\n'));
+    }),
   );
 
   it('arrayFromQueryParam - no values', () => {
@@ -184,12 +182,11 @@ describe('arrayFromQueryParam combinations', () => {
       }),
       {
         fruit: [],
-        veggies: []
+        veggies: [],
       },
       'should match empty array',
     );
   });
-
 
   it('arrayFromQueryParam - single value', () => {
     assert.deepEqual(
@@ -197,8 +194,8 @@ describe('arrayFromQueryParam combinations', () => {
         fruit: 'raspberry',
       }),
       {
-        fruit: [ 'raspberry' ],
-        veggies: []
+        fruit: ['raspberry'],
+        veggies: [],
       },
       'should match single value',
     );
@@ -210,8 +207,8 @@ describe('arrayFromQueryParam combinations', () => {
         fruit: 'raspberry,strawberry',
       }),
       {
-        fruit: [ 'raspberry', 'strawberry' ],
-        veggies: []
+        fruit: ['raspberry', 'strawberry'],
+        veggies: [],
       },
       'should match comma delimited values',
     );
@@ -220,11 +217,11 @@ describe('arrayFromQueryParam combinations', () => {
   it('arrayFromQueryParam - multiple values', () => {
     assert.deepEqual(
       convertParams({
-        fruit: [ 'raspberry', 'strawberry' ],
+        fruit: ['raspberry', 'strawberry'],
       }),
       {
-        fruit: [ 'raspberry', 'strawberry' ],
-        veggies: []
+        fruit: ['raspberry', 'strawberry'],
+        veggies: [],
       },
       'should match multiple values',
     );
@@ -233,12 +230,12 @@ describe('arrayFromQueryParam combinations', () => {
   it('arrayFromQueryParam - fruits and veggies', () => {
     assert.deepEqual(
       convertParams({
-        fruit: [ 'raspberry', 'strawberry' ],
+        fruit: ['raspberry', 'strawberry'],
         veggies: 'carrots,potatoes',
       }),
       {
-        fruit: [ 'raspberry', 'strawberry' ],
-        veggies: [ 'carrots', 'potatoes' ],
+        fruit: ['raspberry', 'strawberry'],
+        veggies: ['carrots', 'potatoes'],
       },
       'should match fruits and veggies',
     );

@@ -19,7 +19,5 @@
     "strict": true,
     "target": "es2021"
   },
-  "include": [
-    "./index.ts",
-  ]
+  "include": ["./index.ts"]
 }

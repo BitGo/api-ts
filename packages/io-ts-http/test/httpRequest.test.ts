@@ -20,7 +20,7 @@ const example = {
     authorization: 'Bearer asdf',
   },
   body: {
-    message: 'test'
+    message: 'test',
   },
 };
 
@@ -49,7 +49,7 @@ describe('httpRequest', () => {
         authorization: t.string,
       },
       body: {
-        message: t.string
+        message: t.string,
       },
     });
 
@@ -63,7 +63,7 @@ describe('httpRequest', () => {
       encodedJson: { jsonKey: null },
       optionalParam: 'hello',
       authorization: 'Bearer asdf',
-      message: 'test'
+      message: 'test',
     });
 
     const reEncoded = TestHttpRequest.encode(output);
@@ -104,15 +104,24 @@ describe('httpRequest', () => {
     const EmptyRequest = h.httpRequest({
       body: {
         a: t.number,
-        b: t.string
-      }
+        b: t.string,
+      },
     });
-    const decoded = EmptyRequest.decode({ params: {}, query: {}, headers: {}, body: { a: 2, b: 'hi' } });
+    const decoded = EmptyRequest.decode({
+      params: {},
+      query: {},
+      headers: {},
+      body: { a: 2, b: 'hi' },
+    });
     const output = assertRight(decoded);
     assert.deepStrictEqual(output, { a: 2, b: 'hi' });
 
     const reEncoded = EmptyRequest.encode(output);
-    assert.deepStrictEqual(reEncoded, { query: {}, params: {}, body: { a: 2, b: 'hi' } });
+    assert.deepStrictEqual(reEncoded, {
+      query: {},
+      params: {},
+      body: { a: 2, b: 'hi' },
+    });
   });
 
   // This is actually just a type-level test, but I forgot to update the HttpRequestCodec type
@@ -120,10 +129,10 @@ describe('httpRequest', () => {
   it('Builds codecs that match the HttpRequestCodec type', () => {
     const _codec: h.HttpRequestCodec<{ foo: string }> = h.httpRequest({
       params: {
-        foo: t.string
+        foo: t.string,
       },
     });
     // tslint:disable-next-line: no-unused-expression
     void _codec;
-  })
+  });
 });

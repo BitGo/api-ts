@@ -3,8 +3,8 @@ import * as E from 'fp-ts/Either';
 import * as t from 'io-ts';
 
 export const assertRight = E.getOrElseW(() => {
-  throw new Error('Failed to decode object')
-})
+  throw new Error('Failed to decode object');
+});
 
 export const assertEncodes = (codec: t.Mixed, test: unknown, expected = test) => {
   const encoded = codec.encode(test);

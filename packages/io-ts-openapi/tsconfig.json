@@ -19,11 +19,7 @@
     "strict": true,
     "target": "es2021"
   },
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.json",
-    "test/**/*.ts"
-  ],
+  "include": ["src/**/*.ts", "test/**/*.json", "test/**/*.ts"],
   "references": [
     {
       "path": "../io-ts-http"
