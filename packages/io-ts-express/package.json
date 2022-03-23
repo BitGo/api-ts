@@ -12,7 +12,6 @@
   "scripts": {
     "build": "tsc --build --incremental --verbose .",
     "clean": "rm -rf -- dist",
-    "lint-staged": "lint-staged",
     "test": "ava"
   },
   "dependencies": {
