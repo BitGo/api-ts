@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-  
+
     strategy:
       matrix:
         node-version: ['12', '14', '16']
@@ -16,22 +16,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-    
+
       - name: Configure Node.js
         uses: actions/setup-node@v2
         with:
           node-verions: ${{ matrix.node-version }}
-      
+
       # Install npm greater-than-or-equal-to 7 so we can use npm workspaces.
       # We can remove this when Node.js 16 is the oldest LTS
       - name: Update npm
         run: npm install --global 'npm@>7'
-      
+
       - name: Install dependencies
         run: npm install
-      
+
       - name: Compile TypeScript
         run: npm run build
-      
+
       - name: Test
         run: npm test
