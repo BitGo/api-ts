@@ -17,20 +17,21 @@
   "workspaces": [
     "packages/**"
   ],
+  "packageManager": "npm@8.5.0",
   "scripts": {
-    "build": "tsc --build --incremental --verbose .",
-    "clean": "npm run --workspaces clean",
+    "build": "turbo run build",
+    "clean": "turbo run clean",
+    "predistclean": "turbo run clean",
     "distclean": "rm -rf node_modules packages/*/node_modules",
     "lint-staged": "lint-staged",
-    "test": "npm run --workspaces test"
+    "test": "turbo run test"
   },
   "pre-commit": "lint-staged",
   "devDependencies": {
     "lint-staged": "12.3.7",
     "pre-commit": "1.2.2",
     "prettier": "2.5.1",
+    "turbo": "1.1.10",
     "typescript": "4.5.5"
-  },
-  "dependencies": {
   }
 }
