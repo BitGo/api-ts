@@ -261,6 +261,16 @@ export const schemaForRouteNode = (memo: any) => (node: Expression<ts.Expression
     ),
   )({ decl: node, memo });
 
+export const apiSpecVersion = (sym: Symbol) =>
+  pipe(
+    E.fromNullable('no version tag for symbol')(
+      sym.getJsDocTags().find((tag) => tag.getName() === 'version'),
+    ),
+    E.chain((tag) => E.fromNullable('no text for version tag')(tag.getText()[0])),
+    E.map((text) => text.text),
+    E.getOrElse(() => '0.1.0'),
+  );
+
 export const schemaForApiSpec = (memo: any) => (apiSpec: Node) =>
   pipe(
     apiSpec.getType().getProperties(),
