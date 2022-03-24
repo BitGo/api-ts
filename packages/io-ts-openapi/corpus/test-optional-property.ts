@@ -32,7 +32,7 @@ export const Routes = h.apiSpec({
   "openapi": "3.1.0",
   "info": {
     "title": "test",
-    "version": "1"
+    "version": "0.1.0"
   },
   "paths": {
     "/test": {
