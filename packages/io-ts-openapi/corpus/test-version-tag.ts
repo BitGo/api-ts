@@ -1,4 +1,4 @@
-//! should parse string unions
+//! should parse version tags
 
 /// file: index.ts
 
@@ -10,10 +10,15 @@ const MyRoute = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({}),
   response: {
-    ok: t.keyof({ foo: 1, bar: 1, baz: 1 }),
+    ok: t.string,
   },
-} as const);
+});
 
+/**
+ * Test
+ *
+ * @version 1.0.0
+ */
 export const Routes = h.apiSpec({
   'api.v1.test.myroute': {
     get: MyRoute,
@@ -27,7 +32,7 @@ export const Routes = h.apiSpec({
   "openapi": "3.1.0",
   "info": {
     "title": "test",
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
   "paths": {
     "/test": {
@@ -41,7 +46,6 @@ export const Routes = h.apiSpec({
             "content": {
               "application/json": {
                 "schema": {
-                  "enum": ["foo", "bar", "baz"],
                   "type": "string"
                 }
               }

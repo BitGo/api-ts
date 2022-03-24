@@ -4,9 +4,9 @@ import * as RA from 'fp-ts/ReadonlyArray';
 import * as E from 'fp-ts/Either';
 import * as RE from 'fp-ts/ReaderEither';
 import { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
-import { Node, Project, SourceFile, Symbol, VariableDeclaration } from 'ts-morph';
+import { Node, Project, Symbol, VariableDeclaration } from 'ts-morph';
 
-import { schemaForApiSpec } from './route';
+import { apiSpecVersion, schemaForApiSpec } from './route';
 import { Config } from './config';
 
 type Env = {
@@ -48,13 +48,12 @@ type PathSpec = { [Path: string]: { [Method: string]: OpenAPIV3_1.OperationObjec
  */
 type ParameterList = (OpenAPIV3.ReferenceObject | OpenAPIV3.ParameterObject)[];
 
-const routesForSourceFile =
-  (source: SourceFile) =>
+const routesForSymbol =
+  (sym: Symbol): RE.ReaderEither<Env, string, PathSpec> =>
   ({ config: { includeInternal }, memo }: Env) =>
     pipe(
-      source.getExportSymbols(),
-      RA.map(flow(variableDeclarationOfSymbol, E.chain(schemaForApiSpec(memo)))),
-      A.altAll(E.Alt)(E.left('no valid exports found')),
+      variableDeclarationOfSymbol(sym),
+      E.chain(schemaForApiSpec(memo)),
       E.map(
         flow(
           RA.reduce(
@@ -127,12 +126,24 @@ export function componentsForProject(
   return pipe(
     project,
     RE.chainEitherK(sourceFile(config.index)),
-    RE.chain(routesForSourceFile),
-    RE.map((paths) => ({
+    RE.chain((src) =>
+      pipe(
+        src.getExportSymbols(),
+        RA.map((sym) =>
+          pipe(
+            RE.Do,
+            RE.bind('paths', () => routesForSymbol(sym)),
+            RE.bind('version', () => RE.right(apiSpecVersion(sym))),
+          ),
+        ),
+        A.altAll(RE.Alt)(RE.left('no valid route symbols exported')),
+      ),
+    ),
+    RE.map(({ paths, version }) => ({
       openapi: '3.1.0',
       info: {
         title: config.name,
-        version: '1',
+        version: version,
       },
       paths,
       components: {
