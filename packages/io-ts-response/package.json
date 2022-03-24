@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Types for representing responses",
   "author": "Patrick McLaughlin <patrickmclaughlin@bitgo.com>",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "sideEffects": false,

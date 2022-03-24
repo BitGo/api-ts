@@ -8,3 +8,9 @@ npm install
 npm run build
 npm test
 ```
+
+# License
+
+This work is published under the Apache 2.0 license.
+
+`SPDX-License-Identifier: Apache-2.0`
