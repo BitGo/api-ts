@@ -2,7 +2,7 @@
 
 Runtime types for (de)serializing HTTP requests from both the client and server side
 
-## Usage
+## Overview
 
 The primary function in this library is `httpRequest`, which is used to build codecs
 which can parse a generic HTTP request into a more refined type. The generic HTTP
@@ -78,53 +78,6 @@ possible to encode the API contract (or at least as much of it that is possible 
 express in the type system) and therefore someone calling the API can be confident that
 the server will correctly interpret a request if the arguments typecheck.
 
-## Other functions
+## Documentation
 
-### optional
-
-The `optional` function takes a codec and wraps it in one that also accepts `undefined`
-(specifically, not `null`):
-
-```typescript
-import { optional } from '@bitgo/io-ts-http';
-import * as t from 'io-ts';
-
-// This is effectively a runtime representation of `string | undefined`
-const stringOrUndefined = optional(t.string);
-```
-
-### optionalize
-
-In TypeScript, an object may have some keys that are required and others that are
-optional:
-
-```typescript
-type Example = {
-  needed: string;
-  notNeeded?: string;
-};
-```
-
-To build a codec for such a type in `io-ts`, this pattern is generally used:
-
-```typescript
-const Example = t.intersection([
-  t.type({
-    needed: t.string,
-  }),
-  t.partial({
-    notNeeded: t.string,
-  }),
-]);
-```
-
-The `optionalize` function makes this easier to do by accepting a similar set of
-arguments as `t.type` does, and if any of the properties allow `undefined` they become
-optional:
-
-```typescript
-const Example = optionalize({
-  needed: t.string,
-  notNeeded: optional(t.string),
-});
-```
+- [API Reference](docs/apiReference.md)
