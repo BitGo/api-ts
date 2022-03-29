@@ -39,6 +39,15 @@ describe('flattened', () => {
 
   it('combines with optional params', () =>
     assertEncodes(codec, { foo: 42 }, { test: { foo: 42 }, anotherParam: {} }));
+
+  it('does not get confused by overlapping extra parameters', () => {
+    const input = {
+      test: { foo: 42, bar: 'bad' },
+      anotherParam: { foo: 123, bar: '123' },
+    };
+    const expected = { foo: 42, bar: '123' };
+    assertDecodes(codec, input, expected);
+  });
 });
 
 describe('optionalized', () => {
