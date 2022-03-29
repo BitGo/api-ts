@@ -4,15 +4,7 @@ import * as t from 'io-ts';
 import express from 'express';
 import supertest from 'supertest';
 
-import {
-  ApiSpec,
-  apiSpec,
-  httpRequest,
-  httpRoute,
-  optional,
-  RequestType,
-  ResponseType,
-} from '@bitgo/io-ts-http';
+import { ApiSpec, apiSpec, httpRequest, httpRoute, optional } from '@bitgo/io-ts-http';
 import { Response } from '@bitgo/io-ts-response';
 import {
   buildApiClient,
@@ -70,9 +62,7 @@ const routeMiddleware: express.RequestHandler = (req, _res, next) => {
 };
 
 // DISCUSS: defining a RouteHandler type or something (also used in decodeRequestAndEncodeResponse)
-const CreateHelloWorld: (
-  parameters: RequestType<PutHello>,
-) => ResponseType<PutHello> = (parameters: {
+const CreateHelloWorld = async (parameters: {
   secretCode: number;
   appMiddlewareRan?: boolean;
   routeMiddlewareRan?: boolean;
