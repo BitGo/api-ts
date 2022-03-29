@@ -14,7 +14,9 @@ import {
   ResponseType,
 } from '@bitgo/io-ts-http';
 
-export type Function<R extends HttpRoute> = (input: RequestType<R>) => ResponseType<R>;
+export type Function<R extends HttpRoute> = (
+  input: RequestType<R>,
+) => ResponseType<R> | Promise<ResponseType<R>>;
 export type RouteStack<R extends HttpRoute> = [
   ...express.RequestHandler[],
   Function<R>,
