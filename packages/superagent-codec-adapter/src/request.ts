@@ -5,16 +5,15 @@ import type { Response, SuperAgent, SuperAgentRequest } from 'superagent';
 import type { SuperTest } from 'supertest';
 import { URL } from 'url';
 import { pipe } from 'fp-ts/function';
-import { HttpResponseCodes } from '@bitgo/io-ts-http';
 
 type SuccessfulResponses<Route extends h.HttpRoute> = {
-  [Status in h.KnownResponses<Route['response']>]: {
+  [Status in h.KnownHttpStatusCodes<Route['response']>]: {
     status: Status;
     error?: undefined;
     body: t.TypeOf<Route['response'][Status]>;
     original: Response;
   };
-}[h.KnownResponses<Route['response']>];
+}[h.KnownHttpStatusCodes<Route['response']>];
 
 type DecodedResponse<Route extends h.HttpRoute> =
   | SuccessfulResponses<Route>
@@ -29,7 +28,7 @@ const decodedResponse = <Route extends h.HttpRoute>(res: DecodedResponse<Route>)
 
 type ExpectedDecodedResponse<
   Route extends h.HttpRoute,
-  Status extends h.KnownResponses<Route['response']>,
+  Status extends h.KnownHttpStatusCodes<Route['response']>,
 > = {
   body: t.TypeOf<Route['response'][Status]>;
   original: Response;
@@ -37,7 +36,7 @@ type ExpectedDecodedResponse<
 
 type PatchedRequest<Req extends SuperAgentRequest, Route extends h.HttpRoute> = Req & {
   decode: () => Promise<DecodedResponse<Route>>;
-  decodeExpecting: <Status extends h.KnownResponses<Route['response']>>(
+  decodeExpecting: <Status extends h.KnownHttpStatusCodes<Route['response']>>(
     status: Status,
   ) => Promise<ExpectedDecodedResponse<Route, Status>>;
 };
@@ -97,7 +96,7 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
 
       let status: string | undefined;
       // DISCUSS: Should we have this as a preprocessed const in io-ts-http?
-      for (const [name, code] of Object.entries(HttpResponseCodes)) {
+      for (const [name, code] of Object.entries(h.HttpResponseCodes)) {
         if (statusCode === code) {
           status = name;
           break;
@@ -125,7 +124,7 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
         route.response[status].decode(res.body),
         E.map((body) =>
           decodedResponse<Route>({
-            status: status as h.KnownResponses<Route['response']>,
+            status: statusCode,
             body,
             original: res,
           }),
@@ -142,7 +141,9 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
       );
     });
 
-  patchedReq.decodeExpecting = <Status extends h.KnownResponses<Route['response']>>(
+  patchedReq.decodeExpecting = <
+    Status extends h.KnownHttpStatusCodes<Route['response']>,
+  >(
     status: Status,
   ) =>
     patchedReq.decode().then((res) => {
