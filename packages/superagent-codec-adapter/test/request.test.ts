@@ -105,7 +105,7 @@ describe('request', () => {
         .post({ id: 1337, foo: 'test', bar: 42 })
         .decode();
 
-      assert.equal(response.status, 'ok');
+      assert.equal(response.status, 200);
       assert.deepEqual(response.body, {
         id: 1337,
         foo: 'test',
@@ -152,7 +152,7 @@ describe('request', () => {
     it('narrows expected response types', async () => {
       const response = await apiClient['api.v1.test']
         .post({ id: 1337, foo: 'test', bar: 42 })
-        .decodeExpecting('ok');
+        .decodeExpecting(200);
 
       assert.deepEqual(response.body, {
         id: 1337,
@@ -166,7 +166,7 @@ describe('request', () => {
       const result = await apiClient['api.v1.test']
         .post({ id: 1337, foo: 'test', bar: 42 })
         .set('x-send-unexpected-status-code', 'true')
-        .decodeExpecting('ok')
+        .decodeExpecting(200)
         .then(() => false)
         .catch(() => true);
 
@@ -177,7 +177,7 @@ describe('request', () => {
       const result = await apiClient['api.v1.test']
         .post({ id: 1337, foo: 'test', bar: 42 })
         .set('x-send-invalid-response-body', 'true')
-        .decodeExpecting('ok')
+        .decodeExpecting(200)
         .then(() => false)
         .catch(() => true);
 
