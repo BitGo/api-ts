@@ -20,6 +20,7 @@ jobs:
       - name: Configure Node.js
         uses: actions/setup-node@v2
         with:
+          cache: npm
           node-verions: ${{ matrix.node-version }}
 
       # Install npm greater-than-or-equal-to 7 so we can use npm workspaces.
