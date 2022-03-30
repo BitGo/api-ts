@@ -18,3 +18,6 @@ export const HttpResponseCodes: { [K in Status]: number } = {
   internalError: 500,
   serviceUnavailable: 503,
 };
+
+export type KnownHttpStatusCodes<Response extends HttpResponse> =
+  typeof HttpResponseCodes[KnownResponses<Response>];

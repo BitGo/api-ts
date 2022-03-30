@@ -106,7 +106,7 @@ test('should offer a delightful developer experience', async (t) => {
   // application layer :thonking:
   const response = await apiClient['hello.world']
     .put({ secretCode: 1000 })
-    .decodeExpecting('ok')
+    .decodeExpecting(200)
     .then((res) => res.body);
 
   t.like(response, { message: "Who's there?" });
@@ -130,7 +130,7 @@ test('should invoke app-level middleware', async (t) => {
 
   const response = await apiClient['hello.world']
     .put({ secretCode: 1000 })
-    .decodeExpecting('ok')
+    .decodeExpecting(200)
     .then((res) => res.body);
 
   t.like(response, { message: "Who's there?", appMiddlewareRan: true });
@@ -153,7 +153,7 @@ test('should invoke route-level middleware', async (t) => {
 
   const response = await apiClient['hello.world']
     .put({ secretCode: 1000 })
-    .decodeExpecting('ok')
+    .decodeExpecting(200)
     .then((res) => res.body);
 
   t.like(response, { message: "Who's there?", routeMiddlewareRan: true });
@@ -176,7 +176,7 @@ test('should infer status code from response type', async (t) => {
 
   const response = await apiClient['hello.world']
     .put({ secretCode: 0 })
-    .decodeExpecting('invalidRequest')
+    .decodeExpecting(400)
     .then((res) => res.body);
 
   t.like(response, { errors: 'Please do not tell me zero! I will now explode' });
