@@ -225,7 +225,15 @@ export const parseIntersection: ParseStep = (ctx) => {
   if (!t.isIntersection()) {
     return parseFatal('type not intersection');
   }
-  let allOf: (OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject)[] = [];
+
+  // Initialize this with an empty schema object `{}` that will be used to
+  // aggregate together all the properties of the inner types so long as they
+  // are also plain schema objects (so not refs, unions, etc)
+  let allOf: [
+    OpenAPIV3_1.SchemaObject,
+    ...(OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject)[]
+  ] = [{}];
+
   for (const innerType of t.getIntersectionTypes()) {
     const innerResultE = parseType({ ...ctx, type: innerType });
     if (E.isLeft(innerResultE)) {
@@ -243,20 +251,33 @@ export const parseIntersection: ParseStep = (ctx) => {
     } else if (isReferenceObject(innerResult.schema)) {
       allOf.push(innerResult.schema);
     } else if (innerResult.schema.allOf !== undefined) {
-      allOf = allOf.concat(innerResult.schema.allOf);
-    } else if (
-      innerResult.schema.type === 'object' &&
-      Object.keys(innerResult.schema.properties ?? {}).length === 0
-    ) {
-      // Optimization: intersect with {} can be elided.
+      allOf = [...allOf, ...innerResult.schema.allOf];
+    } else if (innerResult.schema.type === 'object') {
+      // TODO: Handle overlapping properties (including additionalProperties) in intersected types by intersecting
+      // them instead of overwriting.
+      const mainSchema = allOf[0];
+      allOf[0] = {
+        type: 'object',
+        required: [
+          ...(mainSchema.required ?? []),
+          ...(innerResult.schema.required ?? []),
+        ],
+        properties: {
+          ...mainSchema.properties,
+          ...innerResult.schema.properties,
+        },
+      };
     } else {
       allOf.push(innerResult.schema);
     }
   }
-  if (allOf.length === 0) {
-    return parseFatal('empty intersection');
-  } else if (allOf.length === 1) {
-    return parseAccept(allOf[0]!);
+  if (allOf.length === 1) {
+    const schema = allOf[0];
+    if (Object.keys(schema).length === 0) {
+      return parseFatal('empty intersection');
+    } else {
+      return parseAccept(schema);
+    }
   } else {
     return parseAccept({ allOf });
   }
