@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 
-import { Status } from '@bitgo/io-ts-response';
+import { Status } from '@api-ts/response';
 
 export type HttpResponse = t.Props;
 

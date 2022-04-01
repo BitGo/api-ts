@@ -1,4 +1,4 @@
-# io-ts-http
+# @api-ts/io-ts-http
 
 Runtime types for (de)serializing HTTP requests from both the client and server side
 
@@ -27,7 +27,7 @@ urlDecoding the values). The `httpRequest` function can be combined with codecs 
 generic HTTP requests into a more refined object. For example:
 
 ```typescript
-import { httpRequest, optional } from '@bitgo/io-ts-types';
+import { httpRequest, optional } from '@api-ts/io-ts-http';
 import { DateFromString, NumberFromString } from 'io-ts-types';
 
 const ExampleHttpRequest = httpRequest({

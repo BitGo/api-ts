@@ -10,7 +10,7 @@ service's API as a collection of operations linked to routes. This function itse
 not do anything aside from enforce the correct type of the parameter passed to it.
 
 ```typescript
-import { apiSpec } from '@bitgo/io-ts-http';
+import { apiSpec } from '@api-ts/io-ts-http';
 
 import { GetMessage, CreateMessage } from './routes/message';
 import { GetUser, CreateUser, UpdateUser, DeleteUser } from './routes/user';

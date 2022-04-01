@@ -73,7 +73,7 @@ type RequestProps = {
   id: number;
 };
 
-// Now imagine I have some api client using the above route definition. `superagent-codec-adapter`
+// Now imagine I have some api client using the above route definition. `superagent-wrapper`
 // can be used to create a client like this for a whole group of routes in one line.
 const routeApiClient: (props: RequestProps) => Promise<string>;
 
