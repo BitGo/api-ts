@@ -12,7 +12,7 @@
   },
   "references": [
     {
-      "path": "../io-ts-response"
+      "path": "../response"
     }
   ]
 }

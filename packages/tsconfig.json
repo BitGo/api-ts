@@ -2,19 +2,19 @@
   "files": [],
   "references": [
     {
-      "path": "io-ts-express"
+      "path": "express-wrapper"
     },
     {
       "path": "io-ts-http"
     },
     {
-      "path": "io-ts-openapi"
+      "path": "openapi-generator"
     },
     {
-      "path": "io-ts-response"
+      "path": "response"
     },
     {
-      "path": "superagent-codec-adapter"
+      "path": "superagent-wrapper"
     }
   ]
 }

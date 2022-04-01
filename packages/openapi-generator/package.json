@@ -1,0 +1,52 @@
+{
+  "name": "@api-ts/openapi-generator",
+  "version": "0.1.0",
+  "description": "Generate an OpenAPI specification from an io-ts-http contract",
+  "author": "Patrick McLaughlin <patrickmclaughlin@bitgo.com>",
+  "license": "Apache-2.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "sideEffects": false,
+  "keywords": [],
+  "files": [
+    "dist/src/"
+  ],
+  "bin": "./dist/src/cli.js",
+  "scripts": {
+    "build": "tsc --build --incremental --verbose .",
+    "clean": "rm -rf -- dist",
+    "test": "ava test/test-corpus.ts"
+  },
+  "dependencies": {
+    "@api-ts/io-ts-http": "0.1.0",
+    "cmd-ts": "0.10.0",
+    "comment-parser": "1.3.1",
+    "fp-ts": "2.11.8",
+    "io-ts": "2.2.16",
+    "io-ts-types": "0.5.16",
+    "openapi-types": "10.0.0",
+    "ts-morph": "13.0.3",
+    "typescript": "4.5.5"
+  },
+  "devDependencies": {
+    "@ava/typescript": "3.0.1",
+    "ava": "4.0.1",
+    "parser-ts": "0.6.16",
+    "ts-node": "10.4.0"
+  },
+  "ava": {
+    "typescript": {
+      "compile": false,
+      "extensions": [
+        "ts"
+      ],
+      "rewritePaths": {
+        "test/": "dist/test/"
+      }
+    },
+    "timeout": "30s"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "name": "@bitgo/api-ts",
+  "name": "@api-ts/base",
   "version": "0.1.0",
   "description": "Tools for using io-ts to describe and consume APIs",
   "license": "Apache-2.0",
