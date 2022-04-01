@@ -8,7 +8,7 @@
     "declarationMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["dom", "es2021"],
+    "lib": ["dom", "es2019"],
     "module": "commonjs",
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
@@ -20,7 +20,7 @@
     "skipLibCheck": false,
     "sourceMap": true,
     "strict": true,
-    "target": "es2021"
+    "target": "es2019"
   },
   "references": [
     {

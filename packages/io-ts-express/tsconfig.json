@@ -2,9 +2,9 @@
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2019",
     "module": "commonjs",
-    "lib": ["es6"],
+    "lib": ["es2019"],
     "moduleResolution": "node",
     "outDir": "./dist",
     "declaration": true,
