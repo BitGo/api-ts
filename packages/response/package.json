@@ -13,15 +13,9 @@
   ],
   "scripts": {
     "build": "tsc --build --incremental --verbose .",
-    "clean": "rm -rf -- dist",
-    "test": "echo 'Please add tests'"
-  },
-  "dependencies": {
-    "fp-ts": "2.11.8",
-    "io-ts": "2.2.16"
+    "clean": "rm -rf -- dist"
   },
   "devDependencies": {
-    "ts-node": "10.4.0",
     "typescript": "4.5.5"
   },
   "publishConfig": {
