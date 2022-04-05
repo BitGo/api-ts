@@ -13,8 +13,7 @@
   ],
   "scripts": {
     "build": "tsc --build --incremental --verbose .",
-    "clean": "rm -rf -- dist",
-    "test": "echo 'Please add tests'"
+    "clean": "rm -rf -- dist"
   },
   "dependencies": {
     "fp-ts": "2.11.8",
