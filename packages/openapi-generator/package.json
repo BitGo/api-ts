@@ -1,6 +1,6 @@
 {
   "name": "@api-ts/openapi-generator",
-  "version": "0.1.0",
+  "version": "*",
   "description": "Generate an OpenAPI specification from an io-ts-http contract",
   "author": "Patrick McLaughlin <patrickmclaughlin@bitgo.com>",
   "license": "Apache-2.0",
@@ -18,7 +18,7 @@
     "test": "ava test/test-corpus.ts"
   },
   "dependencies": {
-    "@api-ts/io-ts-http": "0.1.0",
+    "@api-ts/io-ts-http": "*",
     "cmd-ts": "0.10.0",
     "comment-parser": "1.3.1",
     "fp-ts": "2.11.8",
