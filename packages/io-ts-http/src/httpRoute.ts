@@ -1,7 +1,8 @@
 import * as t from 'io-ts';
 
-import { HttpResponse, KnownResponses } from './httpResponse';
+import { HttpResponse } from './httpResponse';
 import { HttpRequestCodec } from './httpRequest';
+import { Status } from '@api-ts/response';
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -14,11 +15,13 @@ export type HttpRoute = {
 
 export type RequestType<T extends HttpRoute> = t.TypeOf<T['request']>;
 export type ResponseType<T extends HttpRoute> = {
-  [K in KnownResponses<T['response']>]: {
-    type: K;
-    payload: t.TypeOf<T['response'][K]>;
-  };
-}[KnownResponses<T['response']>];
+  [K in Status]: K extends keyof T['response']
+    ? {
+        type: K;
+        payload: t.TypeOf<T['response'][K]>;
+      }
+    : never;
+}[Status];
 
 export type ApiSpec = {
   [Key: string]: {

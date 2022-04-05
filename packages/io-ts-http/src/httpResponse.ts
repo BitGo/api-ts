@@ -2,11 +2,13 @@ import * as t from 'io-ts';
 
 import { Status } from '@api-ts/response';
 
-export type HttpResponse = t.Props;
+export type HttpResponse = {
+  [K: string]: t.Mixed;
+};
 
-export type KnownResponses<Response extends HttpResponse> = {
-  [K in keyof Response]: K extends Status ? K : never;
-}[keyof Response];
+type KnownResponses<Response extends HttpResponse> = {
+  [K in Status]: K extends keyof Response ? K : never;
+}[Status];
 
 export const HttpResponseCodes: { [K in Status]: number } = {
   ok: 200,
