@@ -13,7 +13,6 @@
     "url": "https://github.com/BitGo/api-ts/issues"
   },
   "homepage": "https://github.com/BitGo/api-ts#readme",
-  "keywords": [],
   "workspaces": [
     "packages/**"
   ],
