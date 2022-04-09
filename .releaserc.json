@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semrel-extra/npm",
+    [
+      "@semantic-release/github",
+      {
+        "assignees": ["@BitGo/internal-tools"]
+      }
+    ]
+  ]
+}
