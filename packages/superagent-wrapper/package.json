@@ -1,6 +1,6 @@
 {
   "name": "@api-ts/superagent-wrapper",
-  "version": "0.1.0",
+  "version": "*",
   "description": "Make type-safe HTTP requests with superagent",
   "author": "Patrick McLaughlin <patrickmclaughlin@bitgo.com>",
   "license": "Apache-2.0",
@@ -15,7 +15,7 @@
     "test": "nyc --reporter=lcov --reporter=text --reporter=json-summary mocha test/**/*.test.ts --require ts-node/register --exit"
   },
   "dependencies": {
-    "@api-ts/io-ts-http": "0.1.0",
+    "@api-ts/io-ts-http": "*",
     "fp-ts": "2.11.8",
     "io-ts": "2.2.16",
     "superagent": "3.8.3",

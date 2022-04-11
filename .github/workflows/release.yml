@@ -1,0 +1,40 @@
+---
+name: Release
+
+on:
+  push:
+    branches: [master, alpha, beta, next, next-major]
+
+jobs:
+  release:
+    name: Release
+    runs-one: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          cache: npm
+          node-version: 'lts/*'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile TypeScript
+        run: npm run build
+
+      # Run tests before releasing to verify the code behaves as expected. We expect
+      # this step to identify some (but not all) semantic merge conflicts
+      - name: Test
+        run: npm test
+
+      - name: Release
+        run: npx multi-semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

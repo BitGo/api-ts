@@ -13,7 +13,6 @@
     "url": "https://github.com/BitGo/api-ts/issues"
   },
   "homepage": "https://github.com/BitGo/api-ts#readme",
-  "keywords": [],
   "workspaces": [
     "packages/**"
   ],
@@ -28,6 +27,9 @@
   },
   "pre-commit": "lint-staged",
   "devDependencies": {
+    "@semantic-release/github": "8.0.4",
+    "@semantic-release/npm": "9.0.1",
+    "@semrel-extra/npm": "1.2.0",
     "lint-staged": "12.3.7",
     "pre-commit": "1.2.2",
     "prettier": "2.5.1",
