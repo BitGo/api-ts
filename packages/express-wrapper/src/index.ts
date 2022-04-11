@@ -48,7 +48,7 @@ const decodeRequestAndEncodeResponse = <Route extends HttpRoute>(
         const validationErrors = PathReporter.failure(maybeRequest.left);
         const validationErrorMessage = validationErrors.join('\n');
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.write(JSON.stringify({ errors: validationErrorMessage }));
+        res.write(JSON.stringify({ error: validationErrorMessage }));
         res.end();
         return;
       }

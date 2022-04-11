@@ -44,7 +44,7 @@
         "test/": "dist/test/"
       }
     },
-    "timeout": "30s"
+    "timeout": "1m"
   },
   "publishConfig": {
     "access": "public"
