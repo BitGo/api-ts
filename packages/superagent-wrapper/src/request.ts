@@ -5,15 +5,16 @@ import type { Response, SuperAgent, SuperAgentRequest } from 'superagent';
 import type { SuperTest } from 'supertest';
 import { URL } from 'url';
 import { pipe } from 'fp-ts/function';
+import { Status } from '@api-ts/response';
 
 type SuccessfulResponses<Route extends h.HttpRoute> = {
-  [Status in h.KnownHttpStatusCodes<Route['response']>]: {
-    status: Status;
+  [R in h.KnownResponses<Route['response']>]: {
+    status: h.HttpResponseCodes[R];
     error?: undefined;
-    body: t.TypeOf<Route['response'][Status]>;
+    body: h.ResponseTypeForStatus<Route['response'], R>;
     original: Response;
   };
-}[h.KnownHttpStatusCodes<Route['response']>];
+}[h.KnownResponses<Route['response']>];
 
 type DecodedResponse<Route extends h.HttpRoute> =
   | SuccessfulResponses<Route>
@@ -28,17 +29,16 @@ const decodedResponse = <Route extends h.HttpRoute>(res: DecodedResponse<Route>)
 
 type ExpectedDecodedResponse<
   Route extends h.HttpRoute,
-  Status extends h.KnownHttpStatusCodes<Route['response']>,
-> = {
-  body: t.TypeOf<Route['response'][Status]>;
-  original: Response;
-};
+  StatusCode extends h.HttpResponseCodes[h.KnownResponses<Route['response']>],
+> = DecodedResponse<Route> & { status: StatusCode };
 
 type PatchedRequest<Req extends SuperAgentRequest, Route extends h.HttpRoute> = Req & {
   decode: () => Promise<DecodedResponse<Route>>;
-  decodeExpecting: <Status extends h.KnownHttpStatusCodes<Route['response']>>(
-    status: Status,
-  ) => Promise<ExpectedDecodedResponse<Route, Status>>;
+  decodeExpecting: <
+    StatusCode extends h.HttpResponseCodes[h.KnownResponses<Route['response']>],
+  >(
+    status: StatusCode,
+  ) => Promise<ExpectedDecodedResponse<Route, StatusCode>>;
 };
 
 type SuperagentMethod = 'get' | 'post' | 'put' | 'delete';
@@ -84,6 +84,13 @@ export const supertestRequestFactory =
     return supertest[method](path);
   };
 
+const hasCodecForStatus = <S extends Status>(
+  responses: h.HttpResponse,
+  status: S,
+): responses is { [K in S]: t.Mixed } => {
+  return status in responses && responses[status] !== undefined;
+};
+
 const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
   route: Route,
   req: Req,
@@ -94,11 +101,11 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
     req.then((res) => {
       const { body, status: statusCode } = res;
 
-      let status: string | undefined;
+      let status: Status | undefined;
       // DISCUSS: Should we have this as a preprocessed const in io-ts-http?
       for (const [name, code] of Object.entries(h.HttpResponseCodes)) {
         if (statusCode === code) {
-          status = name;
+          status = name as Status;
           break;
         }
       }
@@ -111,7 +118,7 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
         });
       }
 
-      if (route.response[status] === undefined) {
+      if (!hasCodecForStatus(route.response, status)) {
         return decodedResponse({
           // DISCUSS: what's this non-standard HTTP status code?
           status: 'decodeError',
@@ -124,10 +131,12 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
         route.response[status].decode(res.body),
         E.map((body) =>
           decodedResponse<Route>({
-            status: statusCode,
+            status: statusCode as h.HttpResponseCodes[h.KnownResponses<
+              Route['response']
+            >],
             body,
             original: res,
-          }),
+          } as SuccessfulResponses<Route>),
         ),
         E.getOrElse((error) =>
           // DISCUSS: what's this non-standard HTTP status code?
@@ -142,19 +151,16 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
     });
 
   patchedReq.decodeExpecting = <
-    Status extends h.KnownHttpStatusCodes<Route['response']>,
+    StatusCode extends h.HttpResponseCodes[h.KnownResponses<Route['response']>],
   >(
-    status: Status,
+    status: StatusCode,
   ) =>
     patchedReq.decode().then((res) => {
       if (res.status !== status) {
         const error = res.error ?? `Unexpected status code ${res.status}`;
         throw new Error(JSON.stringify(error));
       } else {
-        return {
-          body: res.body,
-          original: res.original,
-        };
+        return res as ExpectedDecodedResponse<Route, StatusCode>;
       }
     });
   return patchedReq;
