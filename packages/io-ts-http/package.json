@@ -1,6 +1,6 @@
 {
   "name": "@api-ts/io-ts-http",
-  "version": "*",
+  "version": "0.0.0-semantically-released",
   "description": "Types for (de)serializing HTTP requests from both the client and server side",
   "author": "Patrick McLaughlin <patrickmclaughlin@bitgo.com>",
   "license": "Apache-2.0",
@@ -17,7 +17,7 @@
     "test": "nyc --reporter=lcov --reporter=text --reporter=json-summary mocha test/**/*.test.ts --require ts-node/register --exit"
   },
   "dependencies": {
-    "@api-ts/response": "*",
+    "@api-ts/response": "0.0.0-semantically-released",
     "fp-ts": "2.11.8",
     "io-ts": "2.2.16",
     "io-ts-types": "0.5.16",
