@@ -1,6 +1,6 @@
 {
   "name": "@api-ts/express-wrapper",
-  "version": "*",
+  "version": "0.0.0-semantically-released",
   "description": "Implement an HTTP specification with Express",
   "author": "Eric Crosson <ericcrosson@bitgo.com>",
   "license": "Apache-2.0",
@@ -15,13 +15,13 @@
     "test": "ava"
   },
   "dependencies": {
-    "@api-ts/io-ts-http": "*",
+    "@api-ts/io-ts-http": "0.0.0-semantically-released",
     "express": "4.17.2",
     "fp-ts": "2.11.8",
     "io-ts": "2.2.16"
   },
   "devDependencies": {
-    "@api-ts/superagent-wrapper": "*",
+    "@api-ts/superagent-wrapper": "0.0.0-semantically-released",
     "@ava/typescript": "3.0.1",
     "@types/express": "4.17.13",
     "@types/node": "16.11.7",

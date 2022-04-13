@@ -1,6 +1,6 @@
 {
   "name": "@api-ts/response",
-  "version": "*",
+  "version": "0.0.0-semantically-released",
   "description": "Types for representing responses",
   "author": "Patrick McLaughlin <patrickmclaughlin@bitgo.com>",
   "license": "Apache-2.0",
