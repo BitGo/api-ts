@@ -34,7 +34,7 @@ jobs:
         run: npm test
 
       - name: Release
-        run: npx multi-semantic-release
+        run: npx --userconfig .npmrc-release multi-semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
