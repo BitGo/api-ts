@@ -10,7 +10,6 @@ import { buildApiClient, supertestRequestFactory } from '@api-ts/superagent-wrap
 
 import { createServer } from '../src';
 
-// TODO: wallet-platform throws errors instead of returning values
 const PutHello = httpRoute({
   path: '/hello',
   method: 'PUT',
@@ -30,12 +29,10 @@ const PutHello = httpRoute({
       appMiddlewareRan: t.boolean,
       routeMiddlewareRan: t.boolean,
     }),
-    // In wallet-platform, sometimes we return a 202 (by throwing)
     invalidRequest: t.type({
       errors: t.string,
     }),
     notFound: t.unknown,
-    // 500s are also used on prime team
     // DISCUSS: what if a response isn't listed here but shows up?
     internalError: t.unknown,
   },
@@ -84,7 +81,6 @@ test('should offer a delightful developer experience', async (t) => {
     // Configure app-level middleware
     app.use(express.json());
     app.use(appMiddleware);
-    // Configure route-level middleware
     return {
       'hello.world': {
         put: [routeMiddleware, CreateHelloWorld],
@@ -114,7 +110,6 @@ test('should invoke app-level middleware', async (t) => {
     // Configure app-level middleware
     app.use(express.json());
     app.use(appMiddleware);
-    // Configure route-level middleware
     return {
       'hello.world': {
         put: [CreateHelloWorld],
@@ -137,7 +132,6 @@ test('should invoke route-level middleware', async (t) => {
   const app = createServer(ApiSpec, (app: express.Application) => {
     // Configure app-level middleware
     app.use(express.json());
-    // Configure route-level middleware
     return {
       'hello.world': {
         put: [routeMiddleware, CreateHelloWorld],
@@ -160,7 +154,6 @@ test('should infer status code from response type', async (t) => {
   const app = createServer(ApiSpec, (app: express.Application) => {
     // Configure app-level middleware
     app.use(express.json());
-    // Configure route-level middleware
     return {
       'hello.world': {
         put: [CreateHelloWorld],
@@ -183,7 +176,6 @@ test('should return a 400 when request fails to decode', async (t) => {
   const app = createServer(ApiSpec, (app: express.Application) => {
     // Configure app-level middleware
     app.use(express.json());
-    // Configure route-level middleware
     return {
       'hello.world': {
         put: [CreateHelloWorld],
