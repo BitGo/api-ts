@@ -178,3 +178,23 @@ test('should infer status code from response type', async (t) => {
 
   t.like(response, { errors: 'Please do not tell me zero! I will now explode' });
 });
+
+test('should return a 400 when request fails to decode', async (t) => {
+  const app = createServer(ApiSpec, (app: express.Application) => {
+    // Configure app-level middleware
+    app.use(express.json());
+    // Configure route-level middleware
+    return {
+      'hello.world': {
+        put: [CreateHelloWorld],
+      },
+    };
+  });
+
+  const response = await supertest(app)
+    .put('/hello')
+    .set('Content-Type', 'application/json')
+    .expect(400);
+
+  t.true(response.body.error.startsWith('Invalid value undefined supplied to'));
+});
