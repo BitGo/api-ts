@@ -9,5 +9,3 @@ export * from './httpResponse';
 export * from './httpRequest';
 export * from './httpRoute';
 export * from './query-params';
-
-// release the package
