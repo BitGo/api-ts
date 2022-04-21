@@ -35,5 +35,3 @@ export const Response = {
   internalError: responseFunction('internalError'),
   serviceUnavailable: responseFunction('serviceUnavailable'),
 };
-
-// release the package
