@@ -39,8 +39,8 @@ const MyRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.number,
-    invalidRequest: t.type({ foo: t.string, bar: t.number }),
+    200: t.number,
+    400: t.type({ foo: t.string, bar: t.number }),
   },
 });
 

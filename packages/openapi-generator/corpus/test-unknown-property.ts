@@ -15,7 +15,7 @@ const MyRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.type({
+    200: t.type({
       foo: t.unknown,
     }),
   },

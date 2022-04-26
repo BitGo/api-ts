@@ -15,7 +15,7 @@ const MyRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.string,
+    200: t.string,
   },
 });
 

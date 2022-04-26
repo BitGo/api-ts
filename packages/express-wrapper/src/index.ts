@@ -6,13 +6,7 @@
 import express from 'express';
 import * as PathReporter from 'io-ts/lib/PathReporter';
 
-import {
-  ApiSpec,
-  HttpResponseCodes,
-  HttpRoute,
-  RequestType,
-  ResponseType,
-} from '@api-ts/io-ts-http';
+import { ApiSpec, HttpRoute, RequestType, ResponseType } from '@api-ts/io-ts-http';
 
 import { apiTsPathToExpress } from './path';
 
@@ -32,9 +26,6 @@ const createNamedFunction = <F extends (...args: any) => void>(
   name: string,
   fn: F,
 ): F => Object.defineProperty(fn, 'name', { value: name });
-
-const isKnownStatusCode = (code: string): code is keyof typeof HttpResponseCodes =>
-  HttpResponseCodes.hasOwnProperty(code);
 
 const decodeRequestAndEncodeResponse = <Route extends HttpRoute>(
   apiName: string,
@@ -65,20 +56,10 @@ const decodeRequestAndEncodeResponse = <Route extends HttpRoute>(
         return;
       }
 
-      // Take the first match -- the implication is that the ordering of declared response
-      // codecs is significant!
-      for (const [statusCode, responseCodec] of Object.entries(httpRoute.response)) {
-        if (rawResponse.type !== statusCode) {
+      for (const [statusCodeStr, responseCodec] of Object.entries(httpRoute.response)) {
+        const statusCode = Number(statusCodeStr);
+        if (!Number.isInteger(statusCode) || rawResponse.type !== statusCode) {
           continue;
-        }
-
-        if (!isKnownStatusCode(statusCode)) {
-          console.warn(
-            `Got unrecognized status code ${statusCode} for ${apiName} ${httpRoute.method}`,
-          );
-          res.status(500);
-          res.end();
-          return;
         }
 
         // We expect that some route implementations may "beat the type
@@ -96,8 +77,7 @@ const decodeRequestAndEncodeResponse = <Route extends HttpRoute>(
           res.end();
           return;
         }
-        // DISCUSS: safer ways to handle this cast
-        res.writeHead(HttpResponseCodes[statusCode], {
+        res.writeHead(statusCode, {
           'Content-Type': 'application/json',
         });
         res.write(JSON.stringify(response));

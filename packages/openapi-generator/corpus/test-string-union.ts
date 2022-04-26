@@ -10,7 +10,7 @@ const MyRoute = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({}),
   response: {
-    ok: t.keyof({ foo: 1, bar: 1, baz: 1 }),
+    200: t.keyof({ foo: 1, bar: 1, baz: 1 }),
   },
 } as const);
 

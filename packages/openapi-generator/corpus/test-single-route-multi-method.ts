@@ -16,7 +16,7 @@ const FirstRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.string,
+    200: t.string,
   },
 } as const);
 
@@ -35,7 +35,7 @@ const SecondRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.string,
+    200: t.string,
   },
 });
 

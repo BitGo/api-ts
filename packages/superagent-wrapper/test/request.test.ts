@@ -25,7 +25,7 @@ const PostTestRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.type({
+    200: t.type({
       id: t.number,
       foo: t.string,
       bar: t.number,
@@ -39,7 +39,7 @@ const HeaderGetTestRoute = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({}),
   response: {
-    ok: t.type({
+    200: t.type({
       value: t.string,
     }),
   },
@@ -79,7 +79,7 @@ testApp.post('/test/:id', (req, res) => {
       error: 'bad request',
     });
   } else {
-    const response = PostTestRoute.response['ok'].encode({
+    const response = PostTestRoute.response[200].encode({
       ...params,
       baz: true,
     });
@@ -89,7 +89,7 @@ testApp.post('/test/:id', (req, res) => {
 
 testApp.get(HeaderGetTestRoute.path, (req, res) => {
   res.send(
-    HeaderGetTestRoute.response['ok'].encode({
+    HeaderGetTestRoute.response[200].encode({
       value: String(req.headers['x-custom'] ?? ''),
     }),
   );
