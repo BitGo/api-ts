@@ -14,6 +14,8 @@ import {
   ResponseType,
 } from '@api-ts/io-ts-http';
 
+import { apiTsPathToExpress } from './path';
+
 export type Function<R extends HttpRoute> = (
   input: RequestType<R>,
 ) => ResponseType<R> | Promise<ResponseType<R>>;
@@ -141,7 +143,8 @@ export function createServer<Spec extends ApiSpec>(
       );
       const handlers = [...stack.slice(0, stack.length - 1), handler];
 
-      router[method](httpRoute.path, handlers);
+      const expressPath = apiTsPathToExpress(httpRoute.path);
+      router[method](expressPath, handlers);
     }
   }
 

@@ -39,9 +39,25 @@ const PutHello = httpRoute({
 });
 type PutHello = typeof PutHello;
 
+const GetHello = httpRoute({
+  path: '/hello/{id}',
+  method: 'GET',
+  request: httpRequest({
+    params: {
+      id: t.string,
+    },
+  }),
+  response: {
+    ok: t.type({
+      id: t.string,
+    }),
+  },
+});
+
 const ApiSpec = apiSpec({
   'hello.world': {
     put: PutHello,
+    get: GetHello,
   },
 });
 
@@ -76,6 +92,8 @@ const CreateHelloWorld = async (parameters: {
   });
 };
 
+const GetHelloWorld = async (params: { id: string }) => Response.ok(params);
+
 test('should offer a delightful developer experience', async (t) => {
   const app = createServer(ApiSpec, (app: express.Application) => {
     // Configure app-level middleware
@@ -84,6 +102,7 @@ test('should offer a delightful developer experience', async (t) => {
     return {
       'hello.world': {
         put: [routeMiddleware, CreateHelloWorld],
+        get: [GetHelloWorld],
       },
     };
   });
@@ -105,6 +124,29 @@ test('should offer a delightful developer experience', async (t) => {
   t.like(response, { message: "Who's there?" });
 });
 
+test('should handle io-ts-http formatted path parameters', async (t) => {
+  const app = createServer(ApiSpec, (app: express.Application) => {
+    app.use(express.json());
+    app.use(appMiddleware);
+    return {
+      'hello.world': {
+        put: [routeMiddleware, CreateHelloWorld],
+        get: [GetHelloWorld],
+      },
+    };
+  });
+
+  const server = supertest(app);
+  const apiClient = buildApiClient(supertestRequestFactory(server), ApiSpec);
+
+  const response = await apiClient['hello.world']
+    .get({ id: '1337' })
+    .decodeExpecting(200)
+    .then((res) => res.body);
+
+  t.like(response, { id: '1337' });
+});
+
 test('should invoke app-level middleware', async (t) => {
   const app = createServer(ApiSpec, (app: express.Application) => {
     // Configure app-level middleware
@@ -113,6 +155,7 @@ test('should invoke app-level middleware', async (t) => {
     return {
       'hello.world': {
         put: [CreateHelloWorld],
+        get: [GetHelloWorld],
       },
     };
   });
@@ -135,6 +178,7 @@ test('should invoke route-level middleware', async (t) => {
     return {
       'hello.world': {
         put: [routeMiddleware, CreateHelloWorld],
+        get: [GetHelloWorld],
       },
     };
   });
@@ -157,6 +201,7 @@ test('should infer status code from response type', async (t) => {
     return {
       'hello.world': {
         put: [CreateHelloWorld],
+        get: [GetHelloWorld],
       },
     };
   });
@@ -179,6 +224,7 @@ test('should return a 400 when request fails to decode', async (t) => {
     return {
       'hello.world': {
         put: [CreateHelloWorld],
+        get: [GetHelloWorld],
       },
     };
   });
