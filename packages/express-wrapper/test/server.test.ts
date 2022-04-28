@@ -99,7 +99,7 @@ const CreateHelloWorld = async (parameters: {
 
 const GetHelloWorld = async (params: { id: string }) =>
   ({
-    type: 200,
+    type: 'ok',
     payload: params,
   } as const);
 
@@ -110,8 +110,8 @@ test('should offer a delightful developer experience', async (t) => {
     app.use(appMiddleware);
     return {
       'hello.world': {
-        put: [routeMiddleware, CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        get: GetHelloWorld,
       },
     };
   });
@@ -139,8 +139,8 @@ test('should handle io-ts-http formatted path parameters', async (t) => {
     app.use(appMiddleware);
     return {
       'hello.world': {
-        put: [routeMiddleware, CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        get: GetHelloWorld,
       },
     };
   });
@@ -163,8 +163,8 @@ test('should invoke app-level middleware', async (t) => {
     app.use(appMiddleware);
     return {
       'hello.world': {
-        put: [CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: CreateHelloWorld,
+        get: GetHelloWorld,
       },
     };
   });
@@ -186,8 +186,8 @@ test('should invoke route-level middleware', async (t) => {
     app.use(express.json());
     return {
       'hello.world': {
-        put: [routeMiddleware, CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        get: GetHelloWorld,
       },
     };
   });
@@ -209,8 +209,8 @@ test('should infer status code from response type', async (t) => {
     app.use(express.json());
     return {
       'hello.world': {
-        put: [CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: CreateHelloWorld,
+        get: GetHelloWorld,
       },
     };
   });
@@ -232,8 +232,8 @@ test('should return a 400 when request fails to decode', async (t) => {
     app.use(express.json());
     return {
       'hello.world': {
-        put: [CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: CreateHelloWorld,
+        get: GetHelloWorld,
       },
     };
   });

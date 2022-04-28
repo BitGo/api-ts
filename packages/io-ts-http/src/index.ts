@@ -8,3 +8,4 @@ export * from './httpResponse';
 export * from './httpRequest';
 export * from './httpRoute';
 export * from './queryParams';
+export * from './statusCode';
