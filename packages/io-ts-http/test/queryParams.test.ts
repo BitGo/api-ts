@@ -4,7 +4,7 @@ import * as E from 'fp-ts/Either';
 import * as t from 'io-ts';
 import { PathReporter } from 'io-ts/lib/PathReporter';
 
-import { arrayFromQueryParam, nonEmptyArrayFromQueryParam } from '../src/query-params';
+import { arrayFromQueryParam, nonEmptyArrayFromQueryParam } from '../src/queryParams';
 import { NumberFromString } from 'io-ts-types';
 
 describe('nonEmptyArrayFromQueryParam combinations', () => {
