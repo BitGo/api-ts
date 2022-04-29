@@ -1,4 +1,3 @@
-import { HttpResponseCodes } from '@api-ts/io-ts-http';
 import { parse as parseComment } from 'comment-parser';
 import { flow, pipe } from 'fp-ts/function';
 import * as E from 'fp-ts/Either';
@@ -247,11 +246,8 @@ export const schemaForRouteNode = (memo: any) => (node: Expression<ts.Expression
               RE.bindTo('schema'),
               RE.bind('code', () => {
                 const name = sym.getName();
-                const statusCode = HttpResponseCodes.hasOwnProperty(name)
-                  ? HttpResponseCodes[name as keyof typeof HttpResponseCodes]
-                  : undefined;
                 return RE.fromEither(
-                  E.fromNullable(`unknown response type '${name}`)(statusCode),
+                  E.fromNullable('undefined response code name')(name),
                 );
               }),
             ),

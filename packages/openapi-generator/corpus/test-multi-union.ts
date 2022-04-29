@@ -10,7 +10,7 @@ const MyRoute = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({}),
   response: {
-    ok: t.union([t.literal('foo'), t.literal(42), t.type({ message: t.string })]),
+    200: t.union([t.literal('foo'), t.literal(42), t.type({ message: t.string })]),
   },
 } as const);
 

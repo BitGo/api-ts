@@ -10,7 +10,7 @@ const MyRoute = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({}),
   response: {
-    ok: t.record(t.string, t.string),
+    200: t.record(t.string, t.string),
   },
 });
 

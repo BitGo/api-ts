@@ -21,7 +21,7 @@ httpRoute({
     },
   }),
   response: {
-    ok: t.string,
+    200: t.string,
   },
 });
 ```
@@ -38,7 +38,7 @@ httpRoute({
     },
   }),
   response: {
-    ok: t.string,
+    200: t.string,
   },
 });
 ```
@@ -64,7 +64,7 @@ const Route = httpRoute({
     },
   }),
   response: {
-    ok: t.string,
+    200: t.string,
   },
 });
 
@@ -86,8 +86,8 @@ const response: string = await routeApiClient({ id: 1337 });
 ### `response`
 
 Declares the potential responses that a route may return along with the codec associated
-to each response. The possible response keys can be found in the `io-ts-response`
-package. Incoming responses are assumed to be JSON.
+to each response. Response keys correspond to HTTP status codes. Incoming responses are
+assumed to be JSON.
 
 ```typescript
 const Route = httpRoute({
@@ -95,13 +95,13 @@ const Route = httpRoute({
   method: 'GET',
   request: httpRequest({}),
   response: {
-    ok: t.type({
+    200: t.type({
       foo: t.string,
     }),
-    notFound: t.type({
+    404: t.type({
       message: t.string,
     }),
-    invalidRequest: t.type({
+    400: t.type({
       message: t.string,
     }),
   },
@@ -154,7 +154,7 @@ const StringBodyRoute = httpRoute({
     }),
   ]),
   response: {
-    ok: t.string,
+    200: t.string,
   },
 });
 
@@ -191,7 +191,7 @@ const UnionRoute = httpRoute({
     }),
   ]),
   response: {
-    ok: string,
+    200: string,
   },
 });
 

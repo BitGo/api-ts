@@ -10,7 +10,7 @@ const MyRoute = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({}),
   response: {
-    ok: t.intersection([t.type({ foo: t.string }), t.type({ bar: t.string })]),
+    200: t.intersection([t.type({ foo: t.string }), t.type({ bar: t.string })]),
   },
 });
 

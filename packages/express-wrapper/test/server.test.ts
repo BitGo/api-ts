@@ -5,7 +5,6 @@ import express from 'express';
 import supertest from 'supertest';
 
 import { ApiSpec, apiSpec, httpRequest, httpRoute, optional } from '@api-ts/io-ts-http';
-import { Response } from '@api-ts/response';
 import { buildApiClient, supertestRequestFactory } from '@api-ts/superagent-wrapper';
 
 import { createServer } from '../src';
@@ -24,17 +23,17 @@ const PutHello = httpRoute({
   }),
   response: {
     // TODO: create prettier names for these codecs at the io-ts-http level
-    ok: t.type({
+    200: t.type({
       message: t.string,
       appMiddlewareRan: t.boolean,
       routeMiddlewareRan: t.boolean,
     }),
-    invalidRequest: t.type({
+    400: t.type({
       errors: t.string,
     }),
-    notFound: t.unknown,
+    404: t.unknown,
     // DISCUSS: what if a response isn't listed here but shows up?
-    internalError: t.unknown,
+    500: t.unknown,
   },
 });
 type PutHello = typeof PutHello;
@@ -48,7 +47,7 @@ const GetHello = httpRoute({
     },
   }),
   response: {
-    ok: t.type({
+    200: t.type({
       id: t.string,
     }),
   },
@@ -78,21 +77,31 @@ const CreateHelloWorld = async (parameters: {
   routeMiddlewareRan?: boolean;
 }) => {
   if (parameters.secretCode === 0) {
-    return Response.invalidRequest({
-      errors: 'Please do not tell me zero! I will now explode',
-    });
+    return {
+      type: 400,
+      payload: {
+        errors: 'Please do not tell me zero! I will now explode',
+      },
+    } as const;
   }
-  return Response.ok({
-    message:
-      parameters.secretCode === 42
-        ? 'Everything you see from here is yours'
-        : "Who's there?",
-    appMiddlewareRan: parameters.appMiddlewareRan ?? false,
-    routeMiddlewareRan: parameters.routeMiddlewareRan ?? false,
-  });
+  return {
+    type: 200,
+    payload: {
+      message:
+        parameters.secretCode === 42
+          ? 'Everything you see from here is yours'
+          : "Who's there?",
+      appMiddlewareRan: parameters.appMiddlewareRan ?? false,
+      routeMiddlewareRan: parameters.routeMiddlewareRan ?? false,
+    },
+  } as const;
 };
 
-const GetHelloWorld = async (params: { id: string }) => Response.ok(params);
+const GetHelloWorld = async (params: { id: string }) =>
+  ({
+    type: 'ok',
+    payload: params,
+  } as const);
 
 test('should offer a delightful developer experience', async (t) => {
   const app = createServer(ApiSpec, (app: express.Application) => {
@@ -101,8 +110,8 @@ test('should offer a delightful developer experience', async (t) => {
     app.use(appMiddleware);
     return {
       'hello.world': {
-        put: [routeMiddleware, CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        get: GetHelloWorld,
       },
     };
   });
@@ -130,8 +139,8 @@ test('should handle io-ts-http formatted path parameters', async (t) => {
     app.use(appMiddleware);
     return {
       'hello.world': {
-        put: [routeMiddleware, CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        get: GetHelloWorld,
       },
     };
   });
@@ -154,8 +163,8 @@ test('should invoke app-level middleware', async (t) => {
     app.use(appMiddleware);
     return {
       'hello.world': {
-        put: [CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: CreateHelloWorld,
+        get: GetHelloWorld,
       },
     };
   });
@@ -177,8 +186,8 @@ test('should invoke route-level middleware', async (t) => {
     app.use(express.json());
     return {
       'hello.world': {
-        put: [routeMiddleware, CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        get: GetHelloWorld,
       },
     };
   });
@@ -200,8 +209,8 @@ test('should infer status code from response type', async (t) => {
     app.use(express.json());
     return {
       'hello.world': {
-        put: [CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: CreateHelloWorld,
+        get: GetHelloWorld,
       },
     };
   });
@@ -223,8 +232,8 @@ test('should return a 400 when request fails to decode', async (t) => {
     app.use(express.json());
     return {
       'hello.world': {
-        put: [CreateHelloWorld],
-        get: [GetHelloWorld],
+        put: CreateHelloWorld,
+        get: GetHelloWorld,
       },
     };
   });

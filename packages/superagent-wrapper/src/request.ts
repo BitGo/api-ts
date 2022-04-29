@@ -5,16 +5,15 @@ import type { Response, SuperAgent, SuperAgentRequest } from 'superagent';
 import type { SuperTest } from 'supertest';
 import { URL } from 'url';
 import { pipe } from 'fp-ts/function';
-import { Status } from '@api-ts/response';
 
 type SuccessfulResponses<Route extends h.HttpRoute> = {
-  [R in h.KnownResponses<Route['response']>]: {
-    status: h.HttpResponseCodes[R];
+  [R in keyof Route['response']]: {
+    status: R;
     error?: undefined;
     body: h.ResponseTypeForStatus<Route['response'], R>;
     original: Response;
   };
-}[h.KnownResponses<Route['response']>];
+}[keyof Route['response']];
 
 type DecodedResponse<Route extends h.HttpRoute> =
   | SuccessfulResponses<Route>
@@ -29,14 +28,12 @@ const decodedResponse = <Route extends h.HttpRoute>(res: DecodedResponse<Route>)
 
 type ExpectedDecodedResponse<
   Route extends h.HttpRoute,
-  StatusCode extends h.HttpResponseCodes[h.KnownResponses<Route['response']>],
+  StatusCode extends keyof Route['response'],
 > = DecodedResponse<Route> & { status: StatusCode };
 
 type PatchedRequest<Req extends SuperAgentRequest, Route extends h.HttpRoute> = Req & {
   decode: () => Promise<DecodedResponse<Route>>;
-  decodeExpecting: <
-    StatusCode extends h.HttpResponseCodes[h.KnownResponses<Route['response']>],
-  >(
+  decodeExpecting: <StatusCode extends keyof Route['response']>(
     status: StatusCode,
   ) => Promise<ExpectedDecodedResponse<Route, StatusCode>>;
 };
@@ -84,7 +81,7 @@ export const supertestRequestFactory =
     return supertest[method](path);
   };
 
-const hasCodecForStatus = <S extends Status>(
+const hasCodecForStatus = <S extends number>(
   responses: h.HttpResponse,
   status: S,
 ): responses is { [K in S]: t.Mixed } => {
@@ -99,24 +96,7 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
 
   patchedReq.decode = () =>
     req.then((res) => {
-      const { body, status: statusCode } = res;
-
-      let status: Status | undefined;
-      // DISCUSS: Should we have this as a preprocessed const in io-ts-http?
-      for (const [name, code] of Object.entries(h.HttpResponseCodes)) {
-        if (statusCode === code) {
-          status = name as Status;
-          break;
-        }
-      }
-      if (status === undefined) {
-        return decodedResponse({
-          status: 'decodeError',
-          error: `Unknown status code ${statusCode}`,
-          body,
-          original: res,
-        });
-      }
+      const { body, status } = res;
 
       if (!hasCodecForStatus(route.response, status)) {
         return decodedResponse({
@@ -131,9 +111,7 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
         route.response[status].decode(res.body),
         E.map((body) =>
           decodedResponse<Route>({
-            status: statusCode as h.HttpResponseCodes[h.KnownResponses<
-              Route['response']
-            >],
+            status,
             body,
             original: res,
           } as SuccessfulResponses<Route>),
@@ -150,9 +128,7 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
       );
     });
 
-  patchedReq.decodeExpecting = <
-    StatusCode extends h.HttpResponseCodes[h.KnownResponses<Route['response']>],
-  >(
+  patchedReq.decodeExpecting = <StatusCode extends keyof Route['response']>(
     status: StatusCode,
   ) =>
     patchedReq.decode().then((res) => {
