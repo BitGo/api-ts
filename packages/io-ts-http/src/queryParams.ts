@@ -29,7 +29,10 @@ function arrayFromNonEmptyDelimitedString(
   };
 }
 
-const arrayFromNonEmptyCommaDelimitedString = arrayFromNonEmptyDelimitedString(
+/**
+ * @deprecated use `nonEmptyArrayFromQueryParam`
+ */
+export const arrayFromNonEmptyCommaDelimitedString = arrayFromNonEmptyDelimitedString(
   ',',
   'Comma',
 );
