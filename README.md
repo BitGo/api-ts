@@ -1,5 +1,7 @@
 # API-TS
 
+![Build Status](https://github.com/BitGo/api-ts/actions/workflows/ci.yml/badge.svg?branch=master)
+
 **Disclaimer: This project is currently in an alpha state. Documentation is actively
 being worked on.**
 
