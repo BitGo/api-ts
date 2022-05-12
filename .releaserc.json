@@ -1,6 +1,12 @@
 {
   "plugins": [
-    "@semantic-release/commit-analyzer",
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "angular",
+        "releaseRules": [{ "type": "docs", "release": "patch" }]
+      }
+    ],
     "@semantic-release/release-notes-generator",
     "@semrel-extra/npm",
     [
