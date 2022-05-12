@@ -7,17 +7,21 @@ worked on.**
 
 A collection of packages for defining and using type-checked apis with TypeScript.
 
-TypeScript is a very powerful type system layered on top of JavaScript, but lacks type
-information available at runtime. This is not likely to change because it is
-[an explicit non-goal](https://github.com/Microsoft/TypeScript/wiki/TypeScript-Design-Goals#non-goals)
-of TypeScript. [io-ts](https://github.com/gcanti/io-ts) fills in this functionality gap.
-[io-ts-http](packages/io-ts-http/README.md) builds on top of `io-ts` to make it possible
-to define codecs that translate between HTTP requests and plain JS objects.
-Additionally, it provides a way to group these codecs into route definitions, and then
-collect the route definitions into an api. The resulting api definitions may then be
-used on the [client](packages/superagent-wrapper/README.md) and
-[server](packages/express-wrapper/README.md) to have type-checked and runtime-validated
-HTTP calls in a standardized manner.
+TypeScript is a powerful type system layered on top of JavaScript, but lacks type
+information about values received at runtime. This is [an explicit non-goal] of the
+TypeScript language, so we use [io-ts] to statically type this runtime data.
+[io-ts-http] builds on top of io-ts to define codecs that translate between HTTP
+requests and plain old JavaScript objects. Additionally, it provides a way to group
+these codecs into route definitions, and then collect the route definitions into an api.
+The resulting api definitions may then be used on the [client] and [server] to have
+type-checked and runtime-validated HTTP calls in a standardized manner.
+
+[an explicit non-goal]:
+  https://github.com/Microsoft/TypeScript/wiki/TypeScript-Design-Goals#non-goals
+[io-ts]: https://github.com/gcanti/io-ts
+[io-ts-http]: packages/io-ts-http/README.md
+[client]: packages/superagent-wrapper/README.md
+[server]: packages/express-wrapper/README.md
 
 ## Getting started
 
