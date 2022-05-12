@@ -4,27 +4,11 @@
  */
 
 import express from 'express';
-import * as t from 'io-ts';
 import * as PathReporter from 'io-ts/lib/PathReporter';
 
-import {
-  HttpRoute,
-  HttpToKeyStatus,
-  KeyToHttpStatus,
-  RequestType,
-  ResponseType,
-} from '@api-ts/io-ts-http';
+import { HttpRoute, RequestType } from '@api-ts/io-ts-http';
 
-type NumericOrKeyedResponseType<R extends HttpRoute> =
-  | ResponseType<R>
-  | {
-      [S in keyof R['response']]: S extends keyof HttpToKeyStatus
-        ? {
-            type: HttpToKeyStatus[S];
-            payload: t.TypeOf<R['response'][S]>;
-          }
-        : never;
-    }[keyof R['response']];
+import type { NumericOrKeyedResponseType, ResponseEncoder } from './response';
 
 export type ServiceFunction<R extends HttpRoute> = (
   input: RequestType<R>,
@@ -53,10 +37,11 @@ const createNamedFunction = <F extends (...args: any) => void>(
   fn: F,
 ): F => Object.defineProperty(fn, 'name', { value: name });
 
-export const decodeRequestAndEncodeResponse = <Route extends HttpRoute>(
+export const decodeRequestAndEncodeResponse = (
   apiName: string,
-  httpRoute: Route,
-  handler: ServiceFunction<Route>,
+  httpRoute: HttpRoute,
+  handler: ServiceFunction<HttpRoute>,
+  responseEncoder: ResponseEncoder,
 ): express.RequestHandler => {
   return createNamedFunction(
     'decodeRequestAndEncodeResponse' + httpRoute.method + apiName,
@@ -72,7 +57,7 @@ export const decodeRequestAndEncodeResponse = <Route extends HttpRoute>(
         return;
       }
 
-      let rawResponse: NumericOrKeyedResponseType<Route> | undefined;
+      let rawResponse: NumericOrKeyedResponseType<HttpRoute> | undefined;
       try {
         rawResponse = await handler(maybeRequest.right);
       } catch (err) {
@@ -81,23 +66,7 @@ export const decodeRequestAndEncodeResponse = <Route extends HttpRoute>(
         return;
       }
 
-      const { type, payload } = rawResponse;
-      const status = typeof type === 'number' ? type : (KeyToHttpStatus as any)[type];
-      if (status === undefined) {
-        console.warn('Unknown status code returned');
-        res.status(500).end();
-        return;
-      }
-      const responseCodec = httpRoute.response[status];
-      if (responseCodec === undefined || !responseCodec.is(payload)) {
-        console.warn(
-          "Unable to encode route's return value, did you return the expected type?",
-        );
-        res.status(500).end();
-        return;
-      }
-
-      res.status(status).json(responseCodec.encode(payload)).end();
+      responseEncoder(httpRoute, rawResponse, res);
     },
   );
 };
