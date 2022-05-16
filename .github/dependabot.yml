@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Enable npm updates
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+      # UTC
+      time: '08:00'
+    reviewers:
+      - '@BitGo/internal-tools'
+    labels:
+      - dependencies
