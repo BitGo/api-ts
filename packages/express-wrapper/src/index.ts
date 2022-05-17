@@ -16,7 +16,7 @@ import {
 } from './request';
 import { defaultResponseEncoder, ResponseEncoder } from './response';
 
-export type { ResponseEncoder } from './response';
+export type { ResponseEncoder, NumericOrKeyedResponseType } from './response';
 
 const isHttpVerb = (verb: string): verb is 'get' | 'put' | 'post' | 'delete' =>
   verb === 'get' || verb === 'put' || verb === 'post' || verb === 'delete';
