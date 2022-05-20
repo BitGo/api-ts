@@ -38,13 +38,12 @@ export const defaultResponseEncoder: ResponseEncoder = (
     return;
   }
   const responseCodec = route.response[status];
-  if (responseCodec === undefined || !responseCodec.is(payload)) {
+  try {
+    expressRes.status(status).json(responseCodec!.encode(payload)).end();
+  } catch {
     console.warn(
       "Unable to encode route's return value, did you return the expected type?",
     );
     expressRes.status(500).end();
-    return;
   }
-
-  expressRes.status(status).json(responseCodec.encode(payload)).end();
 };
