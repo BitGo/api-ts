@@ -45,7 +45,7 @@ export const decodeRequestAndEncodeResponse = (
 ): express.RequestHandler => {
   return createNamedFunction(
     'decodeRequestAndEncodeResponse' + httpRoute.method + apiName,
-    async (req, res) => {
+    async (req, res, next) => {
       const maybeRequest = httpRoute.request.decode(req);
       if (maybeRequest._tag === 'Left') {
         console.log('Request failed to decode');
@@ -63,10 +63,12 @@ export const decodeRequestAndEncodeResponse = (
       } catch (err) {
         console.warn('Error in route handler:', err);
         res.status(500).end();
+        next();
         return;
       }
 
-      responseEncoder(httpRoute, rawResponse, res);
+      const expressHandler = responseEncoder(httpRoute, rawResponse);
+      expressHandler(req, res, next);
     },
   );
 };

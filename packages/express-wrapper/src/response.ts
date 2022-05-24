@@ -22,28 +22,24 @@ export type NumericOrKeyedResponseType<R extends HttpRoute> =
 export type ResponseEncoder = (
   route: HttpRoute,
   serviceFnResponse: NumericOrKeyedResponseType<HttpRoute>,
-  expressRes: express.Response,
-) => void;
+) => express.RequestHandler;
 
-export const defaultResponseEncoder: ResponseEncoder = (
-  route,
-  serviceFnResponse,
-  expressRes,
-) => {
-  const { type, payload } = serviceFnResponse;
-  const status = typeof type === 'number' ? type : (KeyToHttpStatus as any)[type];
-  if (status === undefined) {
-    console.warn('Unknown status code returned');
-    expressRes.status(500).end();
-    return;
-  }
-  const responseCodec = route.response[status];
-  try {
-    expressRes.status(status).json(responseCodec!.encode(payload)).end();
-  } catch {
-    console.warn(
-      "Unable to encode route's return value, did you return the expected type?",
-    );
-    expressRes.status(500).end();
-  }
-};
+export const defaultResponseEncoder: ResponseEncoder =
+  (route, serviceFnResponse) => (_req, res) => {
+    const { type, payload } = serviceFnResponse;
+    const status = typeof type === 'number' ? type : (KeyToHttpStatus as any)[type];
+    if (status === undefined) {
+      console.warn('Unknown status code returned');
+      res.status(500).end();
+      return;
+    }
+    const responseCodec = route.response[status];
+    try {
+      res.status(status).json(responseCodec!.encode(payload)).end();
+    } catch {
+      console.warn(
+        "Unable to encode route's return value, did you return the expected type?",
+      );
+      res.status(500).end();
+    }
+  };
