@@ -30,7 +30,7 @@
     "@semantic-release/github": "8.0.4",
     "@semantic-release/npm": "9.0.1",
     "@semrel-extra/npm": "1.2.0",
-    "lint-staged": "12.3.7",
+    "lint-staged": "12.4.2",
     "multi-semantic-release": "2.13.0",
     "pre-commit": "1.2.2",
     "prettier": "2.5.1",
