@@ -22,7 +22,7 @@
     "io-ts": "2.2.16",
     "io-ts-types": "0.5.16",
     "monocle-ts": "2.3.10",
-    "newtype-ts": "0.3.4"
+    "newtype-ts": "0.3.5"
   },
   "devDependencies": {
     "@types/chai": "4.2.12",
