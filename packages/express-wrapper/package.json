@@ -12,6 +12,8 @@
   "scripts": {
     "build": "tsc --build --incremental --verbose .",
     "clean": "rm -rf -- dist",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
     "test": "c8 --all ava"
   },
   "dependencies": {
