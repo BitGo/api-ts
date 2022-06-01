@@ -1,6 +1,5 @@
 import { assert } from 'chai';
 import * as t from 'io-ts';
-import { NumberFromString } from 'io-ts-types';
 
 import * as c from '../src/combinators';
 import { assertDecodes, assertEncodes, assertRejects } from './utils';

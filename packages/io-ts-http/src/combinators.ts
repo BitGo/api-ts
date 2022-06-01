@@ -13,7 +13,7 @@ export const optionalized = <P extends t.Props>(props: P) => {
     if (!props.hasOwnProperty(key)) {
       continue;
     }
-    const codec = props[key];
+    const codec = props[key]!;
     const isOptional = codec.is(undefined);
     if (isOptional) {
       optionalProps[key] = codec;
@@ -69,8 +69,8 @@ export const flattened = <Props extends Record<string, t.Props>>(
         nested[o] = {};
         for (const i in props[o]) {
           if ((input as {}).hasOwnProperty(i)) {
-            const codec = props[o][i];
-            nested[o][i] = codec.encode((input as any)[i as any]);
+            const codec = props[o]![i]!;
+            nested[o]![i] = codec.encode((input as any)[i as any]);
           }
         }
       }

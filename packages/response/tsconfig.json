@@ -1,23 +1,7 @@
 {
+  "extends": "../../tsconfig.json",
+  "include": ["src/**/*.ts", "test/**/*.json", "test/**/*.ts"],
   "compilerOptions": {
-    "allowUnreachableCode": false,
-    "composite": true,
-    "declarationMap": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "lib": ["es2019"],
-    "module": "commonjs",
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "outDir": "dist",
-    "resolveJsonModule": true,
-    "skipLibCheck": false,
-    "sourceMap": true,
-    "strict": true,
-    "target": "es2019"
-  },
-  "include": ["src/**/*.ts", "test/**/*.json", "test/**/*.ts"]
+    "outDir": "dist"
+  }
 }
