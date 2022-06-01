@@ -13,6 +13,12 @@
     "clean": {
       "outputs": [],
       "cache": false
+    },
+    "format": {
+      "outputs": []
+    },
+    "format:fix": {
+      "outputs": []
     }
   }
 }
