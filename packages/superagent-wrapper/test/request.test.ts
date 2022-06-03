@@ -5,9 +5,11 @@ import express from 'express';
 import * as E from 'fp-ts/Either';
 import * as t from 'io-ts';
 import { NumberFromString } from 'io-ts-types';
+import superagent from 'superagent';
 import supertest from 'supertest';
+import { URL } from 'url';
 
-import { supertestRequestFactory } from '../src/request';
+import { superagentRequestFactory, supertestRequestFactory } from '../src/request';
 import { buildApiClient } from '../src/routes';
 
 const PostTestRoute = h.httpRoute({
@@ -182,6 +184,34 @@ describe('request', () => {
         .catch(() => true);
 
       assert.isTrue(result);
+    });
+  });
+
+  describe('superagent', async () => {
+    it('does not throw on non-2xx status codes', async () => {
+      // Figure out what host/port supertest set up (the response is just thrown away on purpose)
+      const superTestReq = apiClient['api.v1.test'].post({
+        id: 1337,
+        foo: 'test',
+        bar: 42,
+      });
+
+      // Construct an api client that uses superagent, with the base url extracted from the supertest
+      // request above.
+      const url = new URL(superTestReq.url);
+      url.pathname = '/';
+      const superagentClient = buildApiClient(
+        superagentRequestFactory(superagent, url.toString()),
+        TestRoutes,
+      );
+
+      const req = await superagentClient['api.v1.test']
+        .post({ id: 1337, foo: 'test', bar: 42 })
+        .set('x-send-unexpected-status-code', 'true')
+        .decode();
+
+      assert.equal(req.status, 'decodeError');
+      assert.equal(req.original.status, 400);
     });
   });
 });

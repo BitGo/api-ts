@@ -139,6 +139,10 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
         return res as ExpectedDecodedResponse<Route, StatusCode>;
       }
     });
+
+  // Stop superagent from throwing on non-2xx status codes
+  patchedReq.ok(() => true);
+
   return patchedReq;
 };
 
