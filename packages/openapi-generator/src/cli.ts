@@ -59,13 +59,10 @@ const app = command({
     }),
   },
   handler: async ({ input, output, tsConfig, name, includeInternal }) => {
-    const baseDir = p.dirname(tsConfig);
-    const relativeInput = p.relative(baseDir, input);
-
     const api = pipe(
       componentsForProject({
         virtualFiles: {},
-        index: relativeInput,
+        index: input,
         tsConfig,
         name,
         includeInternal,
