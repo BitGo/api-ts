@@ -2,6 +2,9 @@
 
 Runtime types for (de)serializing HTTP requests from both the client and server side
 
+This package extends [io-ts](https://github.com/gcanti/io-ts) with functionality useful
+for typing http requests. Start there for base knowledge required to use this package.
+
 ## Overview
 
 The primary function in this library is `httpRequest`, which is used to build codecs
