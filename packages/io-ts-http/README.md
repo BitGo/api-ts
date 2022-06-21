@@ -4,8 +4,6 @@ Runtime types for (de)serializing HTTP requests from both the client and server 
 
 ## Overview
 
-
-
 The primary function in this library is `httpRequest`, which is used to build codecs
 which can parse a generic HTTP request into a more refined type. The generic HTTP
 request should conform to the following interface:
