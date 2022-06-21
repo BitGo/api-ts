@@ -80,4 +80,4 @@ the server will correctly interpret a request if the arguments typecheck.
 
 ## Documentation
 
-- [API Reference](docs/apiReference.md)
+- [API Reference](https://github.com/BitGo/api-ts/blob/master/packages/io-ts-http/docs/apiReference.md)
