@@ -4,6 +4,8 @@ Runtime types for (de)serializing HTTP requests from both the client and server 
 
 ## Overview
 
+
+
 The primary function in this library is `httpRequest`, which is used to build codecs
 which can parse a generic HTTP request into a more refined type. The generic HTTP
 request should conform to the following interface:
@@ -80,4 +82,4 @@ the server will correctly interpret a request if the arguments typecheck.
 
 ## Documentation
 
-- [API Reference](docs/apiReference.md)
+- [API Reference](https://github.com/BitGo/api-ts/blob/master/packages/io-ts-http/docs/apiReference.md)
