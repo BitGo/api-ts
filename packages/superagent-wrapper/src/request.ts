@@ -1,8 +1,6 @@
 import * as h from '@api-ts/io-ts-http';
 import * as E from 'fp-ts/Either';
 import * as t from 'io-ts';
-import type { Response, SuperAgent, SuperAgentRequest } from 'superagent';
-import type { SuperTest } from 'supertest';
 import { URL } from 'url';
 import { pipe } from 'fp-ts/function';
 
@@ -31,7 +29,7 @@ type ExpectedDecodedResponse<
   StatusCode extends keyof Route['response'],
 > = DecodedResponse<Route> & { status: StatusCode };
 
-type PatchedRequest<Req extends SuperAgentRequest, Route extends h.HttpRoute> = Req & {
+type PatchedRequest<Req, Route extends h.HttpRoute> = Req & {
   decode: () => Promise<DecodedResponse<Route>>;
   decodeExpecting: <StatusCode extends keyof Route['response']>(
     status: StatusCode,
@@ -39,6 +37,22 @@ type PatchedRequest<Req extends SuperAgentRequest, Route extends h.HttpRoute> = 
 };
 
 type SuperagentMethod = 'get' | 'post' | 'put' | 'delete';
+
+type SuperagentLike<Req> = {
+  [K in SuperagentMethod]: (url: string) => Req;
+};
+
+type Response = {
+  body: unknown;
+  status: number;
+};
+
+interface SuperagentRequest<Res extends Response> extends Promise<Res> {
+  ok(callback: (response: Res) => boolean): this;
+  query(params: Record<string, string | string[]>): this;
+  set(name: string, value: string): this;
+  send(body: string): this;
+}
 
 const METHOD_MAP: { [K in h.Method]: SuperagentMethod } = {
   GET: 'get',
@@ -56,16 +70,13 @@ const substitutePathParams = (path: string, params: Record<string, string>) => {
   return path;
 };
 
-export type RequestFactory<Req extends SuperAgentRequest> = <Route extends h.HttpRoute>(
+export type RequestFactory<Req> = <Route extends h.HttpRoute>(
   route: Route,
   params: Record<string, string>,
 ) => Req;
 
 export const superagentRequestFactory =
-  <Req extends SuperAgentRequest>(
-    superagent: SuperAgent<Req>,
-    base: string,
-  ): RequestFactory<Req> =>
+  <Req>(superagent: SuperagentLike<Req>, base: string): RequestFactory<Req> =>
   <Route extends h.HttpRoute>(route: Route, params: Record<string, string>) => {
     const method = METHOD_MAP[route.method];
     const url = new URL(base);
@@ -74,7 +85,7 @@ export const superagentRequestFactory =
   };
 
 export const supertestRequestFactory =
-  <Req extends SuperAgentRequest>(supertest: SuperTest<Req>): RequestFactory<Req> =>
+  <Req>(supertest: SuperagentLike<Req>): RequestFactory<Req> =>
   <Route extends h.HttpRoute>(route: Route, params: Record<string, string>) => {
     const method = METHOD_MAP[route.method];
     const path = substitutePathParams(route.path, params);
@@ -88,7 +99,10 @@ const hasCodecForStatus = <S extends number>(
   return status in responses && responses[status] !== undefined;
 };
 
-const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
+const patchRequest = <
+  Req extends SuperagentRequest<Response>,
+  Route extends h.HttpRoute,
+>(
   route: Route,
   req: Req,
 ): PatchedRequest<Req, Route> => {
@@ -133,7 +147,7 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
   ) =>
     patchedReq.decode().then((res) => {
       if (res.status !== status) {
-        const error = res.error ?? `Unexpected status code ${res.status}`;
+        const error = res.error ?? `Unexpected status code ${String(res.status)}`;
         throw new Error(JSON.stringify(error));
       } else {
         return res as ExpectedDecodedResponse<Route, StatusCode>;
@@ -147,12 +161,12 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
 };
 
 export type BoundRequestFactory<
-  Req extends SuperAgentRequest,
+  Req extends SuperagentRequest<Response>,
   Route extends h.HttpRoute,
 > = (params: h.RequestType<Route>) => PatchedRequest<Req, Route>;
 
 export const requestForRoute =
-  <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
+  <Req extends SuperagentRequest<Response>, Route extends h.HttpRoute>(
     requestFactory: RequestFactory<Req>,
     route: Route,
   ): BoundRequestFactory<Req, Route> =>
