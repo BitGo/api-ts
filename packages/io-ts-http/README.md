@@ -31,17 +31,15 @@ for typing HTTP requests. Start there for base knowledge required to use this pa
 
 ## Introduction
 
-You can use @api-ts/io-ts-http to define types for APIs that can parse HTTP requests at runtime.
-runtime. Most often, these types are defined in a sibiling package to a service, and
-used by that service and it's clients; naming convention dictates for a service named
-`<service-name>` the types package will be named `<service-name>-types`. Both clients
-and services can use the types defined in `<service-name>-types` to send and parse
-requests with well-defined expectations. If requests don't adhere to the defined types
-at runtime, errors may occur when those requests parse.
+io-ts-http is the definition language for api-ts specifications, which define the API
+contract for a web sever to an arbitrary degree of precision. Web servers can use the
+io-ts-http spec to parse HTTP requests at runtime, and encode HTTP responses. Clients
+can use the io-ts-http spec to enforce API compatibility at compile time, and to encode
+requests to the server and decode responses.
 
 ## Overview
 
-The primary function in this library is `httpRequest`, which is used to build codecs
+The primary function in this library is `httpRequest`. You can use this to build codecs
 which can parse a generic HTTP request into a more refined type. The generic HTTP
 request should conform to the following interface:
 
@@ -120,10 +118,10 @@ the server will correctly interpret a request if the arguments typecheck.
 
 ## Example
 
-Lets drill into the `*-types` package for an example service called `message-user`
-service. The top-level export for any `*-types` package is an
-[`apiSpec`](https://github.com/BitGo/api-ts/blob/master/packages/io-ts-http/docs/apiSpec.md).
-The following is a `message-user-types` definition:
+Let's define the api-ts spec for a hypothetical `message-user` service. The conventional
+top-level export is an
+[`apiSpec`](https://github.com/BitGo/api-ts/blob/master/packages/io-ts-http/docs/apiSpec.md)
+value; for example:
 
 ### `apiSpec`
 
@@ -152,18 +150,18 @@ export const API = apiSpec({
 });
 ```
 
-The `apiSpec` is imported, along with some named `httpRoute`s (`{Get|Create}Message`, and
-`{Get|Create|Update|Delete}User`) [which we'll discuss below](#httproute).
+The `apiSpec` is imported, along with some named `httpRoute`s (`{Get|Create}Message`,
+and `{Get|Create|Update|Delete}User`) [which we'll discuss below](#httproute).
 
 > Currently, if you add the `@version` JSDoc tag to the exported API spec, it will be
 > used as the API `version` when generating an OpenAPI schema. Support for other tags
 > may be added in the future.
 
 The top-level export for `message-user-types` is `API`, which we define as an `apiSpec`
-with two endpoints `api/v1/message` and `api/v1/user`. The `api/v1/message` endpoint responds to `GET` and
-`POST` verbs while the second reponds to `GET`, `POST`, `PUT`, and `DELETE` verbs using
-`httpRoute`s defined in `./routes/message`. The following are the `httpRoute`s defined in
-`./routes/message`.
+with two endpoints `api/v1/message` and `api/v1/user`. The `api/v1/message` endpoint
+responds to `GET` and `POST` verbs while the second reponds to `GET`, `POST`, `PUT`, and
+`DELETE` verbs using `httpRoute`s defined in `./routes/message`. The following are the
+`httpRoute`s defined in `./routes/message`.
 
 ### `httpRoute`
 
@@ -216,7 +214,8 @@ describing the types of data properties. Again, review
 and this package.
 
 Then `httpRoute` and `httpRequest` are imported. We'll review the
-[`httpRequest`](#httprequest) below, but first, let's review the `GetMessage` `httpRoute`.
+[`httpRequest`](#httprequest) below, but first, let's review the `GetMessage`
+`httpRoute`.
 
 ```typescript
 export const GetMessage = httpRoute({
@@ -240,8 +239,9 @@ export const GetMessage = httpRoute({
 ```
 
 [`httpRoute`](https://github.com/BitGo/api-ts/blob/master/packages/io-ts-http/docs/httpRoute.md)s
-`apiSpec`s use [`httpRoute`](https://github.com/BitGo/api-ts/blob/master/packages/io-ts-http/docs/httpRoute.md)s to define the `path`, `method`, `request` and `response` of a
-route.
+`apiSpec`s use
+[`httpRoute`](https://github.com/BitGo/api-ts/blob/master/packages/io-ts-http/docs/httpRoute.md)s
+to define the `path`, `method`, `request` and `response` of a route.
 
 #### `path`
 
@@ -272,24 +272,24 @@ object with a single property `error` which is a `String`.
 
 ### `httpRequest`
 
-Use `httpRequest` to build the expected type that you pass in a request to the route.
-In our example `GetMessage`
+Use `httpRequest` to build the expected type that you pass in a request to the route. In
+our example `GetMessage`
 
 ```typescript
-...
 export const GetMessage = httpRoute({
   path: '/message/{id}',
   method: 'GET',
   request: httpRequest({
     params: {
-      id: t.string
+      id: t.string,
     },
   }),
-...
+  // ...
+});
 ```
 
-`httpRequest`s have a total of 4 optional properties: `params` (shown
-in the example), `query`, `headers`, and `body`.
+`httpRequest`s have a total of 4 optional properties: `params` (shown in the example),
+`query`, `headers`, and `body`.
 
 #### `params`
 
@@ -302,20 +302,19 @@ of our `httpRequest`.
 #### `query`
 
 `query` is the object representing the values passed in via query parameters at the end
-of a URL. The following example uses a new route, `GetMessages`, to our API that searches messages
-related to a specific `author`:
+of a URL. The following example uses a new route, `GetMessages`, to our API that
+searches messages related to a specific `author`:
 
 ```typescript
-...
 export const GetMessages = httpRoute({
   path: '/messages',
   method: 'GET',
   request: httpRequest({
     query: {
-      author: t.string
+      author: t.string,
     },
   }),
-...
+  // ...
 });
 ```
 
@@ -338,10 +337,10 @@ export const CreateMessage = httpRoute({
   method: 'POST',
   request: httpRequest({
     body: {
-      message: t.string
-    }
+      message: t.string,
+    },
   }),
-...
+  // ...
 });
 ```
 
