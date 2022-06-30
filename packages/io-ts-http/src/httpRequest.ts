@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import { Json } from 'io-ts-types';
 import { flattened, optional, optionalized } from './combinators';
-import { DerefProp, FieldPowerSet, OutputConstrainedProps } from './utils';
+import { OutputConstrainedProps } from './utils';
 
 export const GenericHttpRequest = optionalized({
   // DISCUSS: renaming this to something more specific, e.g. route, or path, or routeParams, or pathParams
@@ -18,20 +18,16 @@ export type HttpRequestCodec<T> = t.Type<
 >;
 
 export type HttpRequestCombinatorProps = {
-  params?: OutputConstrainedProps<string | undefined>;
-  query?: OutputConstrainedProps<string | string[] | undefined>;
-} & FieldPowerSet<{
-  headers: OutputConstrainedProps<string | undefined>;
-  body: t.Props;
-}>;
+  params?: NonNullable<OutputConstrainedProps<string | undefined>>;
+  query?: NonNullable<OutputConstrainedProps<string | string[] | undefined>>;
+  headers?: NonNullable<OutputConstrainedProps<string | undefined>>;
+  body?: NonNullable<t.Props>;
+};
 
-export const httpRequest = <Props extends HttpRequestCombinatorProps>({
-  params = {},
-  query = {},
-  ...rest
-}: Props) =>
-  flattened('httpRequest', {
-    params: params as DerefProp<Props, 'params', {}>,
-    query: query as DerefProp<Props, 'query', {}>,
-    ...rest,
-  });
+export function httpRequest<Props extends HttpRequestCombinatorProps>(props: Props) {
+  return flattened('httpRequest', {
+    query: {},
+    params: {},
+    ...(props as Omit<Props, 'query' | 'params'>),
+  } as { query: {}; params: {} } & Props);
+}
