@@ -18,7 +18,7 @@
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
     "fp-ts": "2.12.1",
     "io-ts": "2.2.16",
-    "superagent": "3.8.3",
+    "superagent": "8.0.0",
     "supertest": "6.1.6"
   },
   "devDependencies": {
