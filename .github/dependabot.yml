@@ -11,3 +11,4 @@ updates:
       - '@BitGo/internal-tools'
     labels:
       - dependencies
+    target-branch: beta
