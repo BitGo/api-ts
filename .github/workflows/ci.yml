@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: ['12', '14', 'lts/*']
+        node-version: [lts/-2, lts/-1, lts/*]
 
     name: Node.js ${{ matrix.node-version }}
     steps:
