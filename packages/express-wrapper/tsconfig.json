@@ -6,6 +6,9 @@
   },
   "references": [
     {
+      "path": "../http-router"
+    },
+    {
       "path": "../io-ts-http"
     },
     {

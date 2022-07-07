@@ -1,20 +1,8 @@
-import { flow, pipe } from 'fp-ts/function';
-import * as E from 'fp-ts/Either';
+import { pipe } from 'fp-ts/function';
 import * as TE from 'fp-ts/TaskEither';
 import * as t from 'io-ts';
 
-import type { RouteHandler } from './router';
 import { applyMiddleware, SplatMiddleware } from './middleware';
-
-export type ServiceFn<Request, Response> = (req: Request) => Promise<Response>;
-
-export function applyServiceFn<Response>(
-  onError: (err: unknown) => Response,
-): <Request>(
-  fn: ServiceFn<Request, Response>,
-) => RouteHandler<Request, Response, never> {
-  return (fn) => flow(TE.tryCatchK(fn, onError), TE.matchW(E.left, E.left));
-}
 
 export type RequestEnv = {
   req: unknown;

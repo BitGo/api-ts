@@ -17,6 +17,7 @@
     "test": "c8 --all ava"
   },
   "dependencies": {
+    "@api-ts/http-router": "0.0.0-semantically-released",
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
     "express": "4.17.2",
     "fp-ts": "2.11.8",

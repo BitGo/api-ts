@@ -5,18 +5,16 @@
 
 import express from 'express';
 
-import { ApiSpec, HttpRoute } from '@api-ts/io-ts-http';
+import { applyMiddleware, applyServiceFn, middleware } from '@api-ts/http-router';
+import { ApiSpec } from '@api-ts/io-ts-http';
 
 import { apiTsPathToExpress } from './path';
-import {
-  decodeRequestAndEncodeResponse,
-  getMiddleware,
-  getServiceFunction,
-  RouteHandler,
-} from './request';
-import { defaultResponseEncoder, ResponseEncoder } from './response';
+import { encodeExpressResponse } from './response';
+import { getMiddleware, getServiceFunction, RouteHandler } from './expressMiddleware';
+import { decodeExpressRequest } from './request';
+import { expressHandlerForRoute, ExpressResponseSent } from './routeHandler';
 
-export type { ResponseEncoder, NumericOrKeyedResponseType } from './response';
+export type { NumericOrKeyedResponseType } from './response';
 
 const isHttpVerb = (verb: string): verb is 'get' | 'put' | 'post' | 'delete' =>
   verb === 'get' || verb === 'put' || verb === 'post' || verb === 'delete';
@@ -28,35 +26,39 @@ type CreateRouterProps<Spec extends ApiSpec> = {
       [Method in keyof Spec[ApiName]]: RouteHandler<Spec[ApiName][Method]>;
     };
   };
-  encoder?: ResponseEncoder;
 };
 
 export function routerForApiSpec<Spec extends ApiSpec>({
   spec,
   routeHandlers,
-  encoder = defaultResponseEncoder,
 }: CreateRouterProps<Spec>) {
   const router = express.Router();
   for (const apiName of Object.keys(spec)) {
-    const resource = spec[apiName] as Spec[string];
+    const resource = spec[apiName] as Spec[typeof apiName];
     for (const method of Object.keys(resource)) {
       if (!isHttpVerb(method)) {
         continue;
       }
-      const httpRoute: HttpRoute = resource[method]!;
+      const httpRoute = resource[method]! as Spec[string][string];
       const routeHandler = routeHandlers[apiName]![method]!;
-      const expressRouteHandler = decodeRequestAndEncodeResponse(
-        apiName,
-        httpRoute,
-        // FIXME: TS is complaining that `routeHandler` is not necessarily guaranteed to be a
-        // `ServiceFunction`, because subtypes of Spec[string][string] can have arbitrary extra keys.
-        getServiceFunction(routeHandler as any),
-        encoder,
+      const expressMiddleware = getMiddleware(routeHandler);
+      const serviceFn = getServiceFunction(routeHandler);
+
+      const pipeline = expressHandlerForRoute(httpRoute)(
+        middleware(
+          applyMiddleware(decodeExpressRequest),
+          applyServiceFn(serviceFn, (err, { res }) => {
+            console.error(err);
+            res.status(500);
+            res.end();
+            return ExpressResponseSent;
+          }),
+          encodeExpressResponse,
+        ),
       );
-      const handlers = [...getMiddleware(routeHandler), expressRouteHandler];
 
       const expressPath = apiTsPathToExpress(httpRoute.path);
-      router[method](expressPath, handlers);
+      router[method](expressPath, [...expressMiddleware, pipeline]);
     }
   }
 

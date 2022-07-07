@@ -1,5 +1,8 @@
-import express from 'express';
+import { Middleware } from '@api-ts/http-router';
+import * as TE from 'fp-ts/TaskEither';
 import * as t from 'io-ts';
+
+import { ExpressRequestEnv, ExpressResponseSent } from './routeHandler';
 
 import {
   HttpRoute,
@@ -17,21 +20,20 @@ export type NumericOrKeyedResponseType<R extends HttpRoute> =
       };
     }[keyof R['response'] & keyof HttpToKeyStatus];
 
-// TODO: Use HKT (using fp-ts or a similar workaround method, or who knows maybe they'll add
-// official support) to allow for polymorphic ResponseType<_>.
-export type ResponseEncoder = (
-  route: HttpRoute,
-  serviceFnResponse: NumericOrKeyedResponseType<HttpRoute>,
-) => express.RequestHandler;
-
-export const defaultResponseEncoder: ResponseEncoder =
-  (route, serviceFnResponse) => (_req, res) => {
-    const { type, payload } = serviceFnResponse;
+export function encodeExpressResponse<Route extends HttpRoute>({
+  type,
+  payload,
+}: NumericOrKeyedResponseType<Route>): Middleware<
+  ExpressResponseSent,
+  never,
+  ExpressRequestEnv<Route>
+> {
+  return ({ res, route }) => {
     const status = typeof type === 'number' ? type : (KeyToHttpStatus as any)[type];
     if (status === undefined) {
       console.warn('Unknown status code returned');
       res.status(500).end();
-      return;
+      return TE.left(ExpressResponseSent);
     }
     const responseCodec = route.response[status];
     try {
@@ -42,4 +44,6 @@ export const defaultResponseEncoder: ResponseEncoder =
       );
       res.status(500).end();
     }
+    return TE.left(ExpressResponseSent);
   };
+}
