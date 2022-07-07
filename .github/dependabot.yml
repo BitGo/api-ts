@@ -1,5 +1,17 @@
 version: 2
 updates:
+  # Enable GitHub Actions updates
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    reviewers:
+      - '@BitGo/internal-tools'
+    labels:
+      - dependencies
+      - github-actions
+    target-branch: beta
+
   # Enable npm updates
   - package-ecosystem: npm
     directory: /
@@ -11,3 +23,5 @@ updates:
       - '@BitGo/internal-tools'
     labels:
       - dependencies
+      - npm
+    target-branch: beta
