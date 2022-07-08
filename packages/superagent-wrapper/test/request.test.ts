@@ -9,7 +9,11 @@ import superagent from 'superagent';
 import supertest from 'supertest';
 import { URL } from 'url';
 
-import { superagentRequestFactory, supertestRequestFactory } from '../src/request';
+import {
+  DecodeError,
+  superagentRequestFactory,
+  supertestRequestFactory,
+} from '../src/request';
 import { buildApiClient } from '../src/routes';
 
 const PostTestRoute = h.httpRoute({
@@ -32,6 +36,9 @@ const PostTestRoute = h.httpRoute({
       foo: t.string,
       bar: t.number,
       baz: t.boolean,
+    }),
+    401: t.type({
+      message: t.string,
     }),
   },
 });
@@ -75,10 +82,15 @@ testApp.post('/test/:id', (req, res) => {
     res.send({
       invalid: 'response',
     });
-  } else if (req.headers['x-send-unexpected-status-code']) {
+  } else if (req.headers['x-send-unknown-status-code']) {
     res.status(400);
     res.send({
       error: 'bad request',
+    });
+  } else if (req.headers['x-send-unexpected-status-code']) {
+    res.status(401);
+    res.send({
+      message: 'unauthorized',
     });
   } else {
     const response = PostTestRoute.response[200].encode({
@@ -129,10 +141,10 @@ describe('request', () => {
       });
     });
 
-    it('gracefully handles unexpected status codes', async () => {
+    it('gracefully handles unknown status codes', async () => {
       const response = await apiClient['api.v1.test']
         .post({ id: 1337, foo: 'test', bar: 42 })
-        .set('x-send-unexpected-status-code', 'true')
+        .set('x-send-unknown-status-code', 'true')
         .decode();
 
       assert.equal(response.status, 'decodeError');
@@ -169,10 +181,21 @@ describe('request', () => {
         .post({ id: 1337, foo: 'test', bar: 42 })
         .set('x-send-unexpected-status-code', 'true')
         .decodeExpecting(200)
-        .then(() => false)
-        .catch(() => true);
+        .then(() => '')
+        .catch((err) => (err instanceof DecodeError ? err.message : ''));
 
-      assert.isTrue(result);
+      assert.deepEqual(result, 'Unexpected response 401: {"message":"unauthorized"}');
+    });
+
+    it('throws for unknown responses', async () => {
+      const result = await apiClient['api.v1.test']
+        .post({ id: 1337, foo: 'test', bar: 42 })
+        .set('x-send-unknown-status-code', 'true')
+        .decodeExpecting(200)
+        .then(() => '')
+        .catch((err) => (err instanceof DecodeError ? err.message : ''));
+
+      assert.deepEqual(result, 'Unexpected response 400: {"error":"bad request"}');
     });
 
     it('throws for decode errors', async () => {
@@ -180,10 +203,10 @@ describe('request', () => {
         .post({ id: 1337, foo: 'test', bar: 42 })
         .set('x-send-invalid-response-body', 'true')
         .decodeExpecting(200)
-        .then(() => false)
-        .catch(() => true);
+        .then(() => '')
+        .catch((err) => (err instanceof DecodeError ? err.message : ''));
 
-      assert.isTrue(result);
+      assert.deepEqual(result, 'Could not decode response 200: {"invalid":"response"}');
     });
   });
 
@@ -210,8 +233,7 @@ describe('request', () => {
         .set('x-send-unexpected-status-code', 'true')
         .decode();
 
-      assert.equal(req.status, 'decodeError');
-      assert.equal(req.original.status, 400);
+      assert.equal(req.status, 401);
     });
   });
 });
