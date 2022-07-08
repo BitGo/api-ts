@@ -25,3 +25,6 @@ updates:
       - dependencies
       - npm
     target-branch: beta
+    ignore:
+      - dependency-name: io-ts
+        versions: ['2.x']
