@@ -26,10 +26,6 @@ export type OptionalizedC<Props extends t.Props> = t.IntersectionC<
   [t.TypeC<RequiredProps<Props>>, t.PartialC<OptionalProps<Props>>]
 >;
 
-export type OutputConstrainedProps<O> = {
-  [K: string]: t.Type<any, O, unknown>;
-};
-
 export type NestedProps = {
   [K: string]: t.Props;
 };
