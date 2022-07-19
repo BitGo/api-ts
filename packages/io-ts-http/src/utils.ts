@@ -8,8 +8,9 @@ export type PossiblyUndefinedProps<T extends t.Props> = {
   [K in keyof T]: undefined extends t.TypeOf<T[K]> ? K : never;
 }[keyof T];
 
-type Optionalized<T> = Omit<T, PossiblyUndefinedKeys<T>> &
-  Partial<Pick<T, PossiblyUndefinedKeys<T>>>;
+type Optionalized<T> = Simplify<
+  Omit<T, PossiblyUndefinedKeys<T>> & Partial<Pick<T, PossiblyUndefinedKeys<T>>>
+>;
 
 export type OptionalProps<Props extends t.Props> = Pick<
   Props,
@@ -48,3 +49,5 @@ type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (
 ) => any
   ? R
   : never;
+
+export type Simplify<T> = T extends unknown ? { [K in keyof T]: T[K] } : never;
