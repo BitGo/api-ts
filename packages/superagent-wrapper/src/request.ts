@@ -1,6 +1,7 @@
 import * as h from '@api-ts/io-ts-http';
 import * as E from 'fp-ts/Either';
 import * as t from 'io-ts';
+import * as PathReporter from 'io-ts/lib/PathReporter';
 import { URL } from 'url';
 import { pipe } from 'fp-ts/function';
 
@@ -13,14 +14,23 @@ type SuccessfulResponses<Route extends h.HttpRoute> = {
   };
 }[keyof Route['response']];
 
-type DecodedResponse<Route extends h.HttpRoute> =
+export type DecodedResponse<Route extends h.HttpRoute> =
   | SuccessfulResponses<Route>
   | {
       status: 'decodeError';
-      error: unknown;
+      error: string;
       body: unknown;
       original: Response;
     };
+
+export class DecodeError extends Error {
+  readonly decodedResponse: DecodedResponse<h.HttpRoute>;
+
+  constructor(message: string, decodedResponse: DecodedResponse<h.HttpRoute>) {
+    super(message);
+    this.decodedResponse = decodedResponse;
+  }
+}
 
 const decodedResponse = <Route extends h.HttpRoute>(res: DecodedResponse<Route>) => res;
 
@@ -134,7 +144,7 @@ const patchRequest = <
           // DISCUSS: what's this non-standard HTTP status code?
           decodedResponse<Route>({
             status: 'decodeError',
-            error,
+            error: PathReporter.failure(error).join('\n'),
             body: res.body,
             original: res,
           }),
@@ -146,9 +156,16 @@ const patchRequest = <
     status: StatusCode,
   ) =>
     patchedReq.decode().then((res) => {
-      if (res.status !== status) {
-        const error = res.error ?? `Unexpected status code ${String(res.status)}`;
-        throw new Error(JSON.stringify(error));
+      if (res.original.status !== status) {
+        const error = `Unexpected response ${String(
+          res.original.status,
+        )}: ${JSON.stringify(res.original.body)}`;
+        throw new DecodeError(error, res as DecodedResponse<h.HttpRoute>);
+      } else if (res.status === 'decodeError') {
+        const error = `Could not decode response ${String(
+          res.original.status,
+        )}: ${JSON.stringify(res.original.body)}`;
+        throw new DecodeError(error, res as DecodedResponse<h.HttpRoute>);
       } else {
         return res as ExpectedDecodedResponse<Route, StatusCode>;
       }
