@@ -10,6 +10,7 @@ import {
   OptionalizedC,
   OptionalProps,
   RequiredProps,
+  Simplify,
 } from './utils';
 
 export const optional = <C extends t.Mixed>(subCodec: C) =>
@@ -39,7 +40,10 @@ export const optionalized = <P extends t.Props>(props: P): OptionalizedC<P> => {
 export const flattened = <Props extends NestedProps>(
   name: string,
   props: Props,
-): t.Type<Flattened<NestedType<Props>>, NestedOutputType<Props>> => {
+): t.Type<
+  Simplify<Flattened<NestedType<Props>>>,
+  Simplify<NestedOutputType<Props>>
+> => {
   let flatProps: t.Props = {};
   for (const key in props) {
     if (!props.hasOwnProperty(key)) {
@@ -69,7 +73,7 @@ export const flattened = <Props extends NestedProps>(
             }
             flattened = { ...flattened, ...nested[key] };
           }
-          return flattened as Flattened<NestedType<Props>>;
+          return flattened as Simplify<Flattened<NestedType<Props>>>;
         }),
       ),
     (input: any) => {
@@ -86,7 +90,7 @@ export const flattened = <Props extends NestedProps>(
           }
         }
       }
-      return nested as NestedOutputType<Props>;
+      return nested as Simplify<NestedOutputType<Props>>;
     },
   );
 };
