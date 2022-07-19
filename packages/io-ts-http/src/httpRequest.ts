@@ -37,21 +37,17 @@ type EmitOutputTypeErrors<
   : {
       [K in keyof P & string]: P[K] extends t.Type<any, O, any>
         ? P[K]
-        : `Codec's output type is not assignable to ${OName}. Try using one like \`NumberFromString\``;
+        : `Codec's output type is not assignable to \`${OName}\`. Try using one like \`NumberFromString\``;
     };
 
+type QueryValue = string | string[] | undefined;
+type ParamValue = string | undefined;
+type HeaderValue = string | undefined;
+
 type EmitPropsErrors<P extends HttpRequestCombinatorProps> = {
-  params?: EmitOutputTypeErrors<P['params'], string | undefined, 'string | undefined'>;
-  query?: EmitOutputTypeErrors<
-    P['query'],
-    string | string[] | undefined,
-    'string | string[] | undefined'
-  >;
-  headers?: EmitOutputTypeErrors<
-    P['headers'],
-    string | undefined,
-    'string | undefined'
-  >;
+  params?: EmitOutputTypeErrors<P['params'], ParamValue, 'string | undefined'>;
+  query?: EmitOutputTypeErrors<P['query'], QueryValue, 'string | string[] | undefined'>;
+  headers?: EmitOutputTypeErrors<P['headers'], HeaderValue, 'string | undefined'>;
 };
 
 export function httpRequest<
