@@ -184,7 +184,7 @@ describe('request', () => {
         .then(() => '')
         .catch((err) => (err instanceof DecodeError ? err.message : ''));
 
-      assert.deepEqual(result, 'Unexpected response 401: {"message":"unauthorized"}');
+      assert.equal(result, 'Unexpected response 401: {"message":"unauthorized"}');
     });
 
     it('throws for unknown responses', async () => {
@@ -195,7 +195,7 @@ describe('request', () => {
         .then(() => '')
         .catch((err) => (err instanceof DecodeError ? err.message : ''));
 
-      assert.deepEqual(result, 'Unexpected response 400: {"error":"bad request"}');
+      assert.equal(result, 'Unexpected response 400: {"error":"bad request"}');
     });
 
     it('throws for decode errors', async () => {
@@ -206,7 +206,7 @@ describe('request', () => {
         .then(() => '')
         .catch((err) => (err instanceof DecodeError ? err.message : ''));
 
-      assert.deepEqual(result, 'Could not decode response 200: {"invalid":"response"}');
+      assert.equal(result, 'Could not decode response 200: {"invalid":"response"}');
     });
   });
 
