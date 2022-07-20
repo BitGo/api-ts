@@ -14,7 +14,7 @@
     "clean": "rm -rf -- dist",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "test": "nyc --reporter=lcov --reporter=text --reporter=json-summary mocha test/**/*.test.ts --require ts-node/register --exit"
+    "test": "c8 --all mocha test/**/*.test.ts --require ts-node/register --exit"
   },
   "dependencies": {
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
@@ -32,7 +32,7 @@
     "express": "4.17.1",
     "io-ts-types": "0.5.16",
     "mocha": "10.0.0",
-    "nyc": "15.1.0",
+    "c8": "7.11.2",
     "superagent": "7.1.6",
     "supertest": "6.2.3",
     "ts-node": "10.9.1",
