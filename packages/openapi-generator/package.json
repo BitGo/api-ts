@@ -33,7 +33,7 @@
   "devDependencies": {
     "@ava/typescript": "3.0.1",
     "ava": "4.3.1",
-    "c8": "7.11.2",
+    "c8": "7.12.0",
     "parser-ts": "0.6.16",
     "ts-node": "10.9.1"
   },
