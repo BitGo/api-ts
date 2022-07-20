@@ -157,14 +157,14 @@ const patchRequest = <
   ) =>
     patchedReq.decode().then((res) => {
       if (res.original.status !== status) {
-        const error = `Unexpected response ${String(
-          res.original.status,
-        )}: ${JSON.stringify(res.original.body)}`;
+        const error = `Unexpected response ${res.original.status}: ${JSON.stringify(
+          res.original.body,
+        )}`;
         throw new DecodeError(error, res as DecodedResponse<h.HttpRoute>);
       } else if (res.status === 'decodeError') {
-        const error = `Could not decode response ${String(
-          res.original.status,
-        )}: ${JSON.stringify(res.original.body)}`;
+        const error = `Could not decode response ${
+          res.original.status
+        }: ${JSON.stringify(res.original.body)}`;
         throw new DecodeError(error, res as DecodedResponse<h.HttpRoute>);
       } else {
         return res as ExpectedDecodedResponse<Route, StatusCode>;
