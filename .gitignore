@@ -1,6 +1,5 @@
 .direnv/
 .drone.yml
-.nyc_output/
 .turbo/
 coverage/
 dist/
