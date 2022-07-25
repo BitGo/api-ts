@@ -7,7 +7,7 @@ import supertest from 'supertest';
 import { ApiSpec, apiSpec, httpRequest, httpRoute, optional } from '@api-ts/io-ts-http';
 import { buildApiClient, supertestRequestFactory } from '@api-ts/superagent-wrapper';
 
-import { createServer } from '../src';
+import { createServer, middlewareFn, routeHandler } from '../src';
 
 const PutHello = httpRoute({
   path: '/hello',
@@ -18,7 +18,6 @@ const PutHello = httpRoute({
     body: {
       secretCode: t.number,
       appMiddlewareRan: optional(t.boolean),
-      routeMiddlewareRan: optional(t.boolean),
     },
   }),
   response: {
@@ -65,10 +64,9 @@ const appMiddleware: express.RequestHandler = (req, _res, next) => {
   next();
 };
 
-const routeMiddleware: express.RequestHandler = (req, _res, next) => {
-  req.body.routeMiddlewareRan = true;
-  next();
-};
+const routeMiddleware = middlewareFn(async () => {
+  return { routeMiddlewareRan: true };
+});
 
 // DISCUSS: defining a RouteHandler type or something (also used in decodeRequestAndEncodeResponse)
 const CreateHelloWorld = async (parameters: {
@@ -110,7 +108,7 @@ test('should offer a delightful developer experience', async (t) => {
     app.use(appMiddleware);
     return {
       'hello.world': {
-        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        put: routeHandler({ middleware: [routeMiddleware], handler: CreateHelloWorld }),
         get: GetHelloWorld,
       },
     };
@@ -139,7 +137,7 @@ test('should handle io-ts-http formatted path parameters', async (t) => {
     app.use(appMiddleware);
     return {
       'hello.world': {
-        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        put: routeHandler({ middleware: [routeMiddleware], handler: CreateHelloWorld }),
         get: GetHelloWorld,
       },
     };
@@ -186,7 +184,7 @@ test('should invoke route-level middleware', async (t) => {
     app.use(express.json());
     return {
       'hello.world': {
-        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        put: routeHandler({ middleware: [routeMiddleware], handler: CreateHelloWorld }),
         get: GetHelloWorld,
       },
     };
@@ -201,6 +199,29 @@ test('should invoke route-level middleware', async (t) => {
     .then((res) => res.body);
 
   t.like(response, { message: "Who's there?", routeMiddlewareRan: true });
+});
+
+test('should not add parameters from middleware unless routeHandler() is used', async (t) => {
+  const app = createServer(ApiSpec, (app: express.Application) => {
+    // Configure app-level middleware
+    app.use(express.json());
+    return {
+      'hello.world': {
+        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        get: GetHelloWorld,
+      },
+    };
+  });
+
+  const server = supertest(app);
+  const apiClient = buildApiClient(supertestRequestFactory(server), ApiSpec);
+
+  const response = await apiClient['hello.world']
+    .put({ secretCode: 1000 })
+    .decodeExpecting(200)
+    .then((res) => res.body);
+
+  t.like(response, { message: "Who's there?", routeMiddlewareRan: false });
 });
 
 test('should infer status code from response type', async (t) => {

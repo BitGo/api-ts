@@ -8,15 +8,12 @@ import express from 'express';
 import { ApiSpec, HttpRoute } from '@api-ts/io-ts-http';
 
 import { apiTsPathToExpress } from './path';
-import {
-  decodeRequestAndEncodeResponse,
-  getMiddleware,
-  getServiceFunction,
-  RouteHandler,
-} from './request';
+import { decodeRequestAndEncodeResponse, RouteHandler } from './request';
 import { defaultResponseEncoder, ResponseEncoder } from './response';
 
+export { middlewareFn } from './middleware';
 export type { ResponseEncoder, NumericOrKeyedResponseType } from './response';
+export { routeHandler } from './request';
 
 const isHttpVerb = (verb: string): verb is 'get' | 'put' | 'post' | 'delete' =>
   verb === 'get' || verb === 'put' || verb === 'post' || verb === 'delete';
@@ -50,13 +47,12 @@ export function routerForApiSpec<Spec extends ApiSpec>({
         httpRoute,
         // FIXME: TS is complaining that `routeHandler` is not necessarily guaranteed to be a
         // `ServiceFunction`, because subtypes of Spec[string][string] can have arbitrary extra keys.
-        getServiceFunction(routeHandler as any),
+        routeHandler as RouteHandler<any>,
         encoder,
       );
-      const handlers = [...getMiddleware(routeHandler), expressRouteHandler];
 
       const expressPath = apiTsPathToExpress(httpRoute.path);
-      router[method](expressPath, handlers);
+      router[method](expressPath, expressRouteHandler);
     }
   }
 
