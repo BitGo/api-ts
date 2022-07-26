@@ -61,9 +61,12 @@ export function routeHandler<R extends HttpRoute, Chain extends MiddlewareChain>
 }): RouteHandler<R>;
 
 export function routeHandler<R extends HttpRoute>({
-  middleware,
+  middleware = [],
   handler,
-}: any): RouteHandler<R> {
+}: {
+  middleware?: express.RequestHandler[];
+  handler: ServiceFunction<R, any>;
+}): RouteHandler<R> {
   // This function wouldn't be needed if TS had value/object level existential quantification, but since it doesn't we enforce the relationship
   // between the middleware chain and the handler's input params with this function and then assert the result.
   return { middleware, handler, [MiddlewareBrand]: true } as RouteHandler<R>;
