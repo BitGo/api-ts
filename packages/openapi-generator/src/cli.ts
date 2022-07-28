@@ -75,7 +75,7 @@ const app = command({
         (api) => api,
       ),
     );
-    const formattedApi = JSON.stringify(api, null, 2);
+    const formattedApi = JSON.stringify(api, null, 2) + '\n';
     await writeFile(output, formattedApi);
   },
 });
