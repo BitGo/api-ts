@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 
 export type HttpResponse = {
-  [K: number]: t.Mixed;
+  [K: number | string]: t.Mixed;
 };
 
 export type ResponseTypeForStatus<
