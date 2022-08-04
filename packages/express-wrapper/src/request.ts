@@ -7,7 +7,7 @@ import express from 'express';
 import * as E from 'fp-ts/Either';
 import * as PathReporter from 'io-ts/lib/PathReporter';
 
-import { HttpRoute, RequestType } from '@api-ts/io-ts-http';
+import { HttpRoute, RequestType, ResponseType } from '@api-ts/io-ts-http';
 
 import {
   runMiddlewareChain,
@@ -16,11 +16,11 @@ import {
   MiddlewareChain,
   MiddlewareChainOutput,
 } from './middleware';
-import type { NumericOrKeyedResponseType, ResponseEncoder } from './response';
+import type { KeyedResponseType, ResponseEncoder } from './response';
 
-export type ServiceFunction<R extends HttpRoute, Input = RequestType<R>> = (
-  input: Input,
-) => NumericOrKeyedResponseType<R> | Promise<NumericOrKeyedResponseType<R>>;
+export type ServiceFunction<R extends HttpRoute, Input = RequestType<R>> =
+  | ((input: Input) => ResponseType<R> | Promise<ResponseType<R>>)
+  | ((input: Input) => KeyedResponseType<R> | Promise<KeyedResponseType<R>>);
 
 // The first two alternatives are here to maintain backwards compatibility
 export type RouteHandler<R extends HttpRoute> =
@@ -109,7 +109,10 @@ export const decodeRequestAndEncodeResponse = (
         return;
       }
 
-      let rawResponse: NumericOrKeyedResponseType<HttpRoute> | undefined;
+      let rawResponse:
+        | ResponseType<HttpRoute>
+        | KeyedResponseType<HttpRoute>
+        | undefined;
       try {
         const handlerParams =
           MiddlewareBrand in handler

@@ -8,20 +8,18 @@ import {
   ResponseType,
 } from '@api-ts/io-ts-http';
 
-export type NumericOrKeyedResponseType<R extends HttpRoute> =
-  | ResponseType<R>
-  | {
-      [Key in keyof R['response'] & keyof HttpToKeyStatus]: {
-        type: HttpToKeyStatus[Key];
-        payload: t.TypeOf<R['response'][Key]>;
-      };
-    }[keyof R['response'] & keyof HttpToKeyStatus];
+export type KeyedResponseType<R extends HttpRoute> = {
+  [Key in keyof R['response'] & keyof HttpToKeyStatus]: {
+    type: HttpToKeyStatus[Key];
+    payload: t.TypeOf<R['response'][Key]>;
+  };
+}[keyof R['response'] & keyof HttpToKeyStatus];
 
 // TODO: Use HKT (using fp-ts or a similar workaround method, or who knows maybe they'll add
 // official support) to allow for polymorphic ResponseType<_>.
 export type ResponseEncoder = (
   route: HttpRoute,
-  serviceFnResponse: NumericOrKeyedResponseType<HttpRoute>,
+  serviceFnResponse: ResponseType<HttpRoute>,
 ) => express.RequestHandler;
 
 export const defaultResponseEncoder: ResponseEncoder =

@@ -11,9 +11,9 @@ import { apiTsPathToExpress } from './path';
 import { decodeRequestAndEncodeResponse, RouteHandler } from './request';
 import { defaultResponseEncoder, ResponseEncoder } from './response';
 
-export { middlewareFn } from './middleware';
-export type { ResponseEncoder, NumericOrKeyedResponseType } from './response';
-export { routeHandler } from './request';
+export { middlewareFn, MiddlewareChain, MiddlewareChainOutput } from './middleware';
+export type { ResponseEncoder, KeyedResponseType } from './response';
+export { routeHandler, ServiceFunction } from './request';
 
 const isHttpVerb = (verb: string): verb is 'get' | 'put' | 'post' | 'delete' =>
   verb === 'get' || verb === 'put' || verb === 'post' || verb === 'delete';
