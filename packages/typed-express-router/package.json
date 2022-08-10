@@ -1,8 +1,8 @@
 {
-  "name": "@api-ts/express-wrapper",
+  "name": "@api-ts/typed-express-router",
   "version": "0.0.0-semantically-released",
   "description": "Implement an HTTP specification with Express",
-  "author": "Eric Crosson <ericcrosson@bitgo.com>",
+  "author": "Patrick McLaughlin <patrickmclaughlin@bitgo.com>",
   "license": "Apache-2.0",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -24,7 +24,6 @@
   },
   "devDependencies": {
     "@api-ts/superagent-wrapper": "0.0.0-semantically-released",
-    "@api-ts/typed-express-router": "0.0.0-semantically-released",
     "@ava/typescript": "3.0.1",
     "@types/express": "4.17.13",
     "ava": "4.3.1",

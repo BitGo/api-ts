@@ -4,10 +4,14 @@
  */
 
 import express from 'express';
-import * as E from 'fp-ts/Either';
 import * as PathReporter from 'io-ts/lib/PathReporter';
 
-import { HttpRoute, RequestType, ResponseType } from '@api-ts/io-ts-http';
+import { ApiSpec, HttpRoute, RequestType, ResponseType } from '@api-ts/io-ts-http';
+import {
+  OnDecodeErrorFn,
+  OnEncodeErrorFn,
+  TypedRequestHandler,
+} from '@api-ts/typed-express-router';
 
 import {
   runMiddlewareChain,
@@ -90,58 +94,48 @@ const createNamedFunction = <F extends (...args: any) => void>(
   fn: F,
 ): F => Object.defineProperty(fn, 'name', { value: name });
 
-export const decodeRequestAndEncodeResponse = (
+export const onDecodeError: OnDecodeErrorFn = (errs, _req, res) => {
+  const validationErrors = PathReporter.failure(errs);
+  const validationErrorMessage = validationErrors.join('\n');
+  res.writeHead(400, { 'Content-Type': 'application/json' });
+  res.write(JSON.stringify({ error: validationErrorMessage }));
+  res.end();
+};
+
+export const onEncodeError: OnEncodeErrorFn = (err, _req, res) => {
+  console.warn('Error in route handler:', err);
+  res.status(500).end();
+};
+
+export const handleRequest = (
   apiName: string,
   httpRoute: HttpRoute,
   handler: RouteHandler<HttpRoute>,
   responseEncoder: ResponseEncoder,
-): express.RequestHandler => {
+): TypedRequestHandler<ApiSpec, string, string> => {
   return createNamedFunction(
     'decodeRequestAndEncodeResponse' + httpRoute.method + apiName,
     async (req, res, next) => {
-      const maybeRequest = httpRoute.request.decode(req);
-      if (E.isLeft(maybeRequest)) {
-        const validationErrors = PathReporter.failure(maybeRequest.left);
-        const validationErrorMessage = validationErrors.join('\n');
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.write(JSON.stringify({ error: validationErrorMessage }));
-        res.end();
-        return;
-      }
-
-      let rawResponse:
-        | ResponseType<HttpRoute>
-        | KeyedResponseType<HttpRoute>
-        | undefined;
       try {
         const handlerParams =
           MiddlewareBrand in handler
-            ? await runMiddlewareChain(
-                maybeRequest.right,
-                getMiddleware(handler),
-                req,
-                res,
-              )
+            ? await runMiddlewareChain(req.decoded, getMiddleware(handler), req, res)
             : await runMiddlewareChainIgnoringResults(
-                E.getOrElseW(() => {
-                  throw Error('Request failed to decode');
-                })(maybeRequest),
+                req.decoded,
                 getMiddleware(handler),
                 req,
                 res,
               );
         const serviceFn = getServiceFunction(handler);
 
-        rawResponse = await serviceFn(handlerParams);
+        const response = await serviceFn(handlerParams);
+        responseEncoder(httpRoute, response)(req, res, next);
       } catch (err) {
         console.warn('Error in route handler:', err);
         res.status(500).end();
         next();
         return;
       }
-
-      const expressHandler = responseEncoder(httpRoute, rawResponse);
-      expressHandler(req, res, next);
     },
   );
 };

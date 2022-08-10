@@ -6,9 +6,9 @@
 import express from 'express';
 
 import { ApiSpec, HttpRoute } from '@api-ts/io-ts-http';
+import { createRouter } from '@api-ts/typed-express-router';
 
-import { apiTsPathToExpress } from './path';
-import { decodeRequestAndEncodeResponse, RouteHandler } from './request';
+import { handleRequest, onDecodeError, onEncodeError, RouteHandler } from './request';
 import { defaultResponseEncoder, ResponseEncoder } from './response';
 
 export { middlewareFn, MiddlewareChain, MiddlewareChainOutput } from './middleware';
@@ -33,7 +33,10 @@ export function routerForApiSpec<Spec extends ApiSpec>({
   routeHandlers,
   encoder = defaultResponseEncoder,
 }: CreateRouterProps<Spec>) {
-  const router = express.Router();
+  const router = createRouter(spec, {
+    onDecodeError,
+    onEncodeError,
+  });
   for (const apiName of Object.keys(spec)) {
     const resource = spec[apiName] as Spec[string];
     for (const method of Object.keys(resource)) {
@@ -42,17 +45,15 @@ export function routerForApiSpec<Spec extends ApiSpec>({
       }
       const httpRoute: HttpRoute = resource[method]!;
       const routeHandler = routeHandlers[apiName]![method]!;
-      const expressRouteHandler = decodeRequestAndEncodeResponse(
+      const expressRouteHandler = handleRequest(
         apiName,
         httpRoute,
-        // FIXME: TS is complaining that `routeHandler` is not necessarily guaranteed to be a
-        // `ServiceFunction`, because subtypes of Spec[string][string] can have arbitrary extra keys.
-        routeHandler as RouteHandler<any>,
+        routeHandler as RouteHandler<HttpRoute>,
         encoder,
       );
 
-      const expressPath = apiTsPathToExpress(httpRoute.path);
-      router[method](expressPath, expressRouteHandler);
+      // FIXME: Can't prove to TS here that `apiName` is valid to pass to the generalized `router[method]`
+      (router[method] as any)(apiName, [expressRouteHandler]);
     }
   }
 

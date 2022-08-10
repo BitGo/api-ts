@@ -10,9 +10,6 @@
     },
     {
       "path": "../superagent-wrapper"
-    },
-    {
-      "path": "../typed-express-router"
     }
   ]
 }

@@ -1,0 +1,111 @@
+# @api-ts/typed-express-router
+
+A thin wrapper around Express's `Router`
+
+## Goals
+
+- Define Express routes that are associated with routes in an api-ts `apiSpec`
+- Augment the existing Express request with the decoded request object
+- Augment the existing Express response with a type-checked `encode` function
+- Allow customization of what to do on decode/encode errors, per-route if desired
+- Allow action to be performed after an encoded response is sent, per-route if desired
+- Allow routes to be defined with path that is different than the one specified in the
+  `httpRoute` (e.g. for aliases)
+- Follow the express router api as closely as possible otherwise
+
+## Non-Goals
+
+- Enforce that all routes listed in an `apiSpec` have an associated route handler
+- Layer anything on top of the `express.RequestHandler[]` chain beyond the additional
+  properties described in `Goals` (projects and other libraries can do this)
+
+## Usage
+
+### Creating a router
+
+Two very similar functions are provided by this library that respectively create or wrap
+an Express router:
+
+```ts
+import { createRouter, wrapRouter } from '@api-ts/typed-express-router';
+import express from 'express';
+
+import { MyApi } from 'my-api-package';
+
+const app = express();
+
+const typedRouter = createRouter(MyApi);
+app.use(typedRouter);
+```
+
+### Adding routes
+
+Once you have the `typedRouter`, you can start adding routes by the api-ts api name:
+
+```ts
+typedRouter.get('hello.world', [HelloWorldHandler]);
+```
+
+Here, `HelloWorldHandler` is a almost like an Express request handler, but `req` and
+`res` have an extra property. `req.decoded` contains the validated and decoded request.
+On the response side, there is an extra `res.sendEncoded(status, payload)` function that
+will enforce types on the payload and encode types appropriately (e.g.
+`BigIntFromString` will be converted to a string). The exported `TypedRequestHandler`
+type may be used to infer the parameter types for these functions.
+
+### Aliased routes
+
+If more flexibility is needed in the route path, the `getAlias`-style route functions
+may be used. They take a path that is directly interpreted by Express, but otherwise
+work like the regular route methods:
+
+```ts
+typedRouter.getAlias('/oldDeprecatedHelloWorld', 'hello.world', [HelloWorldHandler]);
+```
+
+### Unchecked routes
+
+For convenience, the original router's `get`/`post`/`put`/`delete` methods can still be
+used via `getUnchecked` (or similar):
+
+```ts
+// Just a normal express route
+typedRouter.getUnchecked('/api/foo/bar', (req, res) => {
+  res.send(200).end();
+});
+```
+
+### Hooks and error handlers
+
+The `createRouter`, `wrapRouter`, and individual route methods all take an optional last
+parameter where a post-response and error handling function may be provided. Ones
+specified for a specific route take precedence over the top-level ones. These may be
+used to customize error responses and perform other actions like metrics collection or
+logging.
+
+```ts
+const typedRouter = createRouter(MyApi, {
+  onDecodeError: (errs, req, res) => {
+    // Format `errs` however you want
+    res.send(400).json({ message: 'Bad request' }).end();
+  },
+  onEncodeError: (err, req, res) => {
+    // Ideally won't happen unless type safety is violated, so it's a 500
+    res.send(500).json({ message: 'Internal server error' }).end();
+  },
+  afterEncodedResponseSent: (status, payload, req, res) => {
+    // Perform side effects or other things, `res` should be ended by this point
+    endRequestMetricsCollection(req);
+  },
+});
+
+// Override the decode error handler on one route
+typedRouter.get('hello.world', [HelloWorldHandler], {
+  onDecodeError: customHelloDecodeErrorHandler,
+});
+```
+
+### Other usage
+
+Other than what is documented above, a wrapped router should behave like a regular
+Express one, so things like `typedRouter.use()` should behave the same.
