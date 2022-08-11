@@ -81,7 +81,7 @@ export function wrapRouter<Spec extends ApiSpec>(
               (req as any).decoded = decoded;
               (res as any).sendEncoded = (
                 status: keyof typeof route['response'],
-                payload: any,
+                payload: unknown,
               ) => {
                 try {
                   const codec = route.response[status];
