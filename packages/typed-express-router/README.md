@@ -5,12 +5,13 @@ A thin wrapper around Express's `Router`
 ## Goals
 
 - Define Express routes that are associated with routes in an api-ts `apiSpec`
-- Augment the existing Express request with the decoded request object
+- Augment the existing Express request with the decoded request object and api-ts route
+  metadata
 - Augment the existing Express response with a type-checked `encode` function
 - Allow customization of what to do on decode/encode errors, per-route if desired
 - Allow action to be performed after an encoded response is sent, per-route if desired
-- Allow routes to be defined with path that is different than the one specified in the
-  `httpRoute` (e.g. for aliases)
+- Allow routes to define alias routes with path that is different than the one specified
+  in the `httpRoute`
 - Follow the express router api as closely as possible otherwise
 
 ## Non-Goals
@@ -53,25 +54,15 @@ will enforce types on the payload and encode types appropriately (e.g.
 `BigIntFromString` will be converted to a string). The exported `TypedRequestHandler`
 type may be used to infer the parameter types for these functions.
 
-### Aliased routes
+### Route aliases
 
-If more flexibility is needed in the route path, the `getAlias`-style route functions
-may be used. They take a path that is directly interpreted by Express, but otherwise
-work like the regular route methods:
-
-```ts
-typedRouter.getAlias('/oldDeprecatedHelloWorld', 'hello.world', [HelloWorldHandler]);
-```
-
-### Unchecked routes
-
-For convenience, the original router's `get`/`post`/`put`/`delete` methods can still be
-used via `getUnchecked` (or similar):
+If more flexibility is needed in the route path, a `routeAliases` function may be
+provided to match multiple paths. These paths may use the full Express matching syntax,
+but take care to preserve any path parameters or else you will likely get decode errors.
 
 ```ts
-// Just a normal express route
-typedRouter.getUnchecked('/api/foo/bar', (req, res) => {
-  res.send(200).end();
+typedRouter.get('hello.world', [HelloWorldHandler], {
+  routeAliases: ['/oldDeprecatedHelloWorld'],
 });
 ```
 
@@ -104,6 +95,31 @@ typedRouter.get('hello.world', [HelloWorldHandler], {
   onDecodeError: customHelloDecodeErrorHandler,
 });
 ```
+
+### Unchecked routes
+
+If you need custom behavior on decode errors that is more involved than just sending an
+error response, then the unchecked variant of the router functions can be used. They do
+not fail and call `onDecodeError` when a request is invalid. Instead, they will still
+populate `req.decoded`, except this time it'll contain the
+`Either<Errors, DecodedRequest>` type for route handlers to inspect.
+
+```ts
+// Just a normal express route
+typedRouter.getUnchecked('hello.world', (req, res) => {
+  if (E.isLeft(req.decoded)) {
+    console.warn('Route failed to decode! Continuing anyway');
+  })
+
+  res.send(200).end();
+});
+```
+
+### Router middleware
+
+Middleware added with `typedRouter.use()` is ran just after the request is decoded but
+before it is validated, even on checked routes. It'll have access to `req.decoded` in
+the same way that unchecked routes do.
 
 ### Other usage
 

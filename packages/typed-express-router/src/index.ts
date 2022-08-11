@@ -5,9 +5,12 @@ import { pipe } from 'fp-ts/function';
 import { defaultOnDecodeError, defaultOnEncodeError } from './errors';
 import { apiTsPathToExpress } from './path';
 import {
-  AddAliasRouteHandler,
   AddRouteHandler,
+  AddUncheckedRouteHandler,
   Methods,
+  UncheckedRequestHandler,
+  WrappedRequest,
+  WrappedResponse,
   WrappedRouteOptions,
   WrappedRouter,
   WrappedRouterOptions,
@@ -18,6 +21,7 @@ export type {
   OnDecodeErrorFn,
   OnEncodeErrorFn,
   TypedRequestHandler,
+  UncheckedRequestHandler,
   WrappedRouter,
   WrappedRouteOptions,
   WrappedRouterOptions,
@@ -64,60 +68,69 @@ export function wrapRouter<Spec extends ApiSpec>(
     onDecodeError = defaultOnDecodeError,
     onEncodeError = defaultOnEncodeError,
     afterEncodedResponseSent = () => {},
-  }: WrappedRouteOptions<HttpRoute>,
+  }: WrappedRouteOptions,
 ): WrappedRouter<Spec> {
-  function makeAddAliasRoute<Method extends Methods>(
+  const routerMiddleware: UncheckedRequestHandler[] = [];
+
+  function makeAddUncheckedRoute<Method extends Methods>(
     method: Method,
-  ): AddAliasRouteHandler<Spec, Method> {
-    return (path, apiName, handlers, options) => {
+  ): AddUncheckedRouteHandler<Spec, Method> {
+    return (apiName, handlers, options) => {
       const route: HttpRoute = spec[apiName as keyof Spec]![method]!;
-      const wrapReqAndRes: express.RequestHandler = (req, res, next) => {
-        pipe(
-          route.request.decode(req),
-          E.matchW(
-            (errs) => (options?.onDecodeError ?? onDecodeError)(errs, req, res),
-            (decoded) => {
-              // Gotta cast to mutate this in place
-              (req as any).decoded = decoded;
-              (res as any).sendEncoded = (
-                status: keyof typeof route['response'],
-                payload: any,
-              ) => {
-                try {
-                  const codec = route.response[status];
-                  if (!codec) {
-                    throw new Error(`no codec defined for response status ${status}`);
-                  }
-                  const statusCode =
-                    typeof status === 'number'
-                      ? status
-                      : KeyToHttpStatus[status as keyof KeyToHttpStatus];
-                  if (statusCode === undefined) {
-                    throw new Error(`unknown HTTP status code for key ${status}`);
-                  } else if (!codec.is(payload)) {
-                    throw new Error(
-                      `response does not match expected type ${codec.name}`,
-                    );
-                  }
-                  const encoded = codec.encode(payload);
-                  res.status(statusCode).json(encoded).end();
-                  (options?.afterEncodedResponseSent ?? afterEncodedResponseSent)(
-                    status,
-                    payload,
-                    req,
-                    res,
-                  );
-                } catch (err) {
-                  (options?.onEncodeError ?? onEncodeError)(err, req, res);
-                }
-              };
-              next();
-            },
-          ),
-        );
+      const wrapReqAndRes: UncheckedRequestHandler = (req, res, next) => {
+        const decoded = route.request.decode(req);
+        req.decoded = decoded;
+        req.apiName = apiName;
+        req.httpRoute = route;
+        res.sendEncoded = (
+          status: keyof typeof route['response'],
+          payload: unknown,
+        ) => {
+          try {
+            const codec = route.response[status];
+            if (!codec) {
+              throw new Error(`no codec defined for response status ${status}`);
+            }
+            const statusCode =
+              typeof status === 'number'
+                ? status
+                : KeyToHttpStatus[status as keyof KeyToHttpStatus];
+            if (statusCode === undefined) {
+              throw new Error(`unknown HTTP status code for key ${status}`);
+            } else if (!codec.is(payload)) {
+              throw new Error(`response does not match expected type ${codec.name}`);
+            }
+            const encoded = codec.encode(payload);
+            res.status(statusCode).json(encoded).end();
+            (options?.afterEncodedResponseSent ?? afterEncodedResponseSent)(
+              statusCode,
+              payload,
+              req as WrappedRequest,
+              res as WrappedResponse,
+            );
+          } catch (err) {
+            (options?.onEncodeError ?? onEncodeError)(
+              err,
+              req as WrappedRequest,
+              res as WrappedResponse,
+            );
+          }
+        };
+        next();
       };
 
-      router[method](path, [wrapReqAndRes, ...(handlers as express.RequestHandler[])]);
+      const middlewareChain = [
+        wrapReqAndRes,
+        ...routerMiddleware,
+        ...handlers,
+      ] as express.RequestHandler[];
+
+      const path = spec[apiName as keyof typeof spec]![method]!.path;
+      router[method](apiTsPathToExpress(path), middlewareChain);
+
+      options?.routeAliases?.forEach((alias) => {
+        router[method](alias, middlewareChain);
+      });
     };
   }
 
@@ -125,11 +138,24 @@ export function wrapRouter<Spec extends ApiSpec>(
     method: Method,
   ): AddRouteHandler<Spec, Method> {
     return (apiName, handlers, options) => {
-      const path = spec[apiName as keyof typeof spec]![method]!.path;
-      return makeAddAliasRoute(method)(
-        apiTsPathToExpress(path),
+      const validateMiddleware: UncheckedRequestHandler = (req, res, next) => {
+        pipe(
+          req.decoded,
+          E.matchW(
+            (errs) => {
+              (options?.onDecodeError ?? onDecodeError)(errs, req, res);
+            },
+            (value) => {
+              req.decoded = value;
+              next();
+            },
+          ),
+        );
+      };
+
+      return makeAddUncheckedRoute(method)(
         apiName,
-        handlers,
+        [validateMiddleware, ...handlers],
         options,
       );
     };
@@ -144,14 +170,13 @@ export function wrapRouter<Spec extends ApiSpec>(
       post: makeAddRoute('post'),
       put: makeAddRoute('put'),
       delete: makeAddRoute('delete'),
-      getAlias: makeAddAliasRoute('get'),
-      postAlias: makeAddAliasRoute('post'),
-      putAlias: makeAddAliasRoute('put'),
-      deleteAlias: makeAddAliasRoute('delete'),
-      getUnchecked: router.get,
-      postUnchecked: router.post,
-      putUnchecked: router.put,
-      deleteUnchecked: router.delete,
+      getUnchecked: makeAddUncheckedRoute('get'),
+      postUnchecked: makeAddUncheckedRoute('post'),
+      putUnchecked: makeAddUncheckedRoute('put'),
+      deleteUnchecked: makeAddUncheckedRoute('delete'),
+      use: (middleware: UncheckedRequestHandler) => {
+        routerMiddleware.push(middleware);
+      },
     },
   );
 
