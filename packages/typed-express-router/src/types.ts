@@ -1,8 +1,13 @@
-import { ApiSpec, HttpRoute, RequestType } from '@api-ts/io-ts-http';
+import {
+  ApiSpec,
+  HttpRoute,
+  Method as HttpMethod,
+  RequestType,
+} from '@api-ts/io-ts-http';
 import express from 'express';
 import * as t from 'io-ts';
 
-export type Methods = 'get' | 'post' | 'put' | 'delete';
+export type Methods = Lowercase<HttpMethod>;
 
 export type RouteAt<
   Spec extends ApiSpec,
