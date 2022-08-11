@@ -111,12 +111,12 @@ const GetHelloWorld: TypedRequestHandler<TestApiSpec, 'hello.world', 'get'> = (
 test('should match basic routes', async (t) => {
   const router = createRouter(TestApiSpec);
 
-  router.use(express.json());
-  router.use(appMiddleware);
   router.put('hello.world', [routeMiddleware, CreateHelloWorld]);
   router.get('hello.world', [GetHelloWorld]);
 
   const app = express();
+  app.use(express.json());
+  app.use(appMiddleware);
   app.use(router);
 
   const server = supertest(app);
@@ -133,12 +133,11 @@ test('should match basic routes', async (t) => {
 test('should match aliased routes', async (t) => {
   const router = createRouter(TestApiSpec);
 
-  router.use(express.json());
-  router.use(appMiddleware);
-  router.get('hello.world', [GetHelloWorld]);
-  router.getAlias('/alternateHello/:id', 'hello.world', [GetHelloWorld]);
+  router.get('hello.world', [GetHelloWorld], { routeAliases: ['/alternateHello/:id'] });
 
   const app = express();
+  app.use(express.json());
+  app.use(appMiddleware);
   app.use(router);
 
   const apiClient = supertest(app);
@@ -156,8 +155,6 @@ test('should invoke post-response hook', async (t) => {
 
   let hookRun = false;
 
-  router.use(express.json());
-  router.use(appMiddleware);
   router.put('hello.world', [routeMiddleware, CreateHelloWorld], {
     afterEncodedResponseSent: () => {
       hookRun = true;
@@ -165,6 +162,8 @@ test('should invoke post-response hook', async (t) => {
   });
 
   const app = express();
+  app.use(express.json());
+  app.use(appMiddleware);
   app.use(router);
 
   const server = supertest(app);
@@ -178,7 +177,6 @@ test('should invoke post-response hook', async (t) => {
 test('should match first defined route when there is an overlap', async (t) => {
   const router = createRouter(TestApiSpec);
 
-  router.use(express.json());
   router.get('hello.world', [GetHelloWorld]);
 
   // This won't be matched because of definition order
@@ -190,6 +188,7 @@ test('should match first defined route when there is an overlap', async (t) => {
 
   const app = express();
   app.use(router);
+  app.use(express.json());
 
   const server = supertest(app);
   const apiClient = buildApiClient(supertestRequestFactory(server), TestApiSpec);
@@ -204,12 +203,12 @@ test('should match first defined route when there is an overlap', async (t) => {
 test('should handle io-ts-http formatted path parameters', async (t) => {
   const router = createRouter(TestApiSpec);
 
-  router.use(express.json());
-  router.use(appMiddleware);
   router.put('hello.world', [routeMiddleware, CreateHelloWorld]);
   router.get('hello.world', [GetHelloWorld]);
 
   const app = express();
+  app.use(express.json());
+  app.use(appMiddleware);
   app.use(router);
 
   const server = supertest(app);
@@ -226,12 +225,12 @@ test('should handle io-ts-http formatted path parameters', async (t) => {
 test('should invoke app-level middleware', async (t) => {
   const router = createRouter(TestApiSpec);
 
-  router.use(express.json());
-  router.use(appMiddleware);
   router.put('hello.world', [CreateHelloWorld]);
   router.get('hello.world', [GetHelloWorld]);
 
   const app = express();
+  app.use(express.json());
+  app.use(appMiddleware);
   app.use(router);
 
   const server = supertest(app);
@@ -245,14 +244,65 @@ test('should invoke app-level middleware', async (t) => {
   t.like(response, { message: "Who's there?", appMiddlewareRan: true });
 });
 
+test('should invoke router-level middleware', async (t) => {
+  const router = createRouter(TestApiSpec);
+
+  let routerMiddlewareRan: string = '';
+  router.use((req, _res, next) => {
+    routerMiddlewareRan = req.apiName;
+    next();
+  });
+
+  router.put('hello.world', [CreateHelloWorld]);
+  router.get('hello.world', [GetHelloWorld]);
+
+  const app = express();
+  app.use(express.json());
+  app.use(router);
+
+  const server = supertest(app);
+  const apiClient = buildApiClient(supertestRequestFactory(server), TestApiSpec);
+
+  const response = await apiClient['hello.world']
+    .put({ secretCode: 1000 })
+    .decodeExpecting(200)
+    .then((res) => res.body);
+
+  t.like(response, { message: "Who's there?", appMiddlewareRan: false });
+  t.is(routerMiddlewareRan, 'hello.world');
+});
+
+test('router-level middleware should run before request validation on checked routes', async (t) => {
+  const router = createRouter(TestApiSpec);
+
+  let routerMiddlewareRan: string = '';
+  router.use((req, _res, next) => {
+    routerMiddlewareRan = req.apiName;
+    next();
+  });
+
+  router.put('hello.world', [CreateHelloWorld]);
+
+  const app = express();
+  app.use(express.json());
+  app.use(router);
+
+  const server = supertest(app);
+  const apiClient = buildApiClient(supertestRequestFactory(server), TestApiSpec);
+
+  await apiClient['hello.world'].put({} as any).expect(400);
+
+  t.is(routerMiddlewareRan, 'hello.world');
+});
+
 test('should invoke route-level middleware', async (t) => {
   const router = createRouter(TestApiSpec);
 
-  router.use(express.json());
   router.put('hello.world', [routeMiddleware, CreateHelloWorld]);
   router.get('hello.world', [GetHelloWorld]);
 
   const app = express();
+  app.use(express.json());
   app.use(router);
 
   const server = supertest(app);
@@ -269,11 +319,11 @@ test('should invoke route-level middleware', async (t) => {
 test('should infer status code from response type', async (t) => {
   const router = createRouter(TestApiSpec);
 
-  router.use(express.json());
   router.put('hello.world', [routeMiddleware, CreateHelloWorld]);
   router.get('hello.world', [GetHelloWorld]);
 
   const app = express();
+  app.use(express.json());
   app.use(router);
 
   const server = supertest(app);
@@ -290,11 +340,11 @@ test('should infer status code from response type', async (t) => {
 test('should return a 400 when request fails to decode', async (t) => {
   const router = createRouter(TestApiSpec);
 
-  router.use(express.json());
   router.put('hello.world', [routeMiddleware, CreateHelloWorld]);
   router.get('hello.world', [GetHelloWorld]);
 
   const app = express();
+  app.use(express.json());
   app.use(router);
 
   t.notThrows(async () => {
@@ -312,14 +362,20 @@ test('should invoke custom decode error function', async (t) => {
     },
   });
 
-  router.use(express.json());
-  router.getAlias('/helloNoPathParams', 'hello.world', [
-    (_req, res) => {
-      res.sendEncoded(200, { id: '1234' });
+  router.get(
+    'hello.world',
+    [
+      (_req, res) => {
+        res.sendEncoded(200, { id: '1234' });
+      },
+    ],
+    {
+      routeAliases: ['/helloNoPathParams'],
     },
-  ]);
+  );
 
   const app = express();
+  app.use(express.json());
   app.use(router);
 
   const apiClient = supertest(app);
@@ -335,9 +391,7 @@ test('should invoke per-route custom decode error function', async (t) => {
     },
   });
 
-  router.use(express.json());
-  router.getAlias(
-    '/helloNoPathParams',
+  router.get(
     'hello.world',
     [
       (_req, res) => {
@@ -348,10 +402,12 @@ test('should invoke per-route custom decode error function', async (t) => {
       onDecodeError: (_errs, _req, res) => {
         res.status(400).json('Route decode error').end();
       },
+      routeAliases: ['/helloNoPathParams'],
     },
   );
 
   const app = express();
+  app.use(express.json());
   app.use(router);
 
   const apiClient = supertest(app);
@@ -363,7 +419,6 @@ test('should invoke per-route custom decode error function', async (t) => {
 test('should send a 500 when response type does not match', async (t) => {
   const router = createRouter(TestApiSpec);
 
-  router.use(express.json());
   router.get('hello.world', [
     (_req, res) => {
       res.sendEncoded(200, { what: 'is this parameter?' } as any);
@@ -371,6 +426,7 @@ test('should send a 500 when response type does not match', async (t) => {
   ]);
 
   const app = express();
+  app.use(express.json());
   app.use(router);
 
   const server = supertest(app);
@@ -387,7 +443,6 @@ test('should invoke custom encode error function when response type does not mat
     },
   });
 
-  router.use(express.json());
   router.get('hello.world', [
     (_req, res) => {
       res.sendEncoded(200, { what: 'is this parameter?' } as any);
@@ -395,6 +450,7 @@ test('should invoke custom encode error function when response type does not mat
   ]);
 
   const app = express();
+  app.use(express.json());
   app.use(router);
 
   const server = supertest(app);
@@ -412,7 +468,6 @@ test('should invoke per-route custom encode error function when response type do
     },
   });
 
-  router.use(express.json());
   router.get(
     'hello.world',
     [
@@ -428,6 +483,7 @@ test('should invoke per-route custom encode error function when response type do
   );
 
   const app = express();
+  app.use(express.json());
   app.use(router);
 
   const server = supertest(app);
@@ -445,7 +501,6 @@ test('should invoke custom encode error function when an unknown HTTP status is 
     },
   });
 
-  router.use(express.json());
   router.get('hello.world', [
     (_req, res) => {
       res.sendEncoded(202 as any, {} as any);
@@ -453,6 +508,7 @@ test('should invoke custom encode error function when an unknown HTTP status is 
   ]);
 
   const app = express();
+  app.use(express.json());
   app.use(router);
 
   const server = supertest(app);
@@ -483,7 +539,6 @@ test('should invoke custom encode error function when an unknown keyed status is
     },
   });
 
-  router.use(express.json());
   router.get('foo', [
     (_req, res) => {
       res.sendEncoded('wat', {});
@@ -491,6 +546,7 @@ test('should invoke custom encode error function when an unknown keyed status is
   ]);
 
   const app = express();
+  app.use(express.json());
   app.use(router);
 
   const server = supertest(app);

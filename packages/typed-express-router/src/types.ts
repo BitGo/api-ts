@@ -1,9 +1,4 @@
-import {
-  ApiSpec,
-  HttpRoute,
-  Method as HttpMethod,
-  RequestType,
-} from '@api-ts/io-ts-http';
+import { ApiSpec, HttpRoute, Method as HttpMethod } from '@api-ts/io-ts-http';
 import express from 'express';
 import * as t from 'io-ts';
 
@@ -15,24 +10,19 @@ export type RouteAt<
   Method extends keyof Spec[ApiName],
 > = Spec[ApiName][Method] extends HttpRoute ? Spec[ApiName][Method] : never;
 
-export type WrappedRequest<
-  Spec extends ApiSpec,
-  ApiName extends keyof Spec,
-  Method extends keyof Spec[ApiName],
-> = express.Request & {
-  decoded: RequestType<RouteAt<Spec, ApiName, Method>>;
+export type WrappedRequest<Decoded = unknown> = express.Request & {
+  decoded: Decoded;
+  apiName: string;
+  httpRoute: HttpRoute;
 };
 
-export type WrappedResponse<
-  Spec extends ApiSpec,
-  ApiName extends keyof Spec,
-  Method extends keyof Spec[ApiName],
-> = express.Response & {
-  sendEncoded: <Status extends keyof RouteAt<Spec, ApiName, Method>['response']>(
-    status: Status,
-    payload: t.TypeOf<RouteAt<Spec, ApiName, Method>['response'][Status]>,
-  ) => void;
-};
+export type WrappedResponse<Responses extends {} = Record<string | number, unknown>> =
+  express.Response & {
+    sendEncoded: <Status extends keyof Responses>(
+      status: Status,
+      payload: Responses[Status],
+    ) => void;
+  };
 
 export type OnDecodeErrorFn = (
   errs: t.Errors,
@@ -42,41 +32,52 @@ export type OnDecodeErrorFn = (
 
 export type OnEncodeErrorFn = (
   err: unknown,
-  req: express.Request,
-  res: express.Response,
+  req: WrappedRequest,
+  res: WrappedResponse,
 ) => void;
 
-export type AfterEncodedResponseSentFn<Route extends HttpRoute> = <
-  Status extends keyof Route['response'],
->(
-  status: Status,
-  payload: Route['response'][Status],
-  req: express.Request,
-  res: express.Response,
+export type AfterEncodedResponseSentFn = (
+  status: number,
+  payload: unknown,
+  req: WrappedRequest,
+  res: WrappedResponse,
 ) => void;
 
-export type WrappedRouteOptions<Route extends HttpRoute> = {
-  onDecodeError?: OnDecodeErrorFn;
+export type UncheckedWrappedRouteOptions = {
   onEncodeError?: OnEncodeErrorFn;
-  afterEncodedResponseSent?: AfterEncodedResponseSentFn<Route>;
+  afterEncodedResponseSent?: AfterEncodedResponseSentFn;
+  routeAliases?: string[];
 };
 
-export type WrappedRouterOptions = express.RouterOptions &
-  WrappedRouteOptions<HttpRoute>;
+export type WrappedRouteOptions = UncheckedWrappedRouteOptions & {
+  onDecodeError?: OnDecodeErrorFn;
+};
+
+export type WrappedRouterOptions = express.RouterOptions & WrappedRouteOptions;
 
 export type TypedRequestHandler<
-  Spec extends ApiSpec,
-  ApiName extends keyof Spec,
-  Method extends keyof Spec[ApiName],
+  Spec extends ApiSpec = ApiSpec,
+  ApiName extends keyof Spec = string,
+  Method extends keyof Spec[ApiName] = string,
 > = (
-  req: WrappedRequest<Spec, ApiName, Method>,
-  res: WrappedResponse<Spec, ApiName, Method>,
+  req: WrappedRequest<t.TypeOf<RouteAt<Spec, ApiName, Method>['request']>>,
+  res: WrappedResponse<t.TypeOfProps<RouteAt<Spec, ApiName, Method>['response']>>,
+  next: express.NextFunction,
+) => void;
+
+export type UncheckedRequestHandler<
+  Spec extends ApiSpec = ApiSpec,
+  ApiName extends keyof Spec = string,
+  Method extends keyof Spec[ApiName] = string,
+> = (
+  req: WrappedRequest<ReturnType<RouteAt<Spec, ApiName, Method>['request']['decode']>>,
+  res: WrappedResponse<t.TypeOfProps<RouteAt<Spec, ApiName, Method>['response']>>,
   next: express.NextFunction,
 ) => void;
 
 type ApiNamesWithMethod<Spec extends ApiSpec, Method extends Methods> = {
-  [K in keyof Spec]: Method extends keyof Spec[K] ? K : never;
-}[keyof Spec];
+  [K in keyof Spec & string]: Method extends keyof Spec[K] ? K : never;
+}[keyof Spec & string];
 
 /**
  * Defines a route from one listed in an `apiSpec`. The request object will contain
@@ -92,25 +93,24 @@ export type AddRouteHandler<Spec extends ApiSpec, Method extends Methods> = <
 >(
   apiName: ApiName,
   handlers: TypedRequestHandler<Spec, ApiName, Method>[],
-  options?: WrappedRouteOptions<Spec[ApiName][Method]>,
+  options?: WrappedRouteOptions,
 ) => void;
 
 /**
- * Defines a route from one listed in an `apiSpec`, except matching an arbitrary path. Ensure that any path parameters match
- * with what is expected from the `httpRoute` or else you will get decode errors.
+ * Defines a route from one listed in an `apiSpec`. The request object will contain
+ * a `decoded` request property, and the response object will have a type-checked
+ * `sendEncoded` function with the correct types.
  *
- * @param path {string} the path to match, can use the full Express router syntax
  * @param apiName {string} the api name defined in the `apiSpec` assoiated with this router
  * @param handlers {TypedRequestHandler[]} a series of Express request handlers with extra properties
- * @param options {WrappedRouteOptions} error and response hooks for this route that override the top-level ones if provided
+ * @param options {UncheckedWrappedRouteOptions} error and response hooks for this route that override the top-level ones if provided
  */
-export type AddAliasRouteHandler<Spec extends ApiSpec, Method extends Methods> = <
+export type AddUncheckedRouteHandler<Spec extends ApiSpec, Method extends Methods> = <
   ApiName extends ApiNamesWithMethod<Spec, Method>,
 >(
-  path: string,
   apiName: ApiName,
-  handlers: TypedRequestHandler<Spec, ApiName, Method>[],
-  options?: WrappedRouteOptions<Spec[ApiName][Method]>,
+  handlers: UncheckedRequestHandler<Spec, ApiName, Method>[],
+  options?: UncheckedWrappedRouteOptions,
 ) => void;
 
 /**
@@ -118,20 +118,16 @@ export type AddAliasRouteHandler<Spec extends ApiSpec, Method extends Methods> =
  */
 export type WrappedRouter<Spec extends ApiSpec> = Omit<
   express.Router,
-  'get' | 'post' | 'put' | 'delete'
+  'get' | 'post' | 'put' | 'delete' | 'use'
 > &
   express.RequestHandler & {
+    use: (middleware: UncheckedRequestHandler<ApiSpec, string, string>) => void;
     get: AddRouteHandler<Spec, 'get'>;
     post: AddRouteHandler<Spec, 'post'>;
     put: AddRouteHandler<Spec, 'put'>;
     delete: AddRouteHandler<Spec, 'delete'>;
-    getAlias: AddAliasRouteHandler<Spec, 'get'>;
-    postAlias: AddAliasRouteHandler<Spec, 'post'>;
-    putAlias: AddAliasRouteHandler<Spec, 'put'>;
-    deleteAlias: AddAliasRouteHandler<Spec, 'delete'>;
-    // Expose the original express router methods as an escape hatch
-    getUnchecked: express.Router['get'];
-    postUnchecked: express.Router['post'];
-    putUnchecked: express.Router['put'];
-    deleteUnchecked: express.Router['delete'];
+    getUnchecked: AddUncheckedRouteHandler<Spec, 'get'>;
+    postUnchecked: AddUncheckedRouteHandler<Spec, 'post'>;
+    putUnchecked: AddUncheckedRouteHandler<Spec, 'put'>;
+    deleteUnchecked: AddUncheckedRouteHandler<Spec, 'delete'>;
   };
