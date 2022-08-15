@@ -91,12 +91,14 @@ type ExampleDecodedResult = {
 This type is properly inferred by TypeScript and can be used in destructuring like so:
 
 ```typescript
-// decodeOrElse is a function defined in our common-interface package
-const { id, time } = decodeOrElse(
-  'Request',
-  ExampleHttpRequest,
-  request,
-  someErrorHandler,
+import { pipe } from 'fp-ts/function';
+import * as E from 'fp-ts/Either';
+
+const { id, time } = pipe(
+  ExampleHttpRequest.decode(request),
+  E.getOrElseW((decodeErrors) => {
+    someErrorHandler(decodeErrors);
+  }),
 );
 ```
 
