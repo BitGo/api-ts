@@ -11,6 +11,7 @@ import { TestCase, TestCasesFromString } from './test-case';
 // System under test
 import { componentsForProject } from '../src/project';
 
+const TEST_CORPUS_DIR = path.resolve(__dirname, '..', '..', 'corpus');
 const ROOT_DIR = path.resolve(__dirname, '..', '..', 'dummyProject');
 const TEST_CONFIG = path.join(ROOT_DIR, 'tsconfig.json');
 
@@ -18,6 +19,9 @@ const ENTRYPOINT = 'index.ts' as NonEmptyString;
 
 const evaluateTestCase = test.macro({
   async exec(t, testCase: TestCase) {
+    // Wait for the event loop to tick once
+    await new Promise((resolve) => setImmediate(resolve));
+
     const fileContentsByFilename = testCase.inputs.reduce<
       Record<NonEmptyString, NonEmptyString>
     >(
@@ -62,16 +66,7 @@ const evaluateTestCases = (filename: string) => {
   }
 };
 
-const main = () => {
-  // ava runs with cwd in the package root
-  const corpusDirectory = 'corpus';
-  const corpusFilenames = fs
-    .readdirSync(corpusDirectory)
-    .map((filename) => path.join(corpusDirectory, filename));
-
-  for (const filename of corpusFilenames) {
-    evaluateTestCases(filename);
-  }
+export const testCorpusFile = (name: string) => {
+  const filename = path.join(TEST_CORPUS_DIR, `${name}.ts`);
+  evaluateTestCases(filename);
 };
-
-main();

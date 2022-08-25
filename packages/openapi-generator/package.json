@@ -17,7 +17,7 @@
     "clean": "rm -rf -- dist",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "test": "c8 --all --src src ava test/test-corpus.ts"
+    "test": "c8 --all --src src ava test/corpusFiles/*.ts"
   },
   "dependencies": {
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
