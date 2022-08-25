@@ -11,7 +11,8 @@ import { TestCase, TestCasesFromString } from './test-case';
 // System under test
 import { componentsForProject } from '../src/project';
 
-const TEST_CONFIG = path.join(__dirname, '..', '..', 'dummyProject', 'tsconfig.json');
+const ROOT_DIR = path.resolve(__dirname, '..', '..', 'dummyProject');
+const TEST_CONFIG = path.join(ROOT_DIR, 'tsconfig.json');
 
 const ENTRYPOINT = 'index.ts' as NonEmptyString;
 
@@ -20,7 +21,8 @@ const evaluateTestCase = test.macro({
     const fileContentsByFilename = testCase.inputs.reduce<
       Record<NonEmptyString, NonEmptyString>
     >(
-      (acc, { filename, contents }) => Object.assign(acc, { [filename]: contents }),
+      (acc, { filename, contents }) =>
+        Object.assign(acc, { [path.join(ROOT_DIR, filename)]: contents }),
       {},
     );
 

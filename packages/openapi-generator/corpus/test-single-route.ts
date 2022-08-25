@@ -2,7 +2,6 @@
 
 /// file: other.ts
 
-import * as t from 'io-ts';
 import { NumberFromString } from 'io-ts-types';
 
 /**
