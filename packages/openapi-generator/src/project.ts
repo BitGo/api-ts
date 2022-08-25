@@ -1,4 +1,4 @@
-import { flow, pipe } from 'fp-ts/function';
+import { pipe } from 'fp-ts/function';
 import * as A from 'fp-ts/Alt';
 import * as RA from 'fp-ts/ReadonlyArray';
 import * as E from 'fp-ts/Either';
@@ -55,65 +55,63 @@ const routesForSymbol =
       variableDeclarationOfSymbol(sym),
       E.chain(schemaForApiSpec(memo)),
       E.map(
-        flow(
-          RA.reduce(
-            {},
-            (
-              paths: PathSpec,
-              {
-                path,
-                method,
-                query,
-                params,
-                body,
-                responses,
-                summary,
-                description,
-                isPrivate,
-              },
-            ) =>
-              isPrivate && !includeInternal
-                ? paths
-                : {
-                    ...paths,
-                    [path]: {
-                      ...paths[path],
-                      [method]: {
-                        summary,
-                        description,
-                        ...(isPrivate ? { 'x-internal': true } : {}),
-                        parameters: [
-                          ...(query as ParameterList),
-                          ...(params as ParameterList),
-                        ],
-                        responses: responses.reduce<OpenAPIV3_1.ResponsesObject>(
-                          (acc, { code, schema: { schema } }) => ({
-                            ...acc,
-                            [code]: {
-                              description: '',
-                              content: {
-                                'application/json': { schema },
-                              },
+        RA.reduce(
+          {},
+          (
+            paths: PathSpec,
+            {
+              path,
+              method,
+              query,
+              params,
+              body,
+              responses,
+              summary,
+              description,
+              isPrivate,
+            },
+          ) =>
+            isPrivate && !includeInternal
+              ? paths
+              : {
+                  ...paths,
+                  [path]: {
+                    ...paths[path],
+                    [method]: {
+                      summary,
+                      ...(description !== undefined ? { description } : {}),
+                      ...(isPrivate ? { 'x-internal': true } : {}),
+                      parameters: [
+                        ...(query as ParameterList),
+                        ...(params as ParameterList),
+                      ],
+                      responses: responses.reduce<OpenAPIV3_1.ResponsesObject>(
+                        (acc, { code, schema: { schema } }) => ({
+                          ...acc,
+                          [code]: {
+                            description: '', // DISCUSS: This field actually is required, is there a better default for this?
+                            content: {
+                              'application/json': { schema },
                             },
-                          }),
-                          {},
-                        ),
-                        ...(body !== undefined
-                          ? {
-                              requestBody: {
-                                content: {
-                                  'application/json': {
-                                    schema: body.schema,
-                                  },
+                          },
+                        }),
+                        {},
+                      ),
+                      ...(body !== undefined
+                        ? {
+                            requestBody: {
+                              content: {
+                                'application/json': {
+                                  schema: body.schema,
                                 },
-                                required: body.required,
                               },
-                            }
-                          : {}),
-                      },
+                              required: body.required,
+                            },
+                          }
+                        : {}),
                     },
                   },
-          ),
+                },
         ),
       ),
     );

@@ -38,11 +38,9 @@ export const Routes = h.apiSpec({
     "/test": {
       "get": {
         "summary": "MyRoute",
-        "description": "",
         "parameters": [
           {
             "name": "req",
-            "description": "",
             "schema": {
               "type": "string"
             },
@@ -51,7 +49,6 @@ export const Routes = h.apiSpec({
           },
           {
             "name": "opt",
-            "description": "",
             "schema": {
               "type": "string"
             },
