@@ -101,7 +101,9 @@ const parametersFromCodecOutputSym = (paramIn: 'query' | 'path') =>
               schema,
               required,
               in: paramIn,
-              description: description[description.length - 1] ?? '',
+              ...(description.length > 0
+                ? { description: description[description.length - 1] }
+                : {}),
             })),
           ),
         ),
@@ -150,7 +152,7 @@ const routeSummary = (init: Node) => {
   }
 };
 
-const routeDescription = (init: Node) => {
+const routeDescription = (init: Node): { description?: string; isPrivate: boolean } => {
   return pipe(
     E.fromNullable('No symbol for initializer')(init.getSymbol()),
     E.chain((sym) =>
@@ -158,7 +160,7 @@ const routeDescription = (init: Node) => {
         (sym.getAliasedSymbol() ?? sym).getValueDeclaration(),
       ),
     ),
-    E.chain((decl) => {
+    E.chain((decl): E.Either<string, { description?: string; isPrivate: boolean }> => {
       let current: Node | undefined = decl;
       while (current !== undefined) {
         const comments = current.getLeadingCommentRanges();
@@ -182,7 +184,7 @@ const routeDescription = (init: Node) => {
       }
       return E.left('no comment found');
     }),
-    E.getOrElse(() => ({ description: '', isPrivate: false })),
+    E.getOrElseW(() => ({ isPrivate: false })),
   );
 };
 

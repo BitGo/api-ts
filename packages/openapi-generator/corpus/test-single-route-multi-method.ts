@@ -59,7 +59,6 @@ export const Routes = h.apiSpec({
     "/test/{id}": {
       "get": {
         "summary": "FirstRoute",
-        "description": "",
         "parameters": [
           {
             "name": "id",
@@ -86,7 +85,6 @@ export const Routes = h.apiSpec({
       },
       "post": {
         "summary": "SecondRoute",
-        "description": "",
         "parameters": [
           {
             "name": "id",

@@ -38,7 +38,6 @@ export const Routes = h.apiSpec({
     "/test": {
       "get": {
         "summary": "MyRoute",
-        "description": "",
         "parameters": [],
         "responses": {
           "200": {
