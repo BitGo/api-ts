@@ -4,7 +4,13 @@ import * as RA from 'fp-ts/ReadonlyArray';
 import * as E from 'fp-ts/Either';
 import * as RE from 'fp-ts/ReaderEither';
 import { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
-import { Node, Project, Symbol, VariableDeclaration } from 'ts-morph';
+import {
+  DiagnosticCategory,
+  Node,
+  Project,
+  Symbol,
+  VariableDeclaration,
+} from 'ts-morph';
 
 import { apiSpecVersion, schemaForApiSpec } from './route';
 import { Config } from './config';
@@ -22,6 +28,22 @@ const project = ({
   });
   for (const [filename, source] of Object.entries(virtualFiles)) {
     project.createSourceFile(filename, source);
+  }
+
+  const errors = project
+    .getPreEmitDiagnostics()
+    .filter((diag) => diag.getCategory() === DiagnosticCategory.Error);
+
+  if (errors.length > 0) {
+    const messages = errors.map((err) => {
+      const message = err.getMessageText();
+      if (typeof message === 'string') {
+        return message;
+      } else {
+        return message.getMessageText();
+      }
+    });
+    return E.left(`Errors found in project:\n${messages.join('\n')}`);
   }
 
   return E.right(project);
