@@ -3,11 +3,18 @@ import * as t from 'io-ts';
 import { HttpResponse } from './httpResponse';
 import { HttpRequestCodec } from './httpRequest';
 
-export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
+export const Method = t.keyof({
+  get: 1,
+  post: 1,
+  put: 1,
+  delete: 1,
+});
 
-export type HttpRoute = {
+export type Method = t.TypeOf<typeof Method>;
+
+export type HttpRoute<M extends Method = Method> = {
   readonly path: string;
-  readonly method: Method;
+  readonly method: Uppercase<M>;
   readonly request: HttpRequestCodec<any>;
   readonly response: HttpResponse;
 };
@@ -23,11 +30,20 @@ export type ResponseType<T extends HttpRoute> = {
 }[keyof T['response']];
 
 export type ApiSpec = {
-  [Key: string]: {
-    [Req: string]: HttpRoute;
+  [ApiAction: string]: {
+    [M in Method]?: HttpRoute<M>;
   };
 };
 
-export const apiSpec = <Spec extends ApiSpec>(spec: Spec): Spec => spec;
+type UnknownKeysToError<Spec extends ApiSpec> = {
+  [ApiAction in keyof Spec]: {
+    [M in keyof Spec[ApiAction]]: M extends Method
+      ? Spec[ApiAction][M]
+      : `Unsupported HTTP Method. Use "get" | "post" | "put" | "delete"`;
+  };
+};
+
+export const apiSpec = <Spec extends ApiSpec>(spec: UnknownKeysToError<Spec>): Spec =>
+  spec as Spec;
 
 export const httpRoute = <Props extends HttpRoute>(spec: Props): Props => spec;

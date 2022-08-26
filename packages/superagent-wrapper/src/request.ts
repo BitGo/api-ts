@@ -46,10 +46,8 @@ type PatchedRequest<Req, Route extends h.HttpRoute> = Req & {
   ) => Promise<ExpectedDecodedResponse<Route, StatusCode>>;
 };
 
-type SuperagentMethod = 'get' | 'post' | 'put' | 'delete';
-
 type SuperagentLike<Req> = {
-  [K in SuperagentMethod]: (url: string) => Req;
+  [K in h.Method]: (url: string) => Req;
 };
 
 type Response = {
@@ -63,13 +61,6 @@ interface SuperagentRequest<Res extends Response> extends Promise<Res> {
   set(name: string, value: string): this;
   send(body: string): this;
 }
-
-const METHOD_MAP: { [K in h.Method]: SuperagentMethod } = {
-  GET: 'get',
-  POST: 'post',
-  PUT: 'put',
-  DELETE: 'delete',
-};
 
 const substitutePathParams = (path: string, params: Record<string, string>) => {
   for (const key in params) {
@@ -88,7 +79,11 @@ export type RequestFactory<Req> = <Route extends h.HttpRoute>(
 export const superagentRequestFactory =
   <Req>(superagent: SuperagentLike<Req>, base: string): RequestFactory<Req> =>
   <Route extends h.HttpRoute>(route: Route, params: Record<string, string>) => {
-    const method = METHOD_MAP[route.method];
+    const method = route.method.toLowerCase();
+    if (!h.Method.is(method)) {
+      // Not supposed to happen if the route typechecked
+      throw Error(`Unsupported http method "${route.method}"`);
+    }
     const url = new URL(base);
     url.pathname = substitutePathParams(route.path, params);
     return superagent[method](url.toString());
@@ -97,7 +92,11 @@ export const superagentRequestFactory =
 export const supertestRequestFactory =
   <Req>(supertest: SuperagentLike<Req>): RequestFactory<Req> =>
   <Route extends h.HttpRoute>(route: Route, params: Record<string, string>) => {
-    const method = METHOD_MAP[route.method];
+    const method = route.method.toLowerCase();
+    if (!h.Method.is(method)) {
+      // Not supposed to happen if the route typechecked
+      throw Error(`Unsupported http method "${route.method}"`);
+    }
     const path = substitutePathParams(route.path, params);
     return supertest[method](path);
   };

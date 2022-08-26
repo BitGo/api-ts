@@ -5,7 +5,7 @@
 
 import express from 'express';
 
-import { ApiSpec, HttpRoute } from '@api-ts/io-ts-http';
+import { ApiSpec, HttpRoute, Method as HttpMethod } from '@api-ts/io-ts-http';
 import { createRouter } from '@api-ts/typed-express-router';
 
 import { handleRequest, onDecodeError, onEncodeError, RouteHandler } from './request';
@@ -15,14 +15,13 @@ export { middlewareFn, MiddlewareChain, MiddlewareChainOutput } from './middlewa
 export type { ResponseEncoder, KeyedResponseType } from './response';
 export { routeHandler, ServiceFunction } from './request';
 
-const isHttpVerb = (verb: string): verb is 'get' | 'put' | 'post' | 'delete' =>
-  verb === 'get' || verb === 'put' || verb === 'post' || verb === 'delete';
-
 type CreateRouterProps<Spec extends ApiSpec> = {
   spec: Spec;
   routeHandlers: {
     [ApiName in keyof Spec]: {
-      [Method in keyof Spec[ApiName]]: RouteHandler<Spec[ApiName][Method]>;
+      [Method in keyof Spec[ApiName] & HttpMethod]: RouteHandler<
+        NonNullable<Spec[ApiName][Method]>
+      >;
     };
   };
   encoder?: ResponseEncoder;
@@ -40,7 +39,7 @@ export function routerForApiSpec<Spec extends ApiSpec>({
   for (const apiName of Object.keys(spec)) {
     const resource = spec[apiName] as Spec[string];
     for (const method of Object.keys(resource)) {
-      if (!isHttpVerb(method)) {
+      if (!HttpMethod.is(method)) {
         continue;
       }
       const httpRoute: HttpRoute = resource[method]!;
@@ -64,7 +63,9 @@ export const createServer = <Spec extends ApiSpec>(
   spec: Spec,
   configureExpressApplication: (app: express.Application) => {
     [ApiName in keyof Spec]: {
-      [Method in keyof Spec[ApiName]]: RouteHandler<Spec[ApiName][Method]>;
+      [Method in keyof Spec[ApiName] & HttpMethod]: RouteHandler<
+        NonNullable<Spec[ApiName][Method]>
+      >;
     };
   },
 ) => {

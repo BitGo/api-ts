@@ -76,7 +76,12 @@ export function wrapRouter<Spec extends ApiSpec>(
     method: Method,
   ): AddUncheckedRouteHandler<Spec, Method> {
     return (apiName, handlers, options) => {
-      const route: HttpRoute = spec[apiName as keyof Spec]![method]!;
+      const route: HttpRoute | undefined = spec[apiName]?.[method];
+      if (route === undefined) {
+        // Should only happen with an explicit undefined property, which we can only prevent at the
+        // type level with the `exactOptionalPropertyTypes` tsconfig option
+        throw Error(`Method "${method}" at "${apiName}" must not be "undefined"'`);
+      }
       const wrapReqAndRes: UncheckedRequestHandler = (req, res, next) => {
         const decoded = route.request.decode(req);
         req.decoded = decoded;
@@ -138,7 +143,11 @@ export function wrapRouter<Spec extends ApiSpec>(
     method: Method,
   ): AddRouteHandler<Spec, Method> {
     return (apiName, handlers, options) => {
-      const validateMiddleware: UncheckedRequestHandler = (req, res, next) => {
+      const validateMiddleware: UncheckedRequestHandler<
+        Spec,
+        typeof apiName,
+        Method
+      > = (req, res, next) => {
         pipe(
           req.decoded,
           E.matchW(
@@ -155,7 +164,7 @@ export function wrapRouter<Spec extends ApiSpec>(
 
       return makeAddUncheckedRoute(method)(
         apiName,
-        [validateMiddleware, ...handlers],
+        [validateMiddleware, ...(handlers as express.RequestHandler[])],
         options,
       );
     };

@@ -556,3 +556,21 @@ test('should invoke custom encode error function when an unknown keyed status is
   test.is(response.original.status, 500);
   test.is(response.body, 'Custom encode error');
 });
+
+const ExplicitUndefinedApiSpec = apiSpec({
+  empty: {
+    get: undefined,
+  },
+});
+
+test('should throw on explicitly undefined route definition', async (t) => {
+  const router = createRouter(ExplicitUndefinedApiSpec);
+
+  t.throws(() => {
+    router.get('empty', [
+      (_req, res) => {
+        res.send(200);
+      },
+    ]);
+  });
+});

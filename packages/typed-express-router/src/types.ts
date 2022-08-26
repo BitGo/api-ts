@@ -4,12 +4,6 @@ import * as t from 'io-ts';
 
 export type Methods = Lowercase<HttpMethod>;
 
-export type RouteAt<
-  Spec extends ApiSpec,
-  ApiName extends keyof Spec,
-  Method extends keyof Spec[ApiName],
-> = Spec[ApiName][Method] extends HttpRoute ? Spec[ApiName][Method] : never;
-
 export type WrappedRequest<Decoded = unknown> = express.Request & {
   decoded: Decoded;
   apiName: string;
@@ -57,21 +51,23 @@ export type WrappedRouterOptions = express.RouterOptions & WrappedRouteOptions;
 
 export type TypedRequestHandler<
   Spec extends ApiSpec = ApiSpec,
-  ApiName extends keyof Spec = string,
-  Method extends keyof Spec[ApiName] = string,
+  ApiName extends keyof Spec = keyof Spec,
+  Method extends keyof Spec[ApiName] & HttpMethod = keyof Spec[ApiName] & HttpMethod,
 > = (
-  req: WrappedRequest<t.TypeOf<RouteAt<Spec, ApiName, Method>['request']>>,
-  res: WrappedResponse<t.TypeOfProps<RouteAt<Spec, ApiName, Method>['response']>>,
+  req: WrappedRequest<t.TypeOf<NonNullable<Spec[ApiName][Method]>['request']>>,
+  res: WrappedResponse<t.TypeOfProps<NonNullable<Spec[ApiName][Method]>['response']>>,
   next: express.NextFunction,
 ) => void;
 
 export type UncheckedRequestHandler<
   Spec extends ApiSpec = ApiSpec,
-  ApiName extends keyof Spec = string,
-  Method extends keyof Spec[ApiName] = string,
+  ApiName extends keyof Spec = keyof Spec,
+  Method extends keyof Spec[ApiName] & HttpMethod = keyof Spec[ApiName] & HttpMethod,
 > = (
-  req: WrappedRequest<ReturnType<RouteAt<Spec, ApiName, Method>['request']['decode']>>,
-  res: WrappedResponse<t.TypeOfProps<RouteAt<Spec, ApiName, Method>['response']>>,
+  req: WrappedRequest<
+    t.Validation<t.TypeOf<NonNullable<Spec[ApiName][Method]>['request']>>
+  >,
+  res: WrappedResponse<t.TypeOfProps<NonNullable<Spec[ApiName][Method]>['response']>>,
   next: express.NextFunction,
 ) => void;
 
@@ -121,7 +117,7 @@ export type WrappedRouter<Spec extends ApiSpec> = Omit<
   'get' | 'post' | 'put' | 'delete' | 'use'
 > &
   express.RequestHandler & {
-    use: (middleware: UncheckedRequestHandler<ApiSpec, string, string>) => void;
+    use: (middleware: UncheckedRequestHandler<ApiSpec, string, HttpMethod>) => void;
     get: AddRouteHandler<Spec, 'get'>;
     post: AddRouteHandler<Spec, 'post'>;
     put: AddRouteHandler<Spec, 'put'>;

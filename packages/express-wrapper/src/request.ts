@@ -112,7 +112,7 @@ export const handleRequest = (
   httpRoute: HttpRoute,
   handler: RouteHandler<HttpRoute>,
   responseEncoder: ResponseEncoder,
-): TypedRequestHandler<ApiSpec, string, string> => {
+): TypedRequestHandler<ApiSpec> => {
   return createNamedFunction(
     'decodeRequestAndEncodeResponse' + httpRoute.method + apiName,
     async (req, res, next) => {
