@@ -1,3 +1,7 @@
+/*
+ * response
+ */
+
 // HTTP                        | GRPC               | Response
 // ----------------------------|--------------------|---------------------------
 // 400 (bad request)           | INVALID_ARGUMENT   | Response.invalidRequest
