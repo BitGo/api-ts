@@ -1,4 +1,3 @@
-import { HttpResponseCodes } from '@api-ts/io-ts-http';
 import { parse as parseComment } from 'comment-parser';
 import { flow, pipe } from 'fp-ts/function';
 import * as E from 'fp-ts/Either';
@@ -102,7 +101,9 @@ const parametersFromCodecOutputSym = (paramIn: 'query' | 'path') =>
               schema,
               required,
               in: paramIn,
-              description: description[description.length - 1] ?? '',
+              ...(description.length > 0
+                ? { description: description[description.length - 1] }
+                : {}),
             })),
           ),
         ),
@@ -151,7 +152,7 @@ const routeSummary = (init: Node) => {
   }
 };
 
-const routeDescription = (init: Node) => {
+const routeDescription = (init: Node): { description?: string; isPrivate: boolean } => {
   return pipe(
     E.fromNullable('No symbol for initializer')(init.getSymbol()),
     E.chain((sym) =>
@@ -159,7 +160,7 @@ const routeDescription = (init: Node) => {
         (sym.getAliasedSymbol() ?? sym).getValueDeclaration(),
       ),
     ),
-    E.chain((decl) => {
+    E.chain((decl): E.Either<string, { description?: string; isPrivate: boolean }> => {
       let current: Node | undefined = decl;
       while (current !== undefined) {
         const comments = current.getLeadingCommentRanges();
@@ -183,7 +184,7 @@ const routeDescription = (init: Node) => {
       }
       return E.left('no comment found');
     }),
-    E.getOrElse(() => ({ description: '', isPrivate: false })),
+    E.getOrElseW(() => ({ isPrivate: false })),
   );
 };
 
@@ -247,11 +248,8 @@ export const schemaForRouteNode = (memo: any) => (node: Expression<ts.Expression
               RE.bindTo('schema'),
               RE.bind('code', () => {
                 const name = sym.getName();
-                const statusCode = HttpResponseCodes.hasOwnProperty(name)
-                  ? HttpResponseCodes[name as keyof typeof HttpResponseCodes]
-                  : undefined;
                 return RE.fromEither(
-                  E.fromNullable(`unknown response type '${name}`)(statusCode),
+                  E.fromNullable('undefined response code name')(name),
                 );
               }),
             ),

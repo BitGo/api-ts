@@ -1,6 +1,6 @@
+.direnv/
 .drone.yml
-.nyc_output/
+.turbo/
+coverage/
 dist/
 node_modules/
-coverage/
-.turbo/

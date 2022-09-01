@@ -10,7 +10,10 @@ const MyRoute = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({}),
   response: {
-    ok: t.union([t.type({ key: t.literal('foo') }), t.type({ key: t.literal('bar') })]),
+    200: t.union([
+      t.type({ key: t.literal('foo') }),
+      t.type({ key: t.literal('bar') }),
+    ]),
   },
 } as const);
 
@@ -33,7 +36,6 @@ export const Routes = h.apiSpec({
     "/test": {
       "get": {
         "summary": "MyRoute",
-        "description": "",
         "parameters": [],
         "responses": {
           "200": {

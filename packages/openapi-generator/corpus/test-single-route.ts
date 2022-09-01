@@ -2,7 +2,6 @@
 
 /// file: other.ts
 
-import * as t from 'io-ts';
 import { NumberFromString } from 'io-ts-types';
 
 /**
@@ -39,8 +38,8 @@ const MyRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.number,
-    invalidRequest: t.type({ foo: t.string, bar: t.number }),
+    200: t.number,
+    400: t.type({ foo: t.string, bar: t.number }),
   },
 });
 

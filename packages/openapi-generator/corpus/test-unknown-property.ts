@@ -15,7 +15,7 @@ const MyRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.type({
+    200: t.type({
       foo: t.unknown,
     }),
   },
@@ -40,7 +40,6 @@ export const Routes = h.apiSpec({
     "/test/{id}": {
       "post": {
         "summary": "MyRoute",
-        "description": "",
         "parameters": [
           {
             "name": "id",

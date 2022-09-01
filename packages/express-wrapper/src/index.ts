@@ -4,148 +4,74 @@
  */
 
 import express from 'express';
-import * as PathReporter from 'io-ts/lib/PathReporter';
 
-import {
-  ApiSpec,
-  HttpResponseCodes,
-  HttpRoute,
-  RequestType,
-  ResponseType,
-} from '@api-ts/io-ts-http';
+import { ApiSpec, HttpRoute, Method as HttpMethod } from '@api-ts/io-ts-http';
+import { createRouter } from '@api-ts/typed-express-router';
 
-export type Function<R extends HttpRoute> = (
-  input: RequestType<R>,
-) => ResponseType<R> | Promise<ResponseType<R>>;
-export type RouteStack<R extends HttpRoute> = [
-  ...express.RequestHandler[],
-  Function<R>,
-];
+import { handleRequest, onDecodeError, onEncodeError, RouteHandler } from './request';
+import { defaultResponseEncoder, ResponseEncoder } from './response';
 
-/**
- * Dynamically assign a function name to avoid anonymous functions in stack traces
- * https://stackoverflow.com/a/69465672
- */
-const createNamedFunction = <F extends (...args: any) => void>(
-  name: string,
-  fn: F,
-): F => Object.defineProperty(fn, 'name', { value: name });
+export { middlewareFn, MiddlewareChain, MiddlewareChainOutput } from './middleware';
+export type { ResponseEncoder, KeyedResponseType } from './response';
+export { routeHandler, ServiceFunction } from './request';
 
-const isKnownStatusCode = (code: string): code is keyof typeof HttpResponseCodes =>
-  HttpResponseCodes.hasOwnProperty(code);
-
-const decodeRequestAndEncodeResponse = <Route extends HttpRoute>(
-  apiName: string,
-  httpRoute: Route,
-  handler: Function<Route>,
-): express.RequestHandler => {
-  return createNamedFunction(
-    'decodeRequestAndEncodeResponse' + httpRoute.method + apiName,
-    async (req, res) => {
-      const maybeRequest = httpRoute.request.decode(req);
-      if (maybeRequest._tag === 'Left') {
-        console.log('Request failed to decode');
-        const validationErrors = PathReporter.failure(maybeRequest.left);
-        const validationErrorMessage = validationErrors.join('\n');
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.write(JSON.stringify({ error: validationErrorMessage }));
-        res.end();
-        return;
-      }
-
-      let rawResponse: ResponseType<Route> | undefined;
-      try {
-        rawResponse = await handler(maybeRequest.right);
-      } catch (err) {
-        console.warn('Error in route handler:', err);
-        res.statusCode = 500;
-        res.end();
-        return;
-      }
-
-      // Take the first match -- the implication is that the ordering of declared response
-      // codecs is significant!
-      for (const [statusCode, responseCodec] of Object.entries(httpRoute.response)) {
-        if (rawResponse.type !== statusCode) {
-          continue;
-        }
-
-        if (!isKnownStatusCode(statusCode)) {
-          console.warn(
-            `Got unrecognized status code ${statusCode} for ${apiName} ${httpRoute.method}`,
-          );
-          res.status(500);
-          res.end();
-          return;
-        }
-
-        // We expect that some route implementations may "beat the type
-        // system away with a stick" and return some unexpected values
-        // that fail to encode, so we catch errors here just in case
-        let response: unknown;
-        try {
-          response = responseCodec.encode(rawResponse.payload);
-        } catch (err) {
-          console.warn(
-            "Unable to encode route's return value, did you return the expected type?",
-            err,
-          );
-          res.statusCode = 500;
-          res.end();
-          return;
-        }
-        // DISCUSS: safer ways to handle this cast
-        res.writeHead(HttpResponseCodes[statusCode], {
-          'Content-Type': 'application/json',
-        });
-        res.write(JSON.stringify(response));
-        res.end();
-        return;
-      }
-
-      // If we got here then we got an unexpected response
-      res.status(500);
-      res.end();
-    },
-  );
+type CreateRouterProps<Spec extends ApiSpec> = {
+  spec: Spec;
+  routeHandlers: {
+    [ApiName in keyof Spec]: {
+      [Method in keyof Spec[ApiName] & HttpMethod]: RouteHandler<
+        NonNullable<Spec[ApiName][Method]>
+      >;
+    };
+  };
+  encoder?: ResponseEncoder;
 };
 
-const isHttpVerb = (verb: string): verb is 'get' | 'put' | 'post' | 'delete' =>
-  ({ get: 1, put: 1, post: 1, delete: 1 }.hasOwnProperty(verb));
-
-export function createServer<Spec extends ApiSpec>(
-  spec: Spec,
-  configureExpressApplication: (app: express.Application) => {
-    [ApiName in keyof Spec]: {
-      [Method in keyof Spec[ApiName]]: RouteStack<Spec[ApiName][Method]>;
-    };
-  },
-) {
-  const app: express.Application = express();
-  const routes = configureExpressApplication(app);
-
-  const router = express.Router();
+export function routerForApiSpec<Spec extends ApiSpec>({
+  spec,
+  routeHandlers,
+  encoder = defaultResponseEncoder,
+}: CreateRouterProps<Spec>) {
+  const router = createRouter(spec, {
+    onDecodeError,
+    onEncodeError,
+  });
   for (const apiName of Object.keys(spec)) {
     const resource = spec[apiName] as Spec[string];
     for (const method of Object.keys(resource)) {
-      if (!isHttpVerb(method)) {
+      if (!HttpMethod.is(method)) {
         continue;
       }
       const httpRoute: HttpRoute = resource[method]!;
-      const stack = routes[apiName]![method]!;
-      // Note: `stack` is guaranteed to be non-empty thanks to our function's type signature
-      const handler = decodeRequestAndEncodeResponse(
+      const routeHandler = routeHandlers[apiName]![method]!;
+      const expressRouteHandler = handleRequest(
         apiName,
         httpRoute,
-        stack[stack.length - 1] as Function<HttpRoute>,
+        routeHandler as RouteHandler<HttpRoute>,
+        encoder,
       );
-      const handlers = [...stack.slice(0, stack.length - 1), handler];
 
-      router[method](httpRoute.path, handlers);
+      // FIXME: Can't prove to TS here that `apiName` is valid to pass to the generalized `router[method]`
+      (router[method] as any)(apiName, [expressRouteHandler]);
     }
   }
 
-  app.use(router);
-
-  return app;
+  return router;
 }
+
+export const createServer = <Spec extends ApiSpec>(
+  spec: Spec,
+  configureExpressApplication: (app: express.Application) => {
+    [ApiName in keyof Spec]: {
+      [Method in keyof Spec[ApiName] & HttpMethod]: RouteHandler<
+        NonNullable<Spec[ApiName][Method]>
+      >;
+    };
+  },
+) => {
+  const app = express();
+  const routeHandlers = configureExpressApplication(app);
+  const router = routerForApiSpec({ spec, routeHandlers });
+  app.use(router);
+  return app;
+};

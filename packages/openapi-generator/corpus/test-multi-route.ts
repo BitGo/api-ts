@@ -22,7 +22,7 @@ const FirstRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.string,
+    200: t.string,
   },
 } as const);
 
@@ -42,7 +42,7 @@ const SecondRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.string,
+    200: t.string,
   },
 });
 
@@ -68,7 +68,6 @@ export const Routes = h.apiSpec({
     "/test/{id}/first": {
       "get": {
         "summary": "FirstRoute",
-        "description": "",
         "parameters": [
           {
             "name": "horse",
@@ -115,7 +114,6 @@ export const Routes = h.apiSpec({
     "/test/{id}/second": {
       "get": {
         "summary": "SecondRoute",
-        "description": "",
         "parameters": [
           {
             "name": "horse",

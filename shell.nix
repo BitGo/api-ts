@@ -1,14 +1,14 @@
-{ pkgs ? import <nixpkgs> {} }:
-
-let
-  PROJECT_ROOT=builtins.toString ./.;
-
-in pkgs.mkShell {
-  packages = with pkgs; [
-    nodejs-16_x
-  ];
-
-  shellHook = with pkgs; ''
-    export PATH="${PROJECT_ROOT}/node_modules/.bin:$PATH"
-  '';
-}
+(
+  import
+  (
+    let
+      lock = builtins.fromJSON (builtins.readFile ./flake.lock);
+    in
+      fetchTarball {
+        url = "https://github.com/edolstra/flake-compat/archive/${lock.nodes.flake-compat.locked.rev}.tar.gz";
+        sha256 = lock.nodes.flake-compat.locked.narHash;
+      }
+  )
+  {src = ./.;}
+)
+.shellNix

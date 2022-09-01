@@ -5,9 +5,15 @@ import express from 'express';
 import * as E from 'fp-ts/Either';
 import * as t from 'io-ts';
 import { NumberFromString } from 'io-ts-types';
+import superagent from 'superagent';
 import supertest from 'supertest';
+import { URL } from 'url';
 
-import { supertestRequestFactory } from '../src/request';
+import {
+  DecodeError,
+  superagentRequestFactory,
+  supertestRequestFactory,
+} from '../src/request';
 import { buildApiClient } from '../src/routes';
 
 const PostTestRoute = h.httpRoute({
@@ -25,11 +31,14 @@ const PostTestRoute = h.httpRoute({
     },
   }),
   response: {
-    ok: t.type({
+    200: t.type({
       id: t.number,
       foo: t.string,
       bar: t.number,
       baz: t.boolean,
+    }),
+    401: t.type({
+      message: t.string,
     }),
   },
 });
@@ -39,7 +48,7 @@ const HeaderGetTestRoute = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({}),
   response: {
-    ok: t.type({
+    200: t.type({
       value: t.string,
     }),
   },
@@ -73,13 +82,18 @@ testApp.post('/test/:id', (req, res) => {
     res.send({
       invalid: 'response',
     });
-  } else if (req.headers['x-send-unexpected-status-code']) {
+  } else if (req.headers['x-send-unknown-status-code']) {
     res.status(400);
     res.send({
       error: 'bad request',
     });
+  } else if (req.headers['x-send-unexpected-status-code']) {
+    res.status(401);
+    res.send({
+      message: 'unauthorized',
+    });
   } else {
-    const response = PostTestRoute.response['ok'].encode({
+    const response = PostTestRoute.response[200].encode({
       ...params,
       baz: true,
     });
@@ -89,7 +103,7 @@ testApp.post('/test/:id', (req, res) => {
 
 testApp.get(HeaderGetTestRoute.path, (req, res) => {
   res.send(
-    HeaderGetTestRoute.response['ok'].encode({
+    HeaderGetTestRoute.response[200].encode({
       value: String(req.headers['x-custom'] ?? ''),
     }),
   );
@@ -127,10 +141,10 @@ describe('request', () => {
       });
     });
 
-    it('gracefully handles unexpected status codes', async () => {
+    it('gracefully handles unknown status codes', async () => {
       const response = await apiClient['api.v1.test']
         .post({ id: 1337, foo: 'test', bar: 42 })
-        .set('x-send-unexpected-status-code', 'true')
+        .set('x-send-unknown-status-code', 'true')
         .decode();
 
       assert.equal(response.status, 'decodeError');
@@ -167,10 +181,21 @@ describe('request', () => {
         .post({ id: 1337, foo: 'test', bar: 42 })
         .set('x-send-unexpected-status-code', 'true')
         .decodeExpecting(200)
-        .then(() => false)
-        .catch(() => true);
+        .then(() => '')
+        .catch((err) => (err instanceof DecodeError ? err.message : ''));
 
-      assert.isTrue(result);
+      assert.equal(result, 'Unexpected response 401: {"message":"unauthorized"}');
+    });
+
+    it('throws for unknown responses', async () => {
+      const result = await apiClient['api.v1.test']
+        .post({ id: 1337, foo: 'test', bar: 42 })
+        .set('x-send-unknown-status-code', 'true')
+        .decodeExpecting(200)
+        .then(() => '')
+        .catch((err) => (err instanceof DecodeError ? err.message : ''));
+
+      assert.equal(result, 'Unexpected response 400: {"error":"bad request"}');
     });
 
     it('throws for decode errors', async () => {
@@ -178,10 +203,37 @@ describe('request', () => {
         .post({ id: 1337, foo: 'test', bar: 42 })
         .set('x-send-invalid-response-body', 'true')
         .decodeExpecting(200)
-        .then(() => false)
-        .catch(() => true);
+        .then(() => '')
+        .catch((err) => (err instanceof DecodeError ? err.message : ''));
 
-      assert.isTrue(result);
+      assert.equal(result, 'Could not decode response 200: {"invalid":"response"}');
+    });
+  });
+
+  describe('superagent', async () => {
+    it('does not throw on non-2xx status codes', async () => {
+      // Figure out what host/port supertest set up (the response is just thrown away on purpose)
+      const superTestReq = apiClient['api.v1.test'].post({
+        id: 1337,
+        foo: 'test',
+        bar: 42,
+      });
+
+      // Construct an api client that uses superagent, with the base url extracted from the supertest
+      // request above.
+      const url = new URL(superTestReq.url);
+      url.pathname = '/';
+      const superagentClient = buildApiClient(
+        superagentRequestFactory(superagent, url.toString()),
+        TestRoutes,
+      );
+
+      const req = await superagentClient['api.v1.test']
+        .post({ id: 1337, foo: 'test', bar: 42 })
+        .set('x-send-unexpected-status-code', 'true')
+        .decode();
+
+      assert.equal(req.status, 401);
     });
   });
 });

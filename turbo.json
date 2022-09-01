@@ -7,12 +7,17 @@
       "outputs": ["dist/**"]
     },
     "test": {
-      "dependsOn": ["build"],
-      "outputs": [".nyc_output/**"]
+      "dependsOn": ["build"]
     },
     "clean": {
       "outputs": [],
       "cache": false
+    },
+    "format": {
+      "outputs": []
+    },
+    "format:fix": {
+      "outputs": []
     }
   }
 }

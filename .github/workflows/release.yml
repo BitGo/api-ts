@@ -8,6 +8,7 @@ on:
 jobs:
   release:
     name: Release
+    if: github.repository_owner == 'BitGo'
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +21,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           cache: npm
-          node-version: 'lts/*'
+          node-version: lts/*
 
       - name: Install dependencies
         run: npm ci
@@ -32,6 +33,11 @@ jobs:
       # this step to identify some (but not all) semantic merge conflicts
       - name: Test
         run: npm test
+
+      # DISCUSS: Use `jq` or just a small node script to create/modify `.npmrc` in case
+      # one gets added in the future
+      - name: Prepare Release
+        run: mv .npmrc-release .npmrc
 
       - name: Release
         run: npx multi-semantic-release

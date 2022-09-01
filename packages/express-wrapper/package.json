@@ -12,21 +12,25 @@
   "scripts": {
     "build": "tsc --build --incremental --verbose .",
     "clean": "rm -rf -- dist",
-    "test": "ava"
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "test": "c8 --all ava"
   },
   "dependencies": {
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
     "express": "4.17.2",
-    "fp-ts": "2.12.1",
-    "io-ts": "2.2.16"
+    "fp-ts": "2.12.3",
+    "io-ts": "2.1.3"
   },
   "devDependencies": {
     "@api-ts/superagent-wrapper": "0.0.0-semantically-released",
+    "@api-ts/typed-express-router": "0.0.0-semantically-released",
     "@ava/typescript": "3.0.1",
     "@types/express": "4.17.13",
-    "ava": "4.3.0",
-    "ts-node": "10.8.1",
-    "typescript": "4.6.4"
+    "ava": "4.3.3",
+    "c8": "7.12.0",
+    "ts-node": "10.9.1",
+    "typescript": "4.7.4"
   },
   "ava": {
     "typescript": {

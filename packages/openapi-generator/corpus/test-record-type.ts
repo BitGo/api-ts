@@ -10,7 +10,7 @@ const MyRoute = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({}),
   response: {
-    ok: t.record(t.string, t.string),
+    200: t.record(t.string, t.string),
   },
 });
 
@@ -33,7 +33,6 @@ export const Routes = h.apiSpec({
     "/test": {
       "get": {
         "summary": "MyRoute",
-        "description": "",
         "parameters": [],
         "responses": {
           "200": {

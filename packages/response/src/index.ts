@@ -1,4 +1,5 @@
-// ----------------------------|--------------------|------------
+// HTTP                        | GRPC               | Response
+// ----------------------------|--------------------|---------------------------
 // 400 (bad request)           | INVALID_ARGUMENT   | Response.invalidRequest
 // 401 (unauthorized)          | UNAUTHENTICATED    | Response.unauthenticated
 // 403 (forbidden)             | PERMISSION_DENIED  | Response.permissionDenied

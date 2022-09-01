@@ -1,7 +1,6 @@
 import * as t from 'io-ts';
 import { Json } from 'io-ts-types';
 import { flattened, optional, optionalized } from './combinators';
-import { DerefProp, FieldPowerSet, OutputConstrainedProps } from './utils';
 
 export const GenericHttpRequest = optionalized({
   // DISCUSS: renaming this to something more specific, e.g. route, or path, or routeParams, or pathParams
@@ -18,20 +17,45 @@ export type HttpRequestCodec<T> = t.Type<
 >;
 
 export type HttpRequestCombinatorProps = {
-  params?: OutputConstrainedProps<string | undefined>;
-  query?: OutputConstrainedProps<string | string[] | undefined>;
-} & FieldPowerSet<{
-  headers: OutputConstrainedProps<string | undefined>;
-  body: t.Props;
-}>;
+  params?: NonNullable<t.Props>;
+  query?: NonNullable<t.Props>;
+  headers?: NonNullable<t.Props>;
+  body?: NonNullable<t.Props>;
+};
 
-export const httpRequest = <Props extends HttpRequestCombinatorProps>({
-  params = {},
-  query = {},
-  ...rest
-}: Props) =>
-  flattened('httpRequest', {
-    params: params as DerefProp<Props, 'params', {}>,
-    query: query as DerefProp<Props, 'query', {}>,
-    ...rest,
-  });
+/**
+ * Attempts to produce a helpful error message when invalid codecs are passed to `httpRequest`
+ * It is a workaround until something like https://github.com/microsoft/TypeScript/pull/40468
+ * is merged.
+ */
+type EmitOutputTypeErrors<
+  P extends t.Props | undefined,
+  O,
+  OName extends string,
+> = P extends undefined
+  ? P
+  : {
+      [K in keyof P & string]: P[K] extends t.Type<any, O, any>
+        ? P[K]
+        : `Codec's output type is not assignable to \`${OName}\`. Try using one like \`NumberFromString\``;
+    };
+
+type QueryValue = string | string[] | undefined;
+type ParamValue = string | undefined;
+type HeaderValue = string | undefined;
+
+type EmitPropsErrors<P extends HttpRequestCombinatorProps> = {
+  params?: EmitOutputTypeErrors<P['params'], ParamValue, 'string | undefined'>;
+  query?: EmitOutputTypeErrors<P['query'], QueryValue, 'string | string[] | undefined'>;
+  headers?: EmitOutputTypeErrors<P['headers'], HeaderValue, 'string | undefined'>;
+};
+
+export function httpRequest<
+  Props extends HttpRequestCombinatorProps & EmitPropsErrors<Props>,
+>(props: Props) {
+  return flattened('httpRequest', {
+    query: {},
+    params: {},
+    ...(props as Omit<Props, 'query' | 'params'>),
+  } as { query: {}; params: {} } & Props);
+}

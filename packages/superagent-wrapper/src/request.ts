@@ -1,54 +1,66 @@
 import * as h from '@api-ts/io-ts-http';
 import * as E from 'fp-ts/Either';
 import * as t from 'io-ts';
-import type { Response, SuperAgent, SuperAgentRequest } from 'superagent';
-import type { SuperTest } from 'supertest';
+import * as PathReporter from 'io-ts/lib/PathReporter';
 import { URL } from 'url';
 import { pipe } from 'fp-ts/function';
-import { Status } from '@api-ts/response';
 
 type SuccessfulResponses<Route extends h.HttpRoute> = {
-  [R in h.KnownResponses<Route['response']>]: {
-    status: h.HttpResponseCodes[R];
+  [R in keyof Route['response']]: {
+    status: R;
     error?: undefined;
     body: h.ResponseTypeForStatus<Route['response'], R>;
     original: Response;
   };
-}[h.KnownResponses<Route['response']>];
+}[keyof Route['response']];
 
-type DecodedResponse<Route extends h.HttpRoute> =
+export type DecodedResponse<Route extends h.HttpRoute> =
   | SuccessfulResponses<Route>
   | {
       status: 'decodeError';
-      error: unknown;
+      error: string;
       body: unknown;
       original: Response;
     };
+
+export class DecodeError extends Error {
+  readonly decodedResponse: DecodedResponse<h.HttpRoute>;
+
+  constructor(message: string, decodedResponse: DecodedResponse<h.HttpRoute>) {
+    super(message);
+    this.decodedResponse = decodedResponse;
+  }
+}
 
 const decodedResponse = <Route extends h.HttpRoute>(res: DecodedResponse<Route>) => res;
 
 type ExpectedDecodedResponse<
   Route extends h.HttpRoute,
-  StatusCode extends h.HttpResponseCodes[h.KnownResponses<Route['response']>],
+  StatusCode extends keyof Route['response'],
 > = DecodedResponse<Route> & { status: StatusCode };
 
-type PatchedRequest<Req extends SuperAgentRequest, Route extends h.HttpRoute> = Req & {
+type PatchedRequest<Req, Route extends h.HttpRoute> = Req & {
   decode: () => Promise<DecodedResponse<Route>>;
-  decodeExpecting: <
-    StatusCode extends h.HttpResponseCodes[h.KnownResponses<Route['response']>],
-  >(
+  decodeExpecting: <StatusCode extends keyof Route['response']>(
     status: StatusCode,
   ) => Promise<ExpectedDecodedResponse<Route, StatusCode>>;
 };
 
-type SuperagentMethod = 'get' | 'post' | 'put' | 'delete';
-
-const METHOD_MAP: { [K in h.Method]: SuperagentMethod } = {
-  GET: 'get',
-  POST: 'post',
-  PUT: 'put',
-  DELETE: 'delete',
+type SuperagentLike<Req> = {
+  [K in h.Method]: (url: string) => Req;
 };
+
+type Response = {
+  body: unknown;
+  status: number;
+};
+
+interface SuperagentRequest<Res extends Response> extends Promise<Res> {
+  ok(callback: (response: Res) => boolean): this;
+  query(params: Record<string, string | string[]>): this;
+  set(name: string, value: string): this;
+  send(body: string): this;
+}
 
 const substitutePathParams = (path: string, params: Record<string, string>) => {
   for (const key in params) {
@@ -59,39 +71,47 @@ const substitutePathParams = (path: string, params: Record<string, string>) => {
   return path;
 };
 
-export type RequestFactory<Req extends SuperAgentRequest> = <Route extends h.HttpRoute>(
+export type RequestFactory<Req> = <Route extends h.HttpRoute>(
   route: Route,
   params: Record<string, string>,
 ) => Req;
 
 export const superagentRequestFactory =
-  <Req extends SuperAgentRequest>(
-    superagent: SuperAgent<Req>,
-    base: string,
-  ): RequestFactory<Req> =>
+  <Req>(superagent: SuperagentLike<Req>, base: string): RequestFactory<Req> =>
   <Route extends h.HttpRoute>(route: Route, params: Record<string, string>) => {
-    const method = METHOD_MAP[route.method];
+    const method = route.method.toLowerCase();
+    if (!h.Method.is(method)) {
+      // Not supposed to happen if the route typechecked
+      throw Error(`Unsupported http method "${route.method}"`);
+    }
     const url = new URL(base);
     url.pathname = substitutePathParams(route.path, params);
     return superagent[method](url.toString());
   };
 
 export const supertestRequestFactory =
-  <Req extends SuperAgentRequest>(supertest: SuperTest<Req>): RequestFactory<Req> =>
+  <Req>(supertest: SuperagentLike<Req>): RequestFactory<Req> =>
   <Route extends h.HttpRoute>(route: Route, params: Record<string, string>) => {
-    const method = METHOD_MAP[route.method];
+    const method = route.method.toLowerCase();
+    if (!h.Method.is(method)) {
+      // Not supposed to happen if the route typechecked
+      throw Error(`Unsupported http method "${route.method}"`);
+    }
     const path = substitutePathParams(route.path, params);
     return supertest[method](path);
   };
 
-const hasCodecForStatus = <S extends Status>(
+const hasCodecForStatus = <S extends number>(
   responses: h.HttpResponse,
   status: S,
 ): responses is { [K in S]: t.Mixed } => {
   return status in responses && responses[status] !== undefined;
 };
 
-const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
+const patchRequest = <
+  Req extends SuperagentRequest<Response>,
+  Route extends h.HttpRoute,
+>(
   route: Route,
   req: Req,
 ): PatchedRequest<Req, Route> => {
@@ -99,24 +119,7 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
 
   patchedReq.decode = () =>
     req.then((res) => {
-      const { body, status: statusCode } = res;
-
-      let status: Status | undefined;
-      // DISCUSS: Should we have this as a preprocessed const in io-ts-http?
-      for (const [name, code] of Object.entries(h.HttpResponseCodes)) {
-        if (statusCode === code) {
-          status = name as Status;
-          break;
-        }
-      }
-      if (status === undefined) {
-        return decodedResponse({
-          status: 'decodeError',
-          error: `Unknown status code ${statusCode}`,
-          body,
-          original: res,
-        });
-      }
+      const { body, status } = res;
 
       if (!hasCodecForStatus(route.response, status)) {
         return decodedResponse({
@@ -131,9 +134,7 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
         route.response[status].decode(res.body),
         E.map((body) =>
           decodedResponse<Route>({
-            status: statusCode as h.HttpResponseCodes[h.KnownResponses<
-              Route['response']
-            >],
+            status,
             body,
             original: res,
           } as SuccessfulResponses<Route>),
@@ -142,7 +143,7 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
           // DISCUSS: what's this non-standard HTTP status code?
           decodedResponse<Route>({
             status: 'decodeError',
-            error,
+            error: PathReporter.failure(error).join('\n'),
             body: res.body,
             original: res,
           }),
@@ -150,29 +151,38 @@ const patchRequest = <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
       );
     });
 
-  patchedReq.decodeExpecting = <
-    StatusCode extends h.HttpResponseCodes[h.KnownResponses<Route['response']>],
-  >(
+  patchedReq.decodeExpecting = <StatusCode extends keyof Route['response']>(
     status: StatusCode,
   ) =>
     patchedReq.decode().then((res) => {
-      if (res.status !== status) {
-        const error = res.error ?? `Unexpected status code ${res.status}`;
-        throw new Error(JSON.stringify(error));
+      if (res.original.status !== status) {
+        const error = `Unexpected response ${res.original.status}: ${JSON.stringify(
+          res.original.body,
+        )}`;
+        throw new DecodeError(error, res as DecodedResponse<h.HttpRoute>);
+      } else if (res.status === 'decodeError') {
+        const error = `Could not decode response ${
+          res.original.status
+        }: ${JSON.stringify(res.original.body)}`;
+        throw new DecodeError(error, res as DecodedResponse<h.HttpRoute>);
       } else {
         return res as ExpectedDecodedResponse<Route, StatusCode>;
       }
     });
+
+  // Stop superagent from throwing on non-2xx status codes
+  patchedReq.ok(() => true);
+
   return patchedReq;
 };
 
 export type BoundRequestFactory<
-  Req extends SuperAgentRequest,
+  Req extends SuperagentRequest<Response>,
   Route extends h.HttpRoute,
 > = (params: h.RequestType<Route>) => PatchedRequest<Req, Route>;
 
 export const requestForRoute =
-  <Req extends SuperAgentRequest, Route extends h.HttpRoute>(
+  <Req extends SuperagentRequest<Response>, Route extends h.HttpRoute>(
     requestFactory: RequestFactory<Req>,
     route: Route,
   ): BoundRequestFactory<Req, Route> =>

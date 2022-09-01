@@ -59,13 +59,10 @@ const app = command({
     }),
   },
   handler: async ({ input, output, tsConfig, name, includeInternal }) => {
-    const baseDir = p.dirname(tsConfig);
-    const relativeInput = p.relative(baseDir, input);
-
     const api = pipe(
       componentsForProject({
         virtualFiles: {},
-        index: relativeInput,
+        index: input,
         tsConfig,
         name,
         includeInternal,
@@ -78,7 +75,7 @@ const app = command({
         (api) => api,
       ),
     );
-    const formattedApi = JSON.stringify(api, null, 2);
+    const formattedApi = JSON.stringify(api, null, 2) + '\n';
     await writeFile(output, formattedApi);
   },
 });

@@ -1,36 +1,49 @@
 import * as t from 'io-ts';
 
-import { HttpResponse, KnownResponses } from './httpResponse';
-import { httpRequest, HttpRequestCodec } from './httpRequest';
-import { Status } from '@api-ts/response';
+import { HttpResponse } from './httpResponse';
+import { HttpRequestCodec } from './httpRequest';
 
-export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
+export const Method = t.keyof({
+  get: 1,
+  post: 1,
+  put: 1,
+  delete: 1,
+});
 
-export type HttpRoute = {
+export type Method = t.TypeOf<typeof Method>;
+
+export type HttpRoute<M extends Method = Method> = {
   readonly path: string;
-  readonly method: Method;
+  readonly method: Uppercase<M>;
   readonly request: HttpRequestCodec<any>;
   readonly response: HttpResponse;
 };
 
-type ResponseItem<Status, Codec extends t.Mixed | undefined> = Codec extends t.Mixed
-  ? {
-      type: Status;
-      payload: t.TypeOf<Codec>;
-    }
-  : never;
-
 export type RequestType<T extends HttpRoute> = t.TypeOf<T['request']>;
 export type ResponseType<T extends HttpRoute> = {
-  [K in KnownResponses<T['response']>]: ResponseItem<K, T['response'][K]>;
-}[KnownResponses<T['response']>];
+  [K in keyof T['response']]: T['response'][K] extends t.Mixed
+    ? {
+        type: K;
+        payload: t.TypeOf<T['response'][K]>;
+      }
+    : never;
+}[keyof T['response']];
 
 export type ApiSpec = {
-  [Key: string]: {
-    [Req: string]: HttpRoute;
+  [ApiAction: string]: {
+    [M in Method]?: HttpRoute<M>;
   };
 };
 
-export const apiSpec = <Spec extends ApiSpec>(spec: Spec): Spec => spec;
+type UnknownKeysToError<Spec extends ApiSpec> = {
+  [ApiAction in keyof Spec]: {
+    [M in keyof Spec[ApiAction]]: M extends Method
+      ? Spec[ApiAction][M]
+      : `Unsupported HTTP Method. Use "get" | "post" | "put" | "delete"`;
+  };
+};
+
+export const apiSpec = <Spec extends ApiSpec>(spec: UnknownKeysToError<Spec>): Spec =>
+  spec as Spec;
 
 export const httpRoute = <Props extends HttpRoute>(spec: Props): Props => spec;

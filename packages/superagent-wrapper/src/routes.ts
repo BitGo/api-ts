@@ -5,13 +5,7 @@ import { requestForRoute, BoundRequestFactory, RequestFactory } from './request'
 
 export type ApiClient<Req extends SuperAgentRequest, Spec extends h.ApiSpec> = {
   [A in keyof Spec]: {
-    [B in keyof Spec[A]]: BoundRequestFactory<Req, Spec[A][B]>;
-  };
-};
-
-type PartialApiClient<Req extends SuperAgentRequest, Spec extends h.ApiSpec> = {
-  [A in keyof Spec]?: {
-    [B in keyof Spec[A]]?: BoundRequestFactory<Req, Spec[A][B]>;
+    [B in keyof Spec[A] & h.Method]: BoundRequestFactory<Req, NonNullable<Spec[A][B]>>;
   };
 };
 
@@ -19,20 +13,25 @@ export const buildApiClient = <Req extends SuperAgentRequest, Spec extends h.Api
   requestFactory: RequestFactory<Req>,
   spec: Spec,
 ): ApiClient<Req, Spec> => {
-  const result: PartialApiClient<Req, Spec> = {};
-  for (const a in spec) {
-    if (!spec.hasOwnProperty(a)) {
+  const result: any = {};
+  for (const apiName in spec) {
+    if (!spec.hasOwnProperty(apiName)) {
       continue;
     }
-    const subSpec: PartialApiClient<Req, Spec>[typeof a] = {};
-    for (const b in spec[a]) {
-      if (!spec[a].hasOwnProperty(b)) {
+    const subSpec: any = {};
+    for (const method in spec[apiName]) {
+      if (!spec[apiName].hasOwnProperty(method) || !h.Method.is(method)) {
         continue;
       }
-      const route = spec[a][b];
-      subSpec[b] = requestForRoute(requestFactory, route);
+      const route = spec[apiName][method];
+      if (route === undefined) {
+        // Should only happen with an explicit undefined property, which we can only prevent at the
+        // type level with the `exactOptionalPropertyTypes` tsconfig option
+        throw Error(`Method "${method}" at "${apiName}" must not be "undefined"'`);
+      }
+      subSpec[method] = requestForRoute(requestFactory, route);
     }
-    result[a] = subSpec;
+    result[apiName] = subSpec;
   }
 
   // Type assert that I did in fact add all the expected properties

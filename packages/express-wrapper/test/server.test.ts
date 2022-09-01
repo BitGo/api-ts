@@ -5,12 +5,10 @@ import express from 'express';
 import supertest from 'supertest';
 
 import { ApiSpec, apiSpec, httpRequest, httpRoute, optional } from '@api-ts/io-ts-http';
-import { Response } from '@api-ts/response';
 import { buildApiClient, supertestRequestFactory } from '@api-ts/superagent-wrapper';
 
-import { createServer } from '../src';
+import { createServer, middlewareFn, routeHandler } from '../src';
 
-// TODO: wallet-platform throws errors instead of returning values
 const PutHello = httpRoute({
   path: '/hello',
   method: 'PUT',
@@ -20,31 +18,44 @@ const PutHello = httpRoute({
     body: {
       secretCode: t.number,
       appMiddlewareRan: optional(t.boolean),
-      routeMiddlewareRan: optional(t.boolean),
     },
   }),
   response: {
     // TODO: create prettier names for these codecs at the io-ts-http level
-    ok: t.type({
+    200: t.type({
       message: t.string,
       appMiddlewareRan: t.boolean,
       routeMiddlewareRan: t.boolean,
     }),
-    // In wallet-platform, sometimes we return a 202 (by throwing)
-    invalidRequest: t.type({
+    400: t.type({
       errors: t.string,
     }),
-    notFound: t.unknown,
-    // 500s are also used on prime team
+    404: t.unknown,
     // DISCUSS: what if a response isn't listed here but shows up?
-    internalError: t.unknown,
+    500: t.unknown,
   },
 });
 type PutHello = typeof PutHello;
 
+const GetHello = httpRoute({
+  path: '/hello/{id}',
+  method: 'GET',
+  request: httpRequest({
+    params: {
+      id: t.string,
+    },
+  }),
+  response: {
+    200: t.type({
+      id: t.string,
+    }),
+  },
+});
+
 const ApiSpec = apiSpec({
   'hello.world': {
     put: PutHello,
+    get: GetHello,
   },
 });
 
@@ -53,10 +64,9 @@ const appMiddleware: express.RequestHandler = (req, _res, next) => {
   next();
 };
 
-const routeMiddleware: express.RequestHandler = (req, _res, next) => {
-  req.body.routeMiddlewareRan = true;
-  next();
-};
+const routeMiddleware = middlewareFn(async () => {
+  return { routeMiddlewareRan: true };
+});
 
 // DISCUSS: defining a RouteHandler type or something (also used in decodeRequestAndEncodeResponse)
 const CreateHelloWorld = async (parameters: {
@@ -65,29 +75,41 @@ const CreateHelloWorld = async (parameters: {
   routeMiddlewareRan?: boolean;
 }) => {
   if (parameters.secretCode === 0) {
-    return Response.invalidRequest({
-      errors: 'Please do not tell me zero! I will now explode',
-    });
+    return {
+      type: 400,
+      payload: {
+        errors: 'Please do not tell me zero! I will now explode',
+      },
+    } as const;
   }
-  return Response.ok({
-    message:
-      parameters.secretCode === 42
-        ? 'Everything you see from here is yours'
-        : "Who's there?",
-    appMiddlewareRan: parameters.appMiddlewareRan ?? false,
-    routeMiddlewareRan: parameters.routeMiddlewareRan ?? false,
-  });
+  return {
+    type: 200,
+    payload: {
+      message:
+        parameters.secretCode === 42
+          ? 'Everything you see from here is yours'
+          : "Who's there?",
+      appMiddlewareRan: parameters.appMiddlewareRan ?? false,
+      routeMiddlewareRan: parameters.routeMiddlewareRan ?? false,
+    },
+  } as const;
 };
+
+const GetHelloWorld = async (params: { id: string }) =>
+  ({
+    type: 'ok',
+    payload: params,
+  } as const);
 
 test('should offer a delightful developer experience', async (t) => {
   const app = createServer(ApiSpec, (app: express.Application) => {
     // Configure app-level middleware
     app.use(express.json());
     app.use(appMiddleware);
-    // Configure route-level middleware
     return {
       'hello.world': {
-        put: [routeMiddleware, CreateHelloWorld],
+        put: routeHandler({ middleware: [routeMiddleware], handler: CreateHelloWorld }),
+        get: GetHelloWorld,
       },
     };
   });
@@ -109,15 +131,38 @@ test('should offer a delightful developer experience', async (t) => {
   t.like(response, { message: "Who's there?" });
 });
 
+test('should handle io-ts-http formatted path parameters', async (t) => {
+  const app = createServer(ApiSpec, (app: express.Application) => {
+    app.use(express.json());
+    app.use(appMiddleware);
+    return {
+      'hello.world': {
+        put: routeHandler({ middleware: [routeMiddleware], handler: CreateHelloWorld }),
+        get: GetHelloWorld,
+      },
+    };
+  });
+
+  const server = supertest(app);
+  const apiClient = buildApiClient(supertestRequestFactory(server), ApiSpec);
+
+  const response = await apiClient['hello.world']
+    .get({ id: '1337' })
+    .decodeExpecting(200)
+    .then((res) => res.body);
+
+  t.like(response, { id: '1337' });
+});
+
 test('should invoke app-level middleware', async (t) => {
   const app = createServer(ApiSpec, (app: express.Application) => {
     // Configure app-level middleware
     app.use(express.json());
     app.use(appMiddleware);
-    // Configure route-level middleware
     return {
       'hello.world': {
-        put: [CreateHelloWorld],
+        put: CreateHelloWorld,
+        get: GetHelloWorld,
       },
     };
   });
@@ -137,10 +182,10 @@ test('should invoke route-level middleware', async (t) => {
   const app = createServer(ApiSpec, (app: express.Application) => {
     // Configure app-level middleware
     app.use(express.json());
-    // Configure route-level middleware
     return {
       'hello.world': {
-        put: [routeMiddleware, CreateHelloWorld],
+        put: routeHandler({ middleware: [routeMiddleware], handler: CreateHelloWorld }),
+        get: GetHelloWorld,
       },
     };
   });
@@ -156,14 +201,37 @@ test('should invoke route-level middleware', async (t) => {
   t.like(response, { message: "Who's there?", routeMiddlewareRan: true });
 });
 
+test('should not add parameters from middleware unless routeHandler() is used', async (t) => {
+  const app = createServer(ApiSpec, (app: express.Application) => {
+    // Configure app-level middleware
+    app.use(express.json());
+    return {
+      'hello.world': {
+        put: { middleware: [routeMiddleware], handler: CreateHelloWorld },
+        get: GetHelloWorld,
+      },
+    };
+  });
+
+  const server = supertest(app);
+  const apiClient = buildApiClient(supertestRequestFactory(server), ApiSpec);
+
+  const response = await apiClient['hello.world']
+    .put({ secretCode: 1000 })
+    .decodeExpecting(200)
+    .then((res) => res.body);
+
+  t.like(response, { message: "Who's there?", routeMiddlewareRan: false });
+});
+
 test('should infer status code from response type', async (t) => {
   const app = createServer(ApiSpec, (app: express.Application) => {
     // Configure app-level middleware
     app.use(express.json());
-    // Configure route-level middleware
     return {
       'hello.world': {
-        put: [CreateHelloWorld],
+        put: CreateHelloWorld,
+        get: GetHelloWorld,
       },
     };
   });
@@ -177,4 +245,24 @@ test('should infer status code from response type', async (t) => {
     .then((res) => res.body);
 
   t.like(response, { errors: 'Please do not tell me zero! I will now explode' });
+});
+
+test('should return a 400 when request fails to decode', async (t) => {
+  const app = createServer(ApiSpec, (app: express.Application) => {
+    // Configure app-level middleware
+    app.use(express.json());
+    return {
+      'hello.world': {
+        put: CreateHelloWorld,
+        get: GetHelloWorld,
+      },
+    };
+  });
+
+  const response = await supertest(app)
+    .put('/hello')
+    .set('Content-Type', 'application/json')
+    .expect(400);
+
+  t.true(response.body.error.startsWith('Invalid value undefined supplied to'));
 });
