@@ -1,5 +1,5 @@
 /**
- * request-codecs
+ * io-ts-http
  * Codecs for (de)serializing HTTP requests from both the client and server side
  */
 
