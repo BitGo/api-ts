@@ -1,5 +1,5 @@
 /*
- * openapi-generator
+ * @api-ts/openapi-generator
  */
 
 export * from './project';

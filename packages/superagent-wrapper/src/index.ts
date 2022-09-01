@@ -1,5 +1,5 @@
 /*
- * superagent-wrapper
+ * @api-ts/superagent-wrapper
  */
 
 export * from './request';

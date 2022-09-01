@@ -1,5 +1,5 @@
 /*
- * typed-express-router
+ * @api-ts/typed-express-router
  */
 
 import { ApiSpec, HttpRoute, KeyToHttpStatus } from '@api-ts/io-ts-http';
