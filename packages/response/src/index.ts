@@ -1,5 +1,5 @@
 /*
- * response
+ * @api-ts/response
  */
 
 // HTTP                        | GRPC               | Response
