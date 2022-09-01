@@ -10,7 +10,7 @@ updates:
     labels:
       - dependencies
       - github-actions
-    target-branch: beta
+    target-branch: master
 
   # Enable npm updates
   - package-ecosystem: npm
@@ -24,7 +24,7 @@ updates:
     labels:
       - dependencies
       - npm
-    target-branch: beta
+    target-branch: master
     ignore:
       - dependency-name: io-ts
         versions: ['2.x']
