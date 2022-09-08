@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  api-ts:
     runs-on: ubuntu-latest
 
     strategy:
@@ -51,3 +51,27 @@ jobs:
 
       - name: Test
         run: npm test
+
+  # Only run CI for GitHub Pages on Node.js 16 because docusaurus doesn't support
+  # earlier Node.js versions.
+  website:
+    runs-on: ubuntu-latest
+
+    name: GitHub Pages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v3
+        with:
+          cache: npm
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: website
+
+      - name: Build Docusaurus static site files
+        run: npm run build
+        working-directory: website
