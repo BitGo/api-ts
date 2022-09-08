@@ -15,6 +15,8 @@ concurrency:
 
 jobs:
   build-docs:
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -42,6 +44,7 @@ jobs:
 
   deploy-docs:
     needs: build-docs
+    runs-on: ubuntu-latest
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
