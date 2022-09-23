@@ -42,17 +42,15 @@ const config = {
             [remarkCodeHike, { theme }],
           ],
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/BitGo/api-ts/tree/master/website/',
         },
         blog: {
           showReadingTime: true,
-          // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/BitGo/api-ts/tree/master/website',
         },
         theme: {
           customCss: [
@@ -70,9 +68,9 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'My Site',
+        title: 'api-ts',
         logo: {
-          alt: 'My Site Logo',
+          alt: 'api-ts Logo',
           src: 'img/logo.svg',
         },
         items: [
@@ -83,7 +81,7 @@ const config = {
             label: 'Tutorial',
           },
           {
-            href: 'https://github.com/facebook/docusaurus',
+            href: 'https://github.com/BitGo/api-ts',
             label: 'GitHub',
             position: 'right',
           },
@@ -120,7 +118,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} BitGo, Inc.`,
       },
       prism: {
         theme: lightCodeTheme,
