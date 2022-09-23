@@ -14,7 +14,7 @@ const config = {
   title: 'api-ts home',
   tagline: 'Type- and runtime- safe TypeScript APIs',
   url: 'https://bitgo.github.io/api-ts/',
-  baseUrl: '/',
+  baseUrl: '/api-ts/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
