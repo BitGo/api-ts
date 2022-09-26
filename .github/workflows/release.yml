@@ -5,6 +5,10 @@ on:
   push:
     branches: [master, alpha, beta, next, next-major]
 
+# Only allow one release workflow to execute at a time, since each release
+# workflow uses shared resources (git tags, package registries)
+concurrency: ${{ github.workflow }}
+
 jobs:
   release:
     name: Release
