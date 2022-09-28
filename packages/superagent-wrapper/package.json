@@ -30,7 +30,7 @@
     "body-parser": "1.20.0",
     "chai": "4.3.6",
     "express": "4.17.1",
-    "io-ts-types": "0.5.16",
+    "io-ts-types": "0.5.17",
     "mocha": "10.0.0",
     "c8": "7.11.2",
     "superagent": "7.1.6",
