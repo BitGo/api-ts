@@ -1,4 +1,5 @@
 import { assert } from 'chai';
+import * as NEA from 'fp-ts/NonEmptyArray';
 import * as t from 'io-ts';
 import { nonEmptyArray, JsonFromString, NumberFromString } from 'io-ts-types';
 import { assertRight } from './utils';
@@ -12,7 +13,7 @@ const example = {
   },
   query: {
     test: 'foo',
-    multiTest: ['a', 'b', 'c'],
+    multiTest: NEA.fromReadonlyNonEmptyArray(['a', 'b', 'c']),
     encodedJson: '{"jsonKey":null}',
     optionalParam: 'hello',
   },
@@ -58,7 +59,7 @@ describe('httpRequest', () => {
     assert.deepStrictEqual(output, {
       id: 1,
       test: 'foo',
-      multiTest: ['a', 'b', 'c'],
+      multiTest: NEA.fromReadonlyNonEmptyArray(['a', 'b', 'c']),
       // tslint:disable-next-line: no-null-keyword
       encodedJson: { jsonKey: null },
       optionalParam: 'hello',
