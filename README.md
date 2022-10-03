@@ -1,4 +1,4 @@
-# API-TS
+# api-ts
 
 ![Build Status](https://github.com/BitGo/api-ts/actions/workflows/release.yml/badge.svg?branch=master&event=push)
 
