@@ -2,15 +2,15 @@
 
 ![Build Status](https://github.com/BitGo/api-ts/actions/workflows/release.yml/badge.svg?branch=master&event=push)
 
-A collection of packages for defining and using type-checked apis with TypeScript.
+A collection of packages for defining and using type-checked APIs with TypeScript.
 
 TypeScript is a powerful type system layered on top of JavaScript, but lacks type
 information about values received at runtime. This is [an explicit non-goal] of the
 TypeScript language, so we use [io-ts] to statically type this runtime data.
 [io-ts-http] builds on top of io-ts to define codecs that translate between HTTP
 requests and plain old JavaScript objects. Additionally, it provides a way to group
-these codecs into route definitions, and then collect the route definitions into an api.
-The resulting api definitions may then be used on the [client] and [server] to have
+these codecs into route definitions, and then collect the route definitions into an API.
+The resulting API definitions may then be used on the [client] and [server] to have
 type-checked and runtime-validated HTTP calls in a standardized manner.
 
 [an explicit non-goal]:
@@ -20,7 +20,7 @@ type-checked and runtime-validated HTTP calls in a standardized manner.
 [client]: packages/superagent-wrapper/README.md
 [server]: packages/express-wrapper/README.md
 
-## Getting started
+## Developing
 
 ```sh
 npm install
