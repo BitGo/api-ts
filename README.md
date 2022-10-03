@@ -20,7 +20,7 @@ type-checked and runtime-validated HTTP calls in a standardized manner.
 [client]: packages/superagent-wrapper/README.md
 [server]: packages/express-wrapper/README.md
 
-## Getting started
+## Developing
 
 ```sh
 npm install
