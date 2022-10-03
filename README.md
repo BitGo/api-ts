@@ -1,6 +1,6 @@
 # API-TS
 
-![Build Status](https://github.com/BitGo/api-ts/actions/workflows/ci.yml/badge.svg?branch=master)
+![Build Status](https://github.com/BitGo/api-ts/actions/workflows/release.yml/badge.svg?branch=master&event=push)
 
 **Disclaimer: This project is currently in beta state. Documentation is actively being
 worked on.**
