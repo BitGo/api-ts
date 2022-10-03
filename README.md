@@ -2,9 +2,6 @@
 
 ![Build Status](https://github.com/BitGo/api-ts/actions/workflows/ci.yml/badge.svg?branch=master)
 
-**Disclaimer: This project is currently in beta state. Documentation is actively being
-worked on.**
-
 A collection of packages for defining and using type-checked apis with TypeScript.
 
 TypeScript is a powerful type system layered on top of JavaScript, but lacks type
