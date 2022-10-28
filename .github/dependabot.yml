@@ -1,3 +1,4 @@
+---
 version: 2
 updates:
   # Enable GitHub Actions updates
@@ -5,12 +6,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    reviewers:
-      - '@BitGo/internal-tools'
     labels:
       - dependencies
       - github-actions
-    target-branch: master
 
   # Enable npm updates
   - package-ecosystem: npm
@@ -19,12 +17,9 @@ updates:
       interval: daily
       # UTC
       time: '08:00'
-    reviewers:
-      - '@BitGo/internal-tools'
     labels:
       - dependencies
       - npm
-    target-branch: master
     ignore:
       - dependency-name: io-ts
         versions: ['2.x']
