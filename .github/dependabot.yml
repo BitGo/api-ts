@@ -32,3 +32,7 @@ updates:
         versions: ['^4.8']
       - dependency-name: ts-morph
         versions: ['>=16']
+      # Ignore all @types/nodes patch updates, since
+      # this package updates so frequently
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-patch']
