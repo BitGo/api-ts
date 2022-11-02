@@ -206,7 +206,12 @@ describe('request', () => {
         .then(() => '')
         .catch((err) => (err instanceof DecodeError ? err.message : ''));
 
-      assert.equal(result, 'Could not decode response 200: {"invalid":"response"}');
+      console.log(result);
+
+      assert.equal(
+        result,
+        'Could not decode response 200: [{"invalid":"response"}] due to error [Invalid value undefined supplied to : { id: number, foo: string, bar: number, baz: boolean }/id: number\nInvalid value undefined supplied to : { id: number, foo: string, bar: number, baz: boolean }/foo: string\nInvalid value undefined supplied to : { id: number, foo: string, bar: number, baz: boolean }/bar: number\nInvalid value undefined supplied to : { id: number, foo: string, bar: number, baz: boolean }/baz: boolean]',
+      );
     });
   });
 
