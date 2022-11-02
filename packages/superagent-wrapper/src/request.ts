@@ -108,6 +108,11 @@ const hasCodecForStatus = <S extends number>(
   return status in responses && responses[status] !== undefined;
 };
 
+const stringify = (value: unknown): string =>
+  JSON.stringify(value, (_key: string, value: unknown) =>
+    typeof value === 'bigint' ? value.toString() : value,
+  );
+
 const patchRequest = <
   Req extends SuperagentRequest<Response>,
   Route extends h.HttpRoute,
@@ -156,14 +161,14 @@ const patchRequest = <
   ) =>
     patchedReq.decode().then((res) => {
       if (res.original.status !== status) {
-        const error = `Unexpected response ${res.original.status}: ${JSON.stringify(
+        const error = `Unexpected response ${res.original.status}: ${stringify(
           res.original.body,
         )}`;
         throw new DecodeError(error, res as DecodedResponse<h.HttpRoute>);
       } else if (res.status === 'decodeError') {
-        const error = `Could not decode response ${
-          res.original.status
-        }: ${JSON.stringify(res.original.body)}`;
+        const error = `Could not decode response ${res.original.status}: [${stringify(
+          res.original.body,
+        )}] due to error [${res.error}]`;
         throw new DecodeError(error, res as DecodedResponse<h.HttpRoute>);
       } else {
         return res as ExpectedDecodedResponse<Route, StatusCode>;
@@ -207,7 +212,7 @@ export const requestForRoute =
 
     if (reqProps.body) {
       request.set('content-type', 'application/json');
-      request = request.send(JSON.stringify(reqProps.body));
+      request = request.send(stringify(reqProps.body));
     }
 
     return patchRequest(route, request);
