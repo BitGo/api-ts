@@ -41,6 +41,6 @@
     "typescript": "4.6.4"
   },
   "engines": {
-    "npm": ">6"
+    "npm": ">=7"
   }
 }
