@@ -19,10 +19,7 @@ export const optional = <C extends t.Mixed>(subCodec: C) =>
 export const optionalized = <P extends t.Props>(props: P): OptionalizedC<P> => {
   const requiredProps: t.Props = {};
   const optionalProps: t.Props = {};
-  for (const key in props) {
-    if (!props.hasOwnProperty(key)) {
-      continue;
-    }
+  for (const key of Object.keys(props)) {
     const codec = props[key]!;
     const isOptional = codec.is(undefined);
     if (isOptional) {
