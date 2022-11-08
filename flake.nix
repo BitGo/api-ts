@@ -25,7 +25,7 @@
             name = "api-ts-shell";
 
             packages = with pkgs; [
-              nodejs-16_x
+              nodejs
             ];
 
             shellHook = ''
