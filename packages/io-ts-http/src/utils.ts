@@ -1,5 +1,17 @@
 import type * as t from 'io-ts';
 
+type Defined<T> = T extends undefined ? never : T;
+
+export type DefinedValues<T> = {
+  [K in keyof T]: Defined<T[K]>;
+};
+
+type DefinedProps<Props extends t.Props> = {
+  [K in keyof Props]: Props[K] extends t.Type<infer A, infer O, infer I>
+    ? t.Type<Defined<A>, O, I>
+    : never;
+};
+
 type PossiblyUndefinedKeys<T> = {
   [K in keyof T]: undefined extends T[K] ? K : never;
 }[keyof T];
@@ -9,12 +21,12 @@ export type PossiblyUndefinedProps<T extends t.Props> = {
 }[keyof T];
 
 type Optionalized<T> = Simplify<
-  Omit<T, PossiblyUndefinedKeys<T>> & Partial<Pick<T, PossiblyUndefinedKeys<T>>>
+  Omit<T, PossiblyUndefinedKeys<T>> &
+    Partial<DefinedValues<Pick<T, PossiblyUndefinedKeys<T>>>>
 >;
 
-export type OptionalProps<Props extends t.Props> = Pick<
-  Props,
-  PossiblyUndefinedProps<Props>
+export type OptionalProps<Props extends t.Props> = DefinedProps<
+  Pick<Props, PossiblyUndefinedProps<Props>>
 >;
 
 export type RequiredProps<Props extends t.Props> = Omit<
