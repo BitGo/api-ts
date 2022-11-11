@@ -12,7 +12,7 @@ export const GenericHttpRequest = optionalized({
 
 export type HttpRequestCodec<T> = t.Type<
   T,
-  t.TypeOf<typeof GenericHttpRequest>,
+  t.OutputOf<typeof GenericHttpRequest>,
   unknown
 >;
 
