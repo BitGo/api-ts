@@ -13,8 +13,8 @@ import {
   Simplify,
 } from './utils';
 
-export const optional = <C extends t.Mixed>(subCodec: C) =>
-  t.union([subCodec, t.undefined]);
+export const optional = <C extends t.Mixed>(codec: C): t.UnionC<[C, t.UndefinedC]> =>
+  t.union([codec, t.undefined]);
 
 export const optionalized = <P extends t.Props>(props: P): OptionalizedC<P> => {
   const requiredProps: t.Props = {};
