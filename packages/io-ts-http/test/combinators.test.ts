@@ -93,11 +93,22 @@ describe('optionalized', () => {
   it('does not add explicit undefined properties when encoding', () =>
     assertEncodes(codec, { a: 'a', b: 1 }));
 
-  it('keeps explicit undefined properties when encoding', () => {
+  it('strips explicit undefined properties when decoding', () => {
     const optionalCodec = c.optionalized({
       a: c.optional(t.number),
+      b: t.string,
     });
-    assertEncodes(optionalCodec, { a: undefined });
+    const expected = { b: 'foo' };
+    assertDecodes(optionalCodec, { a: undefined, b: 'foo' }, expected);
+  });
+
+  it('strips explicit undefined properties when encoding', () => {
+    const optionalCodec = c.optionalized({
+      a: c.optional(t.number),
+      b: t.string,
+    });
+    const expected = { b: 'foo' };
+    assertEncodes(optionalCodec, { a: undefined, b: 'foo' }, expected);
   });
 
   it('decodes explicit null properties', () => {
