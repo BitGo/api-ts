@@ -20,6 +20,8 @@ updates:
     labels:
       - dependencies
       - npm
+    allow:
+      - dependency-type: all
     ignore:
       - dependency-name: io-ts
         versions: ['2.x']
