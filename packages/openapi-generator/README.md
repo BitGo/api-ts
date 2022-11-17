@@ -1,18 +1,18 @@
 # @api-ts/openapi-generator
 
-Command-line utility for converting a collection of io-ts-http routes into an OpenAPI
-specification.
+The api-ts **openapi-generator** is a command-line utility for converting an io-ts-http
+API specification into an OpenAPI specification.
 
-# Usage
+## Install
 
-This utility is intended to be run on packages that export a collection of `io-ts-http`
-routes and related codecs. The default assumption is that the routes are exported in the
-top level `index.ts` file, however it should work if the routes are specified elsewhere
-by using the `--input` option.
+```
+npm install --save-dev @api-ts/openapi-generator
+```
 
-# Parameters
+## Use
 
-openapi-generator accepts several command-line arguments, all of which are optional.
+The **openapi-generator** assumes the io-ts-http `apiSpec` is exported in the top level
+`index.ts` file. If your spec lives elsewhere, use the `--input` option.
 
 ```
 OPTIONS:
@@ -24,4 +24,10 @@ OPTIONS:
 FLAGS:
   --internal, -i - include routes marked private
   --help, -h     - show help
+```
+
+For example:
+
+```shell
+npx openapi-generator --input src/index.ts --output api.json
 ```
