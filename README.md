@@ -1,6 +1,9 @@
 # api-ts
 
-![Build Status](https://github.com/BitGo/api-ts/actions/workflows/release.yml/badge.svg?branch=master&event=push)
+[![Build Status]](https://github.com/BitGo/api-ts/actions/workflows/release.yml)
+
+[build status]:
+  https://github.com/BitGo/api-ts/actions/workflows/release.yml/badge.svg?event=push
 
 A collection of packages for defining and using type-checked APIs with TypeScript.
 
