@@ -2,7 +2,7 @@ import * as h from '@api-ts/io-ts-http';
 import * as E from 'fp-ts/Either';
 import * as t from 'io-ts';
 import * as PathReporter from 'io-ts/lib/PathReporter';
-import { URL } from 'url';
+import { URL } from 'whatwg-url';
 import { pipe } from 'fp-ts/function';
 
 type SuccessfulResponses<Route extends h.HttpRoute> = {
