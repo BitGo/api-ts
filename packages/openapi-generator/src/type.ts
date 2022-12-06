@@ -231,7 +231,7 @@ export const parseIntersection: ParseStep = (ctx) => {
   // are also plain schema objects (so not refs, unions, etc)
   let allOf: [
     OpenAPIV3_1.SchemaObject,
-    ...(OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject)[]
+    ...(OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject)[],
   ] = [{}];
 
   for (const innerType of t.getIntersectionTypes()) {
