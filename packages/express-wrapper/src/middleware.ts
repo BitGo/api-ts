@@ -8,7 +8,7 @@ export type MiddlewareFn<T extends {}> = (
   res: express.Response,
 ) => Promise<T>;
 
-type MiddlewareHandler<T extends {} = {}> = {
+export type MiddlewareHandler<T extends {} = {}> = {
   (req: express.Request, res: express.Response, next: express.NextFunction): void;
   [MiddlewareBrand]: T;
 };
