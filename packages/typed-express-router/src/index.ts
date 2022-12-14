@@ -5,7 +5,7 @@
 import { ApiSpec, HttpRoute, KeyToHttpStatus } from '@api-ts/io-ts-http';
 import express from 'express';
 import * as E from 'fp-ts/Either';
-import { pipe } from 'fp-ts/function';
+import { pipe } from 'fp-ts/pipeable';
 import { defaultOnDecodeError, defaultOnEncodeError } from './errors';
 import { apiTsPathToExpress } from './path';
 import {
