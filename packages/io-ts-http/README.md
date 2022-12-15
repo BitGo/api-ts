@@ -66,12 +66,12 @@ generic HTTP requests into a more refined object. For example:
 
 ```typescript
 import { httpRequest, optional } from '@api-ts/io-ts-http';
-import { DateFromString, NumberFromString } from 'io-ts-types';
+import { DateFromISOString, NumberFromString } from 'io-ts-types';
 
 const ExampleHttpRequest = httpRequest({
   query: {
     id: NumberFromString,
-    time: optional(DateFromString),
+    time: optional(DateFromISOString),
   },
 });
 ```
@@ -352,7 +352,7 @@ When you decode `httpRequests` using `io-ts` helpers, the properties of the requ
 flattened like this:
 
 ```typescript
-import { DateFromString, NumberFromString } from 'io-ts-types';
+import { DateFromISOString, NumberFromString } from 'io-ts-types';
 
 // build an httpRequest with one parameter id and a body with content and a timestamp
 const Request = httpRequest({
