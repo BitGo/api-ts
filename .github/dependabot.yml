@@ -22,6 +22,7 @@ updates:
       - npm
     allow:
       - dependency-type: direct
+    versioning-strategy: increase-if-necessary
     ignore:
       - dependency-name: io-ts
         versions: ['2.x']
