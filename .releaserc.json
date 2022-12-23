@@ -3,6 +3,11 @@
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     "@semrel-extra/npm",
-    "@semantic-release/github"
+    [
+      "@semantic-release/github",
+      {
+        "successComment": ":tada: This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.gitTag}</br></br>The release is available on [${releaseInfos[0].name}](${releaseInfos[0].url}) :tada:</br></br>Your **[semantic-release](https://github.com/semantic-release/semantic-release)** bot :package::rocket:"
+      }
+    ]
   ]
 }
