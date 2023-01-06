@@ -25,16 +25,16 @@ export const defaultResponseEncoder: ResponseEncoder =
     const { type, payload } = serviceFnResponse;
     const status = typeof type === 'number' ? type : (KeyToHttpStatus as any)[type];
     if (status === undefined) {
-      console.warn('Unknown status code returned');
+      console.warn(`Unknown status code ${status} returned`);
       res.status(500).end();
       return;
     }
     const responseCodec = route.response[status];
     try {
       res.status(status).json(responseCodec!.encode(payload)).end();
-    } catch {
+    } catch (err) {
       console.warn(
-        "Unable to encode route's return value, did you return the expected type?",
+        `Unable to encode route's return value, did you return the expected type?: ${err}`,
       );
       res.status(500).end();
     }
