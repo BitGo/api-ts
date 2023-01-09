@@ -6,7 +6,7 @@
     [
       "@semantic-release/github",
       {
-        "successComment": ":tada: This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.gitTag}</br></br>The release is available on [${releaseInfos[0].name}](${releaseInfos[0].url}) :tada:</br></br>Your **[semantic-release](https://github.com/semantic-release/semantic-release)** bot :package::rocket:"
+        "successComment": ":tada: This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.gitTag}</br></br>The release is available on [${releases[0].name}](${releases[0].url}) :tada:</br></br>Your **[semantic-release](https://github.com/semantic-release/semantic-release)** bot :package::rocket:"
       }
     ]
   ]
