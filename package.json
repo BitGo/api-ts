@@ -29,7 +29,6 @@
   },
   "pre-commit": "lint-staged",
   "devDependencies": {
-    "@semantic-release/npm": "9.0.2",
     "@semrel-extra/npm": "1.2.0",
     "@types/node": "18.11.7",
     "lint-staged": "13.1.0",
