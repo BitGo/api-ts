@@ -92,7 +92,7 @@ export function wrapRouter<Spec extends ApiSpec>(
         req.apiName = apiName;
         req.httpRoute = route;
         res.sendEncoded = (
-          status: keyof typeof route['response'],
+          status: keyof (typeof route)['response'],
           payload: unknown,
         ) => {
           try {
