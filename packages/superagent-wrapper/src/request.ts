@@ -1,9 +1,10 @@
 import * as h from '@api-ts/io-ts-http';
 import * as E from 'fp-ts/Either';
+import { pipe } from 'fp-ts/pipeable';
 import * as t from 'io-ts';
 import * as PathReporter from 'io-ts/lib/PathReporter';
+import { posix } from 'path';
 import { URL } from 'whatwg-url';
-import { pipe } from 'fp-ts/pipeable';
 
 type SuccessfulResponses<Route extends h.HttpRoute> = {
   [R in keyof Route['response']]: {
@@ -85,7 +86,8 @@ export const superagentRequestFactory =
       throw Error(`Unsupported http method "${route.method}"`);
     }
     const url = new URL(base);
-    url.pathname = substitutePathParams(route.path, params);
+    const substitutedPath = substitutePathParams(route.path, params);
+    url.pathname = posix.join(url.pathname, substitutedPath);
     return superagent[method](url.toString());
   };
 

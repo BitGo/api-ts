@@ -7,7 +7,7 @@ import * as t from 'io-ts';
 import { NumberFromString } from 'io-ts-types';
 import superagent from 'superagent';
 import supertest from 'supertest';
-import { URL } from 'url';
+import { URL } from 'whatwg-url';
 
 import {
   DecodeError,
@@ -214,7 +214,9 @@ describe('request', () => {
   });
 
   describe('superagent', async () => {
-    it('does not throw on non-2xx status codes', async () => {
+    let baseUrl = '';
+
+    before(() => {
       // Figure out what host/port supertest set up (the response is just thrown away on purpose)
       const superTestReq = apiClient['api.v1.test'].post({
         id: 1337,
@@ -222,12 +224,16 @@ describe('request', () => {
         bar: 42,
       });
 
-      // Construct an api client that uses superagent, with the base url extracted from the supertest
-      // request above.
       const url = new URL(superTestReq.url);
       url.pathname = '/';
+      baseUrl = url.toString();
+    });
+
+    it('does not throw on non-2xx status codes', async () => {
+      // Construct an api client that uses superagent, with the base url extracted from the supertest
+      // request in `before`.
       const superagentClient = buildApiClient(
-        superagentRequestFactory(superagent, url.toString()),
+        superagentRequestFactory(superagent, baseUrl),
         TestRoutes,
       );
 
@@ -237,6 +243,56 @@ describe('request', () => {
         .decode();
 
       assert.equal(req.status, 401);
+    });
+
+    it('supports apis with non-root base paths', async () => {
+      // This is kinda hacky, but the alternative was setting up a whole new express app with extended paths,
+      // starting it in supertest, and then finding what port it is running on again and creating a superagent
+      // client. Instead, I'm defining a route identical to `PostTestRoute` except with the first path component removed
+      const NonRootPostTestRoute = h.httpRoute({
+        path: '/{id}',
+        method: 'POST',
+        request: h.httpRequest({
+          query: {
+            foo: t.string,
+          },
+          params: {
+            id: NumberFromString,
+          },
+          body: {
+            bar: t.number,
+          },
+        }),
+        response: {
+          200: t.type({
+            id: t.number,
+            foo: t.string,
+            bar: t.number,
+            baz: t.boolean,
+          }),
+          401: t.type({
+            message: t.string,
+          }),
+        },
+      });
+
+      const prefixedUrl = new URL('/test', baseUrl);
+      const superagentClient = buildApiClient(
+        superagentRequestFactory(superagent, prefixedUrl.toString()),
+        {
+          test: { post: NonRootPostTestRoute },
+        },
+      );
+
+      const response = await superagentClient['test']
+        .post({
+          id: 1234,
+          foo: 'hello',
+          bar: 1337,
+        })
+        .decodeExpecting(200);
+
+      assert.deepEqual(response.body, { id: 1234, foo: 'hello', bar: 1337, baz: true });
     });
   });
 });
