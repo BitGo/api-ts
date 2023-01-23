@@ -29,7 +29,7 @@
   },
   "pre-commit": "lint-staged",
   "devDependencies": {
-    "@semantic-release-extras/github-comment-specific": "1.0.3",
+    "@semantic-release-extras/github-comment-specific": "1.0.5",
     "@semrel-extra/npm": "1.2.0",
     "@types/node": "18.11.7",
     "lint-staged": "13.1.0",
