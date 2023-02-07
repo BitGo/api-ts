@@ -1,11 +1,11 @@
 /*
  * @api-ts/typed-express-router
  */
-
 import { ApiSpec, HttpRoute, KeyToHttpStatus } from '@api-ts/io-ts-http';
 import express from 'express';
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/pipeable';
+
 import { defaultOnDecodeError, defaultOnEncodeError } from './errors';
 import { apiTsPathToExpress } from './path';
 import {
@@ -87,7 +87,12 @@ export function wrapRouter<Spec extends ApiSpec>(
         throw Error(`Method "${method}" at "${apiName}" must not be "undefined"'`);
       }
       const wrapReqAndRes: UncheckedRequestHandler = (req, res, next) => {
-        const decoded = route.request.decode(req);
+        const decoded = route.request.decode({
+          body: req.body,
+          headers: req.headers,
+          params: req.params,
+          query: req.query,
+        });
         req.decoded = decoded;
         req.apiName = apiName;
         req.httpRoute = route;
