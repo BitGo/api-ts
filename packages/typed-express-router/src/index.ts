@@ -87,7 +87,15 @@ export function wrapRouter<Spec extends ApiSpec>(
         throw Error(`Method "${method}" at "${apiName}" must not be "undefined"'`);
       }
       const wrapReqAndRes: UncheckedRequestHandler = (req, res, next) => {
-        const decoded = route.request.decode(req);
+        // Intentionally passing explicit arguments here instead of decoding
+        // req by itself because of issues that arise while using Node 16
+        // See https://github.com/BitGo/api-ts/pull/394 for more information.
+        const decoded = route.request.decode({
+          body: req.body,
+          headers: req.headers,
+          params: req.params,
+          query: req.query,
+        });
         req.decoded = decoded;
         req.apiName = apiName;
         req.httpRoute = route;
