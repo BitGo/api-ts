@@ -6,6 +6,7 @@ import * as E from 'fp-ts/Either';
 import * as fs from 'fs';
 import * as p from 'path';
 import { promisify } from 'util';
+import * as yaml from 'yaml';
 
 import { componentsForProject } from './project';
 
@@ -75,7 +76,9 @@ const app = command({
         (api) => api,
       ),
     );
-    const formattedApi = JSON.stringify(api, null, 2) + '\n';
+    const formattedApi = output.includes('.yaml')
+      ? yaml.stringify(api, null, 2) + '\n'
+      : JSON.stringify(api, null, 2) + '\n';
     await writeFile(output, formattedApi);
   },
 });
