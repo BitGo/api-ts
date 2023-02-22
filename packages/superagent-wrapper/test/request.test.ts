@@ -1,5 +1,4 @@
 import * as h from '@api-ts/io-ts-http';
-import bodyParser from 'body-parser';
 import { assert } from 'chai';
 import express from 'express';
 import * as E from 'fp-ts/Either';
@@ -64,7 +63,7 @@ const TestRoutes = h.apiSpec({
 });
 
 const testApp = express();
-testApp.use(bodyParser.json());
+testApp.use(express.json());
 
 testApp.post('/test/:id', (req, res) => {
   const filteredReq = {
