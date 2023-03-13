@@ -25,7 +25,7 @@
   "devDependencies": {
     "@api-ts/superagent-wrapper": "0.0.0-semantically-released",
     "@api-ts/typed-express-router": "0.0.0-semantically-released",
-    "@ava/typescript": "3.0.1",
+    "@ava/typescript": "4.0.0",
     "@types/express": "4.17.17",
     "ava": "5.2.0",
     "c8": "7.13.0",
