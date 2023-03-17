@@ -27,7 +27,7 @@ updates:
       - dependency-name: io-ts
         versions: ['2.x']
       - dependency-name: typescript
-        versions: ['^4.8']
+        versions: ['^>4.8']
       - dependency-name: ts-morph
         versions: ['>=16']
       # Ignore all @types/nodes patch updates, since
