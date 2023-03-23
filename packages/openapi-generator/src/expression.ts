@@ -174,6 +174,21 @@ const SPECIAL_CASES: SpecialCaseMap = {
         })),
       ),
   },
+  'query-param-types/dist/src/index': {
+    nonEmptyArrayFromQueryParam: (location) =>
+      pipe(
+        getFirstArgument(location),
+        RE.chain(toOpenAPISchema),
+        RE.map(({ schema }) => ({
+          schema: {
+            title: 'NonEmptyArrayFromQueryParam',
+            type: 'array',
+            items: schema,
+          },
+          required: true,
+        })),
+      ),
+  },
   'io-ts-types/lib/DateFromISOString': {
     DateFromISOString: () =>
       RE.right({
@@ -190,7 +205,7 @@ const SPECIAL_CASES: SpecialCaseMap = {
         getFirstArgument(location),
         RE.chain(toOpenAPISchema),
         RE.map(({ schema }) => ({
-          schema: { type: 'array', items: schema },
+          schema,
           required: false,
         })),
       ),
