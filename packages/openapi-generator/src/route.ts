@@ -148,7 +148,34 @@ const routeSummary = (init: Node) => {
   if (!sym) {
     return 'Unknown route';
   } else {
-    return (sym.getAliasedSymbol() ?? sym).getName();
+    const summaryTag = sym.getJsDocTags().find((tag) => tag.getName() === 'summary');
+    return summaryTag?.getText()[0]?.text ?? (sym.getAliasedSymbol() ?? sym).getName();
+  }
+};
+
+const routeOperationId = (init: Node) => {
+  const sym = init.getSymbol();
+  if (!sym) {
+    return 'unknown.route';
+  } else {
+    const operationIdTag = sym
+      .getJsDocTags()
+      .find((tag) => tag.getName() === 'operationId');
+    return (
+      operationIdTag?.getText()[0]?.text ?? (sym.getAliasedSymbol() ?? sym).getName()
+    );
+  }
+};
+
+const routeApiDocsTags = (init: Node) => {
+  const sym = init.getSymbol();
+  if (!sym) {
+    return ['Unknown'];
+  } else {
+    const apiDocsTags = sym.getJsDocTags().find((tag) => tag.getName() === 'tags');
+    const commaDelimitedTags = apiDocsTags?.getText()[0]?.text;
+    const tags = commaDelimitedTags?.split(',');
+    return tags ?? [(sym.getAliasedSymbol() ?? sym).getName()];
   }
 };
 
@@ -192,6 +219,8 @@ export const schemaForRouteNode = (memo: any) => (node: Expression<ts.Expression
   pipe(
     RE.right(routeDescription(node)),
     RE.bind('summary', () => RE.right(routeSummary(node))),
+    RE.bind('operationId', () => RE.right(routeOperationId(node))),
+    RE.bind('tags', () => RE.right(routeApiDocsTags(node))),
     RE.bind('path', () => stringLiteralValueOfBaseProperty('path')),
     RE.bind('method', () =>
       pipe(

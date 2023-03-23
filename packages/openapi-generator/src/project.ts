@@ -89,6 +89,8 @@ const routesForSymbol =
               body,
               responses,
               summary,
+              operationId,
+              tags,
               description,
               isPrivate,
             },
@@ -101,6 +103,8 @@ const routesForSymbol =
                     ...paths[path],
                     [method]: {
                       summary,
+                      operationId,
+                      tags,
                       ...(description !== undefined ? { description } : {}),
                       ...(isPrivate ? { 'x-internal': true } : {}),
                       parameters: [
@@ -165,6 +169,11 @@ export function componentsForProject(
         title: config.name,
         version: version,
       },
+      servers: [
+        {
+          url: '',
+        },
+      ],
       paths,
       components: {
         schemas: memo,
