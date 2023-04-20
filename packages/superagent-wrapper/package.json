@@ -16,7 +16,7 @@
     "format:fix": "prettier --write .",
     "test": "c8 --all mocha test/**/*.test.ts --require ts-node/register --exit"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
     "fp-ts": "^2.0.0",
     "io-ts": "2.1.3",
