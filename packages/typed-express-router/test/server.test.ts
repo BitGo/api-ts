@@ -1,4 +1,5 @@
-import test from 'ava';
+import test from 'node:test';
+import { strict as assert } from 'node:assert';
 
 import * as t from 'io-ts';
 import express from 'express';
@@ -108,7 +109,7 @@ const GetHelloWorld: TypedRequestHandler<TestApiSpec, 'hello.world', 'get'> = (
   res,
 ) => res.sendEncoded(200, { id });
 
-test('should match basic routes', async (t) => {
+test('should match basic routes', async () => {
   const router = createRouter(TestApiSpec);
 
   router.put('hello.world', [routeMiddleware, CreateHelloWorld]);
@@ -127,10 +128,10 @@ test('should match basic routes', async (t) => {
     .decodeExpecting(200)
     .then((res) => res.body);
 
-  t.like(response, { message: "Who's there?" });
+  assert.equal(response.message, "Who's there?");
 });
 
-test('should match aliased routes', async (t) => {
+test('should match aliased routes', async () => {
   const router = createRouter(TestApiSpec);
 
   router.get('hello.world', [GetHelloWorld], { routeAliases: ['/alternateHello/:id'] });
@@ -147,10 +148,10 @@ test('should match aliased routes', async (t) => {
     .expect(200)
     .then((res) => res.body);
 
-  t.like(response, { id: '1234' });
+  assert.equal(response.id, '1234');
 });
 
-test('should invoke post-response hook', async (t) => {
+test('should invoke post-response hook', async () => {
   const router = createRouter(TestApiSpec);
 
   let hookRun = false;
@@ -171,10 +172,10 @@ test('should invoke post-response hook', async (t) => {
 
   await apiClient['hello.world'].put({ secretCode: 1000 }).expect(200);
 
-  t.true(hookRun);
+  assert.ok(hookRun);
 });
 
-test('should match first defined route when there is an overlap', async (t) => {
+test('should match first defined route when there is an overlap', async () => {
   const router = createRouter(TestApiSpec);
 
   router.get('hello.world', [GetHelloWorld]);
@@ -196,11 +197,11 @@ test('should match first defined route when there is an overlap', async (t) => {
   const response = await apiClient['hello.world.overlap'].get({}).decode();
 
   // Defined the wider route first, so that should be matched and cause a decode error
-  t.is(response.status, 'decodeError');
-  t.like(response.body, { id: 'world' });
+  assert.equal(response.status, 'decodeError');
+  assert.equal((response.body as any).id, 'world');
 });
 
-test('should handle io-ts-http formatted path parameters', async (t) => {
+test('should handle io-ts-http formatted path parameters', async () => {
   const router = createRouter(TestApiSpec);
 
   router.put('hello.world', [routeMiddleware, CreateHelloWorld]);
@@ -219,10 +220,10 @@ test('should handle io-ts-http formatted path parameters', async (t) => {
     .decodeExpecting(200)
     .then((res) => res.body);
 
-  t.like(response, { id: '1337' });
+  assert.equal(response.id, '1337');
 });
 
-test('should invoke app-level middleware', async (t) => {
+test('should invoke app-level middleware', async () => {
   const router = createRouter(TestApiSpec);
 
   router.put('hello.world', [CreateHelloWorld]);
@@ -241,10 +242,11 @@ test('should invoke app-level middleware', async (t) => {
     .decodeExpecting(200)
     .then((res) => res.body);
 
-  t.like(response, { message: "Who's there?", appMiddlewareRan: true });
+  assert.equal(response.message, "Who's there?");
+  assert.equal(response.appMiddlewareRan, true);
 });
 
-test('should invoke router-level middleware', async (t) => {
+test('should invoke router-level middleware', async () => {
   const router = createRouter(TestApiSpec);
 
   let routerMiddlewareRan: string = '';
@@ -268,11 +270,12 @@ test('should invoke router-level middleware', async (t) => {
     .decodeExpecting(200)
     .then((res) => res.body);
 
-  t.like(response, { message: "Who's there?", appMiddlewareRan: false });
-  t.is(routerMiddlewareRan, 'hello.world');
+  assert.equal(response.message, "Who's there?");
+  assert.equal(response.appMiddlewareRan, false);
+  assert.equal(routerMiddlewareRan, 'hello.world');
 });
 
-test('router-level middleware should run before request validation on checked routes', async (t) => {
+test('router-level middleware should run before request validation on checked routes', async () => {
   const router = createRouter(TestApiSpec);
 
   let routerMiddlewareRan: string = '';
@@ -292,10 +295,10 @@ test('router-level middleware should run before request validation on checked ro
 
   await apiClient['hello.world'].put({} as any).expect(400);
 
-  t.is(routerMiddlewareRan, 'hello.world');
+  assert.equal(routerMiddlewareRan, 'hello.world');
 });
 
-test('should invoke route-level middleware', async (t) => {
+test('should invoke route-level middleware', async () => {
   const router = createRouter(TestApiSpec);
 
   router.put('hello.world', [routeMiddleware, CreateHelloWorld]);
@@ -313,10 +316,11 @@ test('should invoke route-level middleware', async (t) => {
     .decodeExpecting(200)
     .then((res) => res.body);
 
-  t.like(response, { message: "Who's there?", routeMiddlewareRan: true });
+  assert.equal(response.message, "Who's there?");
+  assert.equal(response.routeMiddlewareRan, true);
 });
 
-test('should infer status code from response type', async (t) => {
+test('should infer status code from response type', async () => {
   const router = createRouter(TestApiSpec);
 
   router.put('hello.world', [routeMiddleware, CreateHelloWorld]);
@@ -334,10 +338,10 @@ test('should infer status code from response type', async (t) => {
     .decodeExpecting(400)
     .then((res) => res.body);
 
-  t.like(response, { errors: 'Please do not tell me zero! I will now explode' });
+  assert.equal(response.errors, 'Please do not tell me zero! I will now explode');
 });
 
-test('should return a 400 when request fails to decode', async (t) => {
+test('should return a 400 when request fails to decode', async () => {
   const router = createRouter(TestApiSpec);
 
   router.put('hello.world', [routeMiddleware, CreateHelloWorld]);
@@ -347,7 +351,7 @@ test('should return a 400 when request fails to decode', async (t) => {
   app.use(express.json());
   app.use(router);
 
-  t.notThrows(async () => {
+  assert.doesNotReject(async () => {
     await supertest(app)
       .put('/hello')
       .set('Content-Type', 'application/json')
@@ -355,7 +359,7 @@ test('should return a 400 when request fails to decode', async (t) => {
   });
 });
 
-test('should invoke custom decode error function', async (t) => {
+test('should invoke custom decode error function', async () => {
   const router = createRouter(TestApiSpec, {
     onDecodeError: (_errs, _req, res) => {
       res.status(400).json('Custom decode error').end();
@@ -381,10 +385,10 @@ test('should invoke custom decode error function', async (t) => {
   const apiClient = supertest(app);
   const response = await apiClient.get('/helloNoPathParams').expect(400);
 
-  t.is(response.body, 'Custom decode error');
+  assert.equal(response.body, 'Custom decode error');
 });
 
-test('should invoke per-route custom decode error function', async (t) => {
+test('should invoke per-route custom decode error function', async () => {
   const router = createRouter(TestApiSpec, {
     onDecodeError: (_errs, _req, res) => {
       res.status(400).json('Top-level decode error').end();
@@ -413,10 +417,10 @@ test('should invoke per-route custom decode error function', async (t) => {
   const apiClient = supertest(app);
   const response = await apiClient.get('/helloNoPathParams').expect(400);
 
-  t.is(response.body, 'Route decode error');
+  assert.equal(response.body, 'Route decode error');
 });
 
-test('should send a 500 when response type does not match', async (t) => {
+test('should send a 500 when response type does not match', async () => {
   const router = createRouter(TestApiSpec);
 
   router.get('hello.world', [
@@ -433,10 +437,10 @@ test('should send a 500 when response type does not match', async (t) => {
   const apiClient = buildApiClient(supertestRequestFactory(server), TestApiSpec);
   const response = await apiClient['hello.world'].get({ id: '1234' }).decode();
 
-  t.is(response.original.status, 500);
+  assert.equal(response.original.status, 500);
 });
 
-test('should invoke custom encode error function when response type does not match', async (t) => {
+test('should invoke custom encode error function when response type does not match', async () => {
   const router = createRouter(TestApiSpec, {
     onEncodeError: (_err, _req, res) => {
       res.status(500).json('Custom encode error').end();
@@ -457,11 +461,11 @@ test('should invoke custom encode error function when response type does not mat
   const apiClient = buildApiClient(supertestRequestFactory(server), TestApiSpec);
   const response = await apiClient['hello.world'].get({ id: '1234' }).decode();
 
-  t.is(response.original.status, 500);
-  t.is(response.body, 'Custom encode error');
+  assert.equal(response.original.status, 500);
+  assert.equal(response.body, 'Custom encode error');
 });
 
-test('should invoke per-route custom encode error function when response type does not match', async (t) => {
+test('should invoke per-route custom encode error function when response type does not match', async () => {
   const router = createRouter(TestApiSpec, {
     onEncodeError: (_err, _req, res) => {
       res.status(500).json('Top-level encode error').end();
@@ -490,11 +494,11 @@ test('should invoke per-route custom encode error function when response type do
   const apiClient = buildApiClient(supertestRequestFactory(server), TestApiSpec);
   const response = await apiClient['hello.world'].get({ id: '1234' }).decode();
 
-  t.is(response.original.status, 500);
-  t.is(response.body, 'Route encode error');
+  assert.equal(response.original.status, 500);
+  assert.equal(response.body, 'Route encode error');
 });
 
-test('should invoke custom encode error function when an unknown HTTP status is passed to `sendEncoded`', async (t) => {
+test('should invoke custom encode error function when an unknown HTTP status is passed to `sendEncoded`', async () => {
   const router = createRouter(TestApiSpec, {
     onEncodeError: (_err, _req, res) => {
       res.status(500).json('Custom encode error').end();
@@ -515,11 +519,11 @@ test('should invoke custom encode error function when an unknown HTTP status is 
   const apiClient = buildApiClient(supertestRequestFactory(server), TestApiSpec);
   const response = await apiClient['hello.world'].get({ id: '1234' }).decode();
 
-  t.is(response.original.status, 500);
-  t.is(response.body, 'Custom encode error');
+  assert.equal(response.original.status, 500);
+  assert.equal(response.body, 'Custom encode error');
 });
 
-test('should invoke custom encode error function when an unknown keyed status is passed to `sendEncoded`', async (test) => {
+test('should invoke custom encode error function when an unknown keyed status is passed to `sendEncoded`', async () => {
   const WeirdApi = apiSpec({
     foo: {
       get: httpRoute({
@@ -553,8 +557,8 @@ test('should invoke custom encode error function when an unknown keyed status is
   const apiClient = buildApiClient(supertestRequestFactory(server), WeirdApi);
   const response = await apiClient['foo'].get({}).decode();
 
-  test.is(response.original.status, 500);
-  test.is(response.body, 'Custom encode error');
+  assert.equal(response.original.status, 500);
+  assert.equal(response.body, 'Custom encode error');
 });
 
 const ExplicitUndefinedApiSpec = apiSpec({
@@ -563,10 +567,10 @@ const ExplicitUndefinedApiSpec = apiSpec({
   },
 });
 
-test('should throw on explicitly undefined route definition', async (t) => {
+test('should throw on explicitly undefined route definition', async () => {
   const router = createRouter(ExplicitUndefinedApiSpec);
 
-  t.throws(() => {
+  assert.throws(() => {
     router.get('empty', [
       (_req, res) => {
         res.send(200);
