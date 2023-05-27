@@ -17,7 +17,7 @@
     "clean": "rm -rf -- dist",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "test": "c8 --all --src src ava test/corpusFiles/*.ts"
+    "test": "c8 --all --src src node --loader tsx --test test/test-entrypoint.ts"
   },
   "dependencies": {
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
@@ -31,23 +31,9 @@
     "typescript": "4.7.4"
   },
   "devDependencies": {
-    "@ava/typescript": "3.0.1",
-    "ava": "5.2.0",
     "c8": "7.13.0",
     "parser-ts": "0.7.0",
-    "ts-node": "10.9.1"
-  },
-  "ava": {
-    "typescript": {
-      "compile": false,
-      "extensions": [
-        "ts"
-      ],
-      "rewritePaths": {
-        "test/": "dist/test/"
-      }
-    },
-    "timeout": "2m"
+    "tsx": "3.12.7"
   },
   "publishConfig": {
     "access": "public"
