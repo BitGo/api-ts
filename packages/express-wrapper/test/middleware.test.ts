@@ -1,4 +1,6 @@
-import test from 'ava';
+import test from 'node:test';
+import { strict as assert } from 'node:assert';
+
 import express from 'express';
 
 import { middlewareFn, runMiddlewareChain } from '../src/middleware';
@@ -27,35 +29,35 @@ const addAltParamMiddleware = middlewareFn(async () => ({
   addedValue: 'hello',
 }));
 
-test('should work with normal express middleware', async (t) => {
+test('should work with normal express middleware', async () => {
   const result = await runMiddlewareChain({ foo: 'test' }, [noopMiddleware], REQ, RES);
-  t.deepEqual(result, { foo: 'test' });
+  assert.deepEqual(result, { foo: 'test' });
 });
 
-test('should handle errors passed to next()', async (t) => {
-  await t.throwsAsync(
+test('should handle errors passed to next()', async () => {
+  await assert.rejects(
     runMiddlewareChain({ foo: 'test' }, [errorMiddleware], null as any, null as any),
   );
 });
 
-test('should work with middleware that return values', async (t) => {
+test('should work with middleware that return values', async () => {
   const result = await runMiddlewareChain(
     { foo: 'test' },
     [addParamMiddleware],
     REQ,
     RES,
   );
-  t.deepEqual(result, { foo: 'test', addedValue: 1337 });
+  assert.deepEqual(result, { foo: 'test', addedValue: 1337 });
 });
 
-test('express and value-producing middleware should work together in any order', async (t) => {
+test('express and value-producing middleware should work together in any order', async () => {
   const result = await runMiddlewareChain(
     { foo: 'test' },
     [noopMiddleware, addParamMiddleware],
     REQ,
     RES,
   );
-  t.deepEqual(result, { foo: 'test', addedValue: 1337 });
+  assert.deepEqual(result, { foo: 'test', addedValue: 1337 });
 
   const resultB = await runMiddlewareChain(
     { foo: 'test' },
@@ -63,17 +65,17 @@ test('express and value-producing middleware should work together in any order',
     REQ,
     RES,
   );
-  t.deepEqual(resultB, { foo: 'test', addedValue: 1337 });
+  assert.deepEqual(resultB, { foo: 'test', addedValue: 1337 });
 });
 
-test('middlewares that set the same value should use the last one in the chain', async (t) => {
+test('middlewares that set the same value should use the last one in the chain', async () => {
   const result = await runMiddlewareChain(
     { foo: 'test' },
     [addParamMiddleware, addAltParamMiddleware],
     REQ,
     RES,
   );
-  t.deepEqual(result, { foo: 'test', addedValue: 'hello' });
+  assert.deepEqual(result, { foo: 'test', addedValue: 'hello' });
 
   const resultB = await runMiddlewareChain(
     { foo: 'test' },
@@ -81,11 +83,11 @@ test('middlewares that set the same value should use the last one in the chain',
     REQ,
     RES,
   );
-  t.deepEqual(resultB, { foo: 'test', addedValue: 1337 });
+  assert.deepEqual(resultB, { foo: 'test', addedValue: 1337 });
 });
 
-test('error-producing middleware should not run subsequent middleware', async (t) => {
-  await t.throwsAsync(
+test('error-producing middleware should not run subsequent middleware', async () => {
+  await assert.rejects(
     runMiddlewareChain(
       { foo: 'test' },
       [errorMiddleware, altErrorMiddleware],

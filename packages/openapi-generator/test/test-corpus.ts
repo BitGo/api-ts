@@ -1,9 +1,10 @@
-import { pipe } from 'fp-ts/function';
-import * as E from 'fp-ts/Either';
 import * as fs from 'fs';
 import * as path from 'path';
+import test from 'node:test';
+import { strict as assert } from 'node:assert';
 
-import test from 'ava';
+import { pipe } from 'fp-ts/function';
+import * as E from 'fp-ts/Either';
 import { NonEmptyString } from 'io-ts-types';
 
 import { TestCase, TestCasesFromString } from './test-case';
@@ -11,17 +12,14 @@ import { TestCase, TestCasesFromString } from './test-case';
 // System under test
 import { componentsForProject } from '../src/project';
 
-const TEST_CORPUS_DIR = path.resolve(__dirname, '..', '..', 'corpus');
-const ROOT_DIR = path.resolve(__dirname, '..', '..', 'dummyProject');
+const TEST_CORPUS_DIR = path.resolve(__dirname, '..', 'corpus');
+const ROOT_DIR = path.resolve(__dirname, '..', 'dummyProject');
 const TEST_CONFIG = path.join(ROOT_DIR, 'tsconfig.json');
 
 const ENTRYPOINT = 'index.ts' as NonEmptyString;
 
-const evaluateTestCase = test.macro({
-  async exec(t, testCase: TestCase) {
-    // Wait for the event loop to tick once
-    await new Promise((resolve) => setImmediate(resolve));
-
+function evaluateTestCase(testCase: TestCase): () => void {
+  return () => {
     const fileContentsByFilename = testCase.inputs.reduce<
       Record<NonEmptyString, NonEmptyString>
     >(
@@ -39,19 +37,16 @@ const evaluateTestCase = test.macro({
         includeInternal: true,
       }),
       E.matchW(
-        (err) => t.fail(err),
+        (err) => assert.fail(err),
         (output) => {
-          t.deepEqual(output as unknown, testCase.expectedOutput);
+          assert.deepEqual(output as unknown, testCase.expectedOutput);
         },
       ),
     );
-  },
-  title(_providedTitle = '', testCase) {
-    return testCase.title;
-  },
-});
+  };
+}
 
-const evaluateTestCases = (filename: string) => {
+function evaluateTestCases(filename: string): void {
   const fileContents = fs.readFileSync(filename, { encoding: 'utf-8' });
   const decodedTestCases = TestCasesFromString.decode(fileContents);
   if (E.isLeft(decodedTestCases)) {
@@ -61,12 +56,10 @@ const evaluateTestCases = (filename: string) => {
   }
   const testCases = decodedTestCases.right;
 
-  for (const testCase of testCases) {
-    test(evaluateTestCase, testCase);
-  }
-};
+  testCases.map((testCase) => test(testCase.title, evaluateTestCase(testCase)));
+}
 
-export const testCorpusFile = (name: string) => {
-  const filename = path.join(TEST_CORPUS_DIR, `${name}.ts`);
+export function runTest(corpusFilename: string): void {
+  const filename = path.join(TEST_CORPUS_DIR, corpusFilename);
   evaluateTestCases(filename);
-};
+}

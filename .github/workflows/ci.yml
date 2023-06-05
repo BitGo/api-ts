@@ -14,7 +14,15 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [lts/-2, lts/-1, lts/*]
+        node-version:
+          # Skip lts/-2 while it refers to Node.js 14, since this version
+          # does not come with Node.js's built-in test runner.
+          # - lts/-2
+          # Skip lts/-1 while it refers to Node.js 16, since this version
+          # ships with a segfault when collecting code coverage with
+          # Node.js's built-in test runner.
+          # - lts/-1
+          - lts/*
 
     name: Node.js ${{ matrix.node-version }}
     steps:
@@ -26,11 +34,6 @@ jobs:
         with:
           cache: npm
           node-version: ${{ matrix.node-version }}
-
-      # Install npm greater-than-or-equal-to 7 so we can use npm workspaces.
-      # We can remove this when Node.js 16 is the oldest LTS
-      - name: Update npm
-        run: npm install --global 'npm@>7'
 
       - name: Install dependencies
         run: npm ci
