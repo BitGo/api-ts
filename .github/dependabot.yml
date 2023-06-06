@@ -24,13 +24,13 @@ updates:
       - dependency-type: direct
     versioning-strategy: increase-if-necessary
     ignore:
-      - dependency-name: io-ts
-        versions: ['2.x']
-      - dependency-name: typescript
-        versions: ['>4.8']
-      - dependency-name: ts-morph
-        versions: ['>=16']
       # Ignore all @types/nodes patch updates, since
       # this package updates so frequently
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-patch']
+      - dependency-name: io-ts
+        versions: ['2.x']
+      - dependency-name: ts-morph
+        versions: ['>=16']
+      - dependency-name: typescript
+        versions: ['>4.8']
