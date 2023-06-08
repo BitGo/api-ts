@@ -191,10 +191,12 @@ export function wrapRouter<Spec extends ApiSpec>(
       post: makeAddRoute('post'),
       put: makeAddRoute('put'),
       delete: makeAddRoute('delete'),
+      patch: makeAddRoute('patch'),
       getUnchecked: makeAddUncheckedRoute('get'),
       postUnchecked: makeAddUncheckedRoute('post'),
       putUnchecked: makeAddUncheckedRoute('put'),
       deleteUnchecked: makeAddUncheckedRoute('delete'),
+      patchUnchecked: makeAddUncheckedRoute('patch'),
       use: (middleware: UncheckedRequestHandler) => {
         routerMiddleware.push(middleware);
       },

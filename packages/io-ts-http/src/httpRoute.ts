@@ -8,6 +8,7 @@ export const Method = t.keyof({
   post: 1,
   put: 1,
   delete: 1,
+  patch: 1,
 });
 
 export type Method = t.TypeOf<typeof Method>;
@@ -39,7 +40,7 @@ type UnknownKeysToError<Spec extends ApiSpec> = {
   [ApiAction in keyof Spec]: {
     [M in keyof Spec[ApiAction]]: M extends Method
       ? Spec[ApiAction][M]
-      : `Unsupported HTTP Method. Use "get" | "post" | "put" | "delete"`;
+      : `Unsupported HTTP Method. Use "get" | "post" | "put" | "delete" | "patch"`;
   };
 };
 
