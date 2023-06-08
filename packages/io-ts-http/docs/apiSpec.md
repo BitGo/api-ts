@@ -13,7 +13,7 @@ not do anything aside from enforce the correct type of the parameter passed to i
 import { apiSpec } from '@api-ts/io-ts-http';
 
 import { GetMessage, CreateMessage } from './routes/message';
-import { GetUser, CreateUser, UpdateUser, DeleteUser } from './routes/user';
+import { GetUser, CreateUser, PatchUser, UpdateUser, DeleteUser } from './routes/user';
 
 /**
  * Example service
@@ -30,6 +30,7 @@ export const API = apiSpec({
     post: CreateUser,
     put: UpdateUser,
     delete: DeleteUser,
+    patch: PatchUser,
   },
 });
 ```

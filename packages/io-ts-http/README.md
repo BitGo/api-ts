@@ -131,7 +131,7 @@ value; for example:
 import { apiSpec } from '@api-ts/io-ts-http';
 
 import { GetMessage, CreateMessage } from './routes/message';
-import { GetUser, CreateUser, UpdateUser, DeleteUser } from './routes/user';
+import { GetUser, CreateUser, PatchUser, UpdateUser, DeleteUser } from './routes/user';
 
 /**
  * message-user service
@@ -148,6 +148,7 @@ export const API = apiSpec({
     post: CreateUser,
     put: UpdateUser,
     delete: DeleteUser,
+    patch: PatchUser,
   },
 });
 ```

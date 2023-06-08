@@ -114,7 +114,7 @@ export type AddUncheckedRouteHandler<Spec extends ApiSpec, Method extends Method
  */
 export type WrappedRouter<Spec extends ApiSpec> = Omit<
   express.Router,
-  'get' | 'post' | 'put' | 'delete' | 'use'
+  'get' | 'post' | 'put' | 'delete' | 'use' | 'patch'
 > &
   express.RequestHandler & {
     use: (middleware: UncheckedRequestHandler<ApiSpec, string, HttpMethod>) => void;
@@ -122,8 +122,10 @@ export type WrappedRouter<Spec extends ApiSpec> = Omit<
     post: AddRouteHandler<Spec, 'post'>;
     put: AddRouteHandler<Spec, 'put'>;
     delete: AddRouteHandler<Spec, 'delete'>;
+    patch: AddRouteHandler<Spec, 'patch'>;
     getUnchecked: AddUncheckedRouteHandler<Spec, 'get'>;
     postUnchecked: AddUncheckedRouteHandler<Spec, 'post'>;
     putUnchecked: AddUncheckedRouteHandler<Spec, 'put'>;
     deleteUnchecked: AddUncheckedRouteHandler<Spec, 'delete'>;
+    patchUnchecked: AddUncheckedRouteHandler<Spec, 'patch'>;
   };
