@@ -29,7 +29,7 @@
     "@types/superagent": "4.1.18",
     "@types/supertest": "2.0.12",
     "@types/whatwg-url": "11.0.0",
-    "c8": "8.0.0",
+    "c8": "8.0.1",
     "chai": "4.3.7",
     "express": "4.18.2",
     "io-ts-types": "0.5.19",
