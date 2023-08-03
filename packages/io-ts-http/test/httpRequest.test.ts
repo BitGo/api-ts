@@ -1,4 +1,6 @@
-import { assert } from 'chai';
+import { describe, it } from 'node:test';
+import { strict as assert } from 'node:assert';
+
 import * as NEA from 'fp-ts/NonEmptyArray';
 import * as t from 'io-ts';
 import { nonEmptyArray, JsonFromString, NumberFromString } from 'io-ts-types';

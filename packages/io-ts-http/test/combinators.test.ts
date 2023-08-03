@@ -1,4 +1,6 @@
-import { assert } from 'chai';
+import { describe, it } from 'node:test';
+import { strict as assert } from 'node:assert';
+
 import * as t from 'io-ts';
 
 import * as c from '../src/combinators';

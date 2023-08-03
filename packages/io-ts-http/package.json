@@ -16,7 +16,7 @@
     "clean": "rm -rf -- dist",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "test": "c8 mocha test/**/*.test.ts --require ts-node/register --exit"
+    "test": "c8 --all node --loader tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@api-ts/response": "0.0.0-semantically-released",
@@ -25,12 +25,8 @@
     "io-ts-types": "^0.5.15"
   },
   "devDependencies": {
-    "@types/chai": "4.3.5",
-    "@types/mocha": "10.0.1",
     "c8": "8.0.1",
-    "chai": "4.3.7",
-    "mocha": "10.2.0",
-    "ts-node": "10.9.1",
+    "tsx": "3.12.7",
     "typescript": "4.7.4"
   },
   "publishConfig": {
