@@ -1,11 +1,17 @@
 import { pipe } from 'fp-ts/function';
 import * as A from 'fp-ts/Alt';
 import * as E from 'fp-ts/Either';
-import * as RE from 'fp-ts/ReaderEither';
+import { Alt as REAlt } from 'fp-ts/ReaderEither';
 import { OpenAPIV3_1 } from 'openapi-types';
-import { InitializerExpressionGetableNode, Node, Type, TypeFlags } from 'ts-morph';
+import {
+  Expression,
+  InitializerExpressionGetableNode,
+  Node,
+  Type,
+  TypeFlags,
+} from 'ts-morph';
 
-import { toOpenAPISchema as parseExpression } from './expression';
+import { filterUnrepresentable, Result as ParseExprResult } from './expression';
 
 type Primitive = Exclude<OpenAPIV3_1.NonArraySchemaObjectType, 'object'>;
 
@@ -25,8 +31,6 @@ const PrimitiveTypes: { [K in Primitive]: TypeFlags } = {
   null: TypeFlags.Null,
 };
 
-type ParseError = string;
-
 type ParseUnrepresentable = {
   type: 'unrepresentable';
   meaning: 'undefined' | 'symbol';
@@ -43,43 +47,59 @@ type ParseResult = ParseSchema | ParseUnrepresentable;
 type ParseEnv = {
   location: Node;
   type: Type;
-  memo: any;
+  parseExpression: (expr: Expression) => E.Either<string, ParseExprResult>;
 };
 
-type ParseStep = RE.ReaderEither<ParseEnv, ParseError, ParseResult>;
+type ParseStep = (ctx: ParseEnv) => E.Either<string, ParseResult>;
 
-const parseFatal = (error: string) => E.left<ParseError>(error);
-const parseUnrepresentable = (meaning: ParseUnrepresentable['meaning']) =>
-  E.right<never, ParseUnrepresentable>({ type: 'unrepresentable', meaning });
-const parseAccept = (
+function parseFatal(error: string): E.Either<string, ParseResult> {
+  return E.left(error);
+}
+
+function parseUnrepresentable(
+  meaning: ParseUnrepresentable['meaning'],
+): E.Either<string, ParseResult> {
+  return E.right<string, ParseUnrepresentable>({ type: 'unrepresentable', meaning });
+}
+
+function parseAccept(
   schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject,
   required: boolean = true,
-) => E.right<never, ParseSchema>({ type: 'schema', schema, required });
+): E.Either<string, ParseResult> {
+  return E.right({ type: 'schema', schema, required });
+}
 
-export const isReferenceObject = (
+export function isReferenceObject(
   o: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject,
-): o is OpenAPIV3_1.ReferenceObject => o.hasOwnProperty('$ref');
+): o is OpenAPIV3_1.ReferenceObject {
+  return o.hasOwnProperty('$ref');
+}
 
-export const isSchemaObject = (
+export function isSchemaObject(
   o: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject,
-): o is OpenAPIV3_1.SchemaObject => o.hasOwnProperty('properties');
+): o is OpenAPIV3_1.SchemaObject {
+  return o.hasOwnProperty('properties');
+}
 
-export const parseUndefined: ParseStep = (ctx) =>
-  ctx.type.isUndefined()
+export function parseUndefined(ctx: ParseEnv): E.Either<string, ParseResult> {
+  return ctx.type.isUndefined()
     ? parseUnrepresentable('undefined')
     : parseFatal('type not undefined');
+}
 
-export const parseSymbol: ParseStep = (ctx) =>
-  ctx.type.getFlags() & TypeFlags.UniqueESSymbol
+export function parseSymbol(ctx: ParseEnv): E.Either<string, ParseResult> {
+  return ctx.type.getFlags() & TypeFlags.UniqueESSymbol
     ? parseUnrepresentable('symbol')
     : parseFatal('type not symbol');
+}
 
-export const parseUnknown: ParseStep = (ctx) =>
-  ctx.type.isUnknown()
+export function parseUnknown(ctx: ParseEnv): E.Either<string, ParseResult> {
+  return ctx.type.isUnknown()
     ? parseAccept({ title: 'unknown' })
     : parseFatal('type not unknown');
+}
 
-export const parsePrimitive: ParseStep = (ctx) => {
+export function parsePrimitive(ctx: ParseEnv): E.Either<string, ParseResult> {
   const { type: t } = ctx;
   for (const [type, flag] of Object.entries(PrimitiveTypes)) {
     if (t.getFlags() & flag) {
@@ -89,10 +109,9 @@ export const parsePrimitive: ParseStep = (ctx) => {
     }
   }
   return parseFatal('type not primitive');
-};
+}
 
-export const parseLiteral: ParseStep = (ctx) => {
-  const { type: t } = ctx;
+export function parseLiteral({ type: t }: ParseEnv) {
   if (!t.isLiteral()) {
     return parseFatal('type not literal');
   }
@@ -109,10 +128,11 @@ export const parseLiteral: ParseStep = (ctx) => {
     }
   }
   return parseFatal('type not literal');
-};
+}
 
-export const parseBooleanLiteral: ParseStep = (ctx) => {
-  const { type: t } = ctx;
+export function parseBooleanLiteral({
+  type: t,
+}: ParseEnv): E.Either<string, ParseResult> {
   if (!t.isBooleanLiteral()) {
     return parseFatal('type not boolean literal');
   }
@@ -122,9 +142,9 @@ export const parseBooleanLiteral: ParseStep = (ctx) => {
     type: 'boolean',
     enum: [t.getText()],
   });
-};
+}
 
-export const parseArray: ParseStep = (ctx) => {
+export function parseArray(ctx: ParseEnv): E.Either<string, ParseResult> {
   const { type: t } = ctx;
   if (!t.isArray()) {
     return parseFatal('type not array');
@@ -144,10 +164,10 @@ export const parseArray: ParseStep = (ctx) => {
         : parseFatal('unrepresentable array type'),
     ),
   );
-};
+}
 
-export const parseObject: ParseStep = (ctx) => {
-  const { location, memo, type: t } = ctx;
+export function parseObject(ctx: ParseEnv): E.Either<string, ParseResult> {
+  const { type: t } = ctx;
   if (t.isArray() || !t.isObject()) {
     return parseFatal('type not object');
   }
@@ -160,20 +180,22 @@ export const parseObject: ParseStep = (ctx) => {
 
   for (const propSym of t.getProperties()) {
     const name = propSym.getName();
-    const propType = propSym.getTypeAtLocation(location);
+    const propType = propSym.getTypeAtLocation(ctx.location);
 
     const decls = propSym.getDeclarations();
     const idx = decls.findIndex((d) => Node.isInitializerExpressionGetable(d));
 
     let propResultE: E.Either<string, ParseResult> = E.left('uninit');
     if (idx >= 0) {
+      const init = (
+        decls[idx] as InitializerExpressionGetableNode & Node
+      ).getInitializer();
       propResultE = pipe(
-        E.fromNullable('no initializer')(
-          (decls[idx] as InitializerExpressionGetableNode & Node).getInitializer(),
-        ),
-        E.chain((expr) => parseExpression(expr)({ memo })),
-        E.map((schema) => ({ type: 'schema', ...schema } as const)),
-        E.orElse(() => parseType({ ...ctx, type: propType })),
+        init,
+        E.fromNullable('could not get initializer'),
+        E.chain(ctx.parseExpression),
+        E.chain(filterUnrepresentable),
+        E.chain(({ schema, required }) => parseAccept(schema, required)),
       );
     } else {
       propResultE = parseType({ ...ctx, type: propType });
@@ -218,9 +240,9 @@ export const parseObject: ParseStep = (ctx) => {
   }
 
   return parseAccept(result);
-};
+}
 
-export const parseIntersection: ParseStep = (ctx) => {
+export function parseIntersection(ctx: ParseEnv): E.Either<string, ParseResult> {
   const { type: t } = ctx;
   if (!t.isIntersection()) {
     return parseFatal('type not intersection');
@@ -281,9 +303,9 @@ export const parseIntersection: ParseStep = (ctx) => {
   } else {
     return parseAccept({ allOf });
   }
-};
+}
 
-export const parseUnion: ParseStep = (ctx) => {
+export function parseUnion(ctx: ParseEnv): E.Either<string, ParseResult> {
   const { type: t } = ctx;
   if (!t.isUnion()) {
     return parseFatal('type not union');
@@ -346,12 +368,13 @@ export const parseUnion: ParseStep = (ctx) => {
   } else {
     return parseAccept({ oneOf: innerSchemas }, required);
   }
-};
+}
 
-const parseFail: ParseStep = ({ type: t }) =>
-  parseFatal(`Could not parse type: ${t.getText()}`);
+function parseFail({ type: t }: ParseEnv): E.Either<string, ParseResult> {
+  return parseFatal(`Could not parse type: ${t.getText()}`);
+}
 
-export const parseType: ParseStep = A.altAll(RE.Alt)(parseUndefined)([
+export const parseType: ParseStep = A.altAll(REAlt)(parseUndefined)([
   parseSymbol,
   parseBooleanLiteral,
   parseLiteral,

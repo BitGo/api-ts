@@ -1,34 +1,34 @@
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/lib/function';
-import * as RE from 'fp-ts/ReaderEither';
 import { OpenAPIV3_1 } from 'openapi-types';
 import { Expression, Node, Symbol } from 'ts-morph';
 
 import { parseType as parseFromType } from './type';
+import type { State } from './state';
 
-type Env = {
-  memo: { [K: string]: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject };
+export type ParseUnrepresentable = {
+  type: 'unrepresentable';
+  meaning: 'undefined' | 'symbol';
 };
 
-type Result = {
+export type ParseSchema = {
+  type: 'schema';
   schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
   required: boolean;
 };
 
-type ParseStep<A = Result> = RE.ReaderEither<Env, string, A>;
+export type Result = ParseSchema | ParseUnrepresentable;
 
-const parseFail = (err: string): ParseStep<never> => RE.left(err);
+function parseFail<A>(err: string): E.Either<string, A> {
+  return E.left(err);
+}
 
-// Why is this not in RE?
-const parseUndefined =
-  (onUndefined: string) =>
-  <T>(result: T | undefined): ParseStep<T> =>
-    RE.fromEither(E.fromNullable(onUndefined)(result));
+function unalias(sym: Symbol): Symbol {
+  return (sym.getAliasedSymbol() ?? sym).getExportSymbol();
+}
 
-const unalias = (sym: Symbol) => (sym.getAliasedSymbol() ?? sym).getExportSymbol();
-
-const baseSymbol = (expr: Expression): ParseStep<Symbol> => {
-  const parseResult = parseUndefined(`No symbol for ${expr.getText()}`);
+function baseSymbol(expr: Expression): E.Either<string, Symbol> {
+  const parseResult = E.fromNullable(`No symbol for ${expr.getText()}`);
   if (Node.isIdentifier(expr)) {
     return parseResult(expr.getSymbol());
   } else if (Node.isPropertyAccessExpression(expr)) {
@@ -38,9 +38,9 @@ const baseSymbol = (expr: Expression): ParseStep<Symbol> => {
   } else {
     return parseFail(`Could not handle expression ${expr.getText}`);
   }
-};
+}
 
-const getJSDoc = (baseSym: Symbol): OpenAPIV3_1.SchemaObject => {
+function getJSDoc(baseSym: Symbol): OpenAPIV3_1.SchemaObject {
   const result: OpenAPIV3_1.SchemaObject = {};
   baseSym.getJsDocTags().forEach((tag) => {
     switch (tag.getName()) {
@@ -58,125 +58,123 @@ const getJSDoc = (baseSym: Symbol): OpenAPIV3_1.SchemaObject => {
     }
   });
   return result;
-};
+}
 
-const mergeJSDoc =
-  (baseSym: Symbol) =>
+function mergeJSDoc(baseSym: Symbol) {
   // Use special cases for adding descriptions to external library types
-  (result: Result): Result =>
-    baseSym.getFullyQualifiedName().includes('node_modules')
+  return function (result: Result): Result {
+    if (result.type === 'unrepresentable') {
+      return result;
+    }
+    return baseSym.getFullyQualifiedName().includes('node_modules')
       ? result
       : {
+          type: 'schema',
           required: result.required,
           schema: {
             ...result.schema,
             ...getJSDoc(baseSym),
           },
         };
-
-const isIOTSExport = (sym: Symbol) =>
-  sym.getFullyQualifiedName().includes('io-ts/lib/index');
-
-const parseMemo =
-  (baseSym: Symbol): ParseStep =>
-  (env: Env) => {
-    if (isIOTSExport(baseSym)) {
-      // Don't memo any of these
-      return E.left(`io-ts codec`);
-    }
-    const name = baseSym.getName();
-    return pipe(
-      E.fromNullable(`No declaration for ${baseSym.getName()}`)(
-        baseSym.getValueDeclaration(),
-      ),
-      E.chain((decl) => parseUnknownCodec(decl)(env)),
-      E.map(({ schema, required }) => {
-        if (!env.memo[name]) {
-          env.memo[name] = {
-            title: name,
-            ...schema,
-          };
-        }
-        return { schema: { $ref: `#/components/schemas/${name}` }, required };
-      }),
-      E.mapLeft((err) => {
-        if (!env.memo[name]) {
-          env.memo[name] = {
-            title: name,
-            description: `Error: ${err}`,
-          };
-        }
-        return err;
-      }),
-    );
   };
+}
 
-const parseUnknownCodec = (location: Node): ParseStep =>
-  pipe(
-    RE.right(location.getType()),
-    RE.chainEitherK((type) =>
+function isIOTSExport(sym: Symbol): boolean {
+  return sym.getFullyQualifiedName().includes('io-ts/lib/index');
+}
+
+function parseMemo(state: State, baseSym: Symbol): E.Either<string, Result> {
+  if (isIOTSExport(baseSym)) {
+    // Don't memo any of these
+    return E.left(`io-ts codec`);
+  }
+  const ref = state.visitRef(baseSym);
+  return E.right({ type: 'schema', schema: ref, required: true });
+}
+
+function parseUnknownCodec(state: State, location: Node): E.Either<string, Result> {
+  return pipe(
+    E.right(location.getType()),
+    E.chain((type) =>
       E.fromNullable(`Not codec ${type.getText()}`)(type.getProperty('_O')),
     ),
-    RE.map((prop) => prop.getTypeAtLocation(location)),
-    RE.chain(
-      (type) =>
-        ({ memo }: Env) =>
-          parseFromType({ location, type, memo }),
+    E.map((prop) => prop.getTypeAtLocation(location)),
+    E.chain((type) =>
+      parseFromType({
+        location,
+        type,
+        parseExpression: (expr) => toOpenAPISchema(state, expr),
+      }),
     ),
-    RE.chain((result) =>
+    E.chain((result) =>
       result.type === 'unrepresentable'
-        ? RE.left(`unrepresentable codec type`)
-        : RE.right(result),
+        ? E.left(`unrepresentable codec type`)
+        : E.right(result),
     ),
   );
+}
 
-const getArguments = (location: Expression): ParseStep<Node[]> =>
-  Node.isCallExpression(location)
-    ? RE.right(location.getArguments())
-    : RE.left(`Not call expression ${location.getText()}`);
+function getArguments(location: Expression): E.Either<string, Node[]> {
+  return Node.isCallExpression(location)
+    ? E.right(location.getArguments())
+    : E.left(`Not call expression ${location.getText()}`);
+}
 
-const getFirstArgument = (location: Expression): ParseStep<Expression> =>
-  pipe(
+function getFirstArgument(location: Expression): E.Either<string, Expression> {
+  return pipe(
     getArguments(location),
-    RE.chain((args) => (args.length > 0 ? RE.right(args[0]!) : RE.left('No args'))),
-    RE.filterOrElse(
-      Node.isExpression,
-      (node) => `Node not expression ${node?.getText}`,
-    ),
+    E.chain((args) => (args.length > 0 ? E.right(args[0]!) : E.left('No args'))),
+    E.filterOrElse(Node.isExpression, (node) => `Node not expression ${node?.getText}`),
   );
+}
+
+export function filterUnrepresentable(result: Result): E.Either<string, ParseSchema> {
+  return result.type === 'unrepresentable'
+    ? E.left(`Unrepresentable ${result.meaning}`)
+    : E.right(result);
+}
 
 type SpecialCaseMap = {
   [File: string]: {
-    [Export: string]: (location: Expression) => ParseStep;
+    [Export: string]: (state: State, location: Expression) => E.Either<string, Result>;
   };
 };
 
 const SPECIAL_CASES: SpecialCaseMap = {
   'io-ts/lib/index': {
-    array: (location) =>
+    array: (state, location) =>
       pipe(
         getFirstArgument(location),
-        RE.chain(toOpenAPISchema),
-        RE.map(({ schema }) => ({
-          schema: { type: 'array', items: schema },
-          required: true,
-        })),
+        E.chain((loc) => toOpenAPISchema(state, loc)),
+        E.chain(filterUnrepresentable),
+        E.map(({ schema }) => {
+          return {
+            type: 'schema',
+            schema: { type: 'array', items: schema },
+            required: true,
+          };
+        }),
       ),
   },
   'io-ts-types/lib/nonEmptyArray': {
-    nonEmptyArray: (location) =>
+    nonEmptyArray: (state, location) =>
       pipe(
         getFirstArgument(location),
-        RE.chain(toOpenAPISchema),
-        RE.map(({ schema }) => ({
-          schema: { title: 'NonEmptyArray', type: 'array', items: schema },
-          required: true,
-        })),
+        E.chain((loc) => toOpenAPISchema(state, loc)),
+        E.chain(filterUnrepresentable),
+        E.map(({ schema }) => {
+          return {
+            type: 'schema',
+            schema: { title: 'NonEmptyArray', type: 'array', items: schema },
+            required: true,
+          };
+        }),
       ),
   },
   'io-ts-types/lib/DateFromISOString': {
     DateFromISOString: () =>
-      RE.right({
+      E.right({
+        type: 'schema',
         schema: {
           type: 'string',
           format: 'date',
@@ -185,44 +183,58 @@ const SPECIAL_CASES: SpecialCaseMap = {
       }),
   },
   'io-ts-http/dist/src/combinators': {
-    optional: (location) =>
+    optional: (state, location) =>
       pipe(
         getFirstArgument(location),
-        RE.chain(toOpenAPISchema),
-        RE.map(({ schema }) => ({
-          schema: { type: 'array', items: schema },
-          required: false,
-        })),
+        E.chain((loc) => toOpenAPISchema(state, loc)),
+        E.chain(filterUnrepresentable),
+        E.map(({ schema }) => {
+          return {
+            type: 'schema',
+            schema: { type: 'array', items: schema },
+            required: false,
+          };
+        }),
       ),
   },
 };
 
-const parseSpecialCases = (baseSym: Symbol, location: Expression): ParseStep => {
-  // TODO: actually parse this instead of blind match
+function parseSpecialCases(
+  state: State,
+  baseSym: Symbol,
+  location: Expression,
+): E.Either<string, Result> {
   const fullName = baseSym.getFullyQualifiedName();
   for (const [file, codecs] of Object.entries(SPECIAL_CASES)) {
     if (fullName.includes(file)) {
       const codecName = baseSym.getExportSymbol().getName();
       for (const [codec, parse] of Object.entries(codecs)) {
         if (codec === codecName) {
-          return parse(location);
+          return parse(state, location);
         }
       }
     }
   }
   return parseFail('Not special case');
-};
+}
 
-export const toOpenAPISchema = (expr: Expression): ParseStep =>
-  pipe(
+export function toOpenAPISchema(
+  state: State,
+  expr: Expression,
+  noMemo: boolean = false,
+): E.Either<string, Result> {
+  return pipe(
     baseSymbol(expr),
-    RE.map(unalias),
-    RE.chain((sym) =>
+    E.map(unalias),
+    E.chain((sym) =>
       pipe(
-        parseSpecialCases(sym, expr),
-        RE.orElse(() => parseMemo(sym)),
-        RE.orElse(() => parseUnknownCodec(expr)),
-        RE.map(mergeJSDoc(sym)),
+        parseSpecialCases(state, sym, expr),
+        E.orElse(() => {
+          return noMemo ? E.left('noMemo set') : parseMemo(state, sym);
+        }),
+        E.orElse(() => parseUnknownCodec(state, expr)),
+        E.map(mergeJSDoc(sym)),
       ),
     ),
   );
+}

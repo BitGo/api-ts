@@ -2,42 +2,36 @@ import { parse as parseComment } from 'comment-parser';
 import { flow, pipe } from 'fp-ts/function';
 import * as E from 'fp-ts/Either';
 import * as RA from 'fp-ts/ReadonlyArray';
-import * as RE from 'fp-ts/ReaderEither';
-import { Expression, Node, Symbol, ts, Type } from 'ts-morph';
+import {
+  Expression,
+  InitializerExpressionGetableNode,
+  Node,
+  Symbol,
+  ts,
+  Type,
+} from 'ts-morph';
+import type { OpenAPIV3_1 } from 'openapi-types';
 
-import { toOpenAPISchema as toSchema } from './expression';
+import { toOpenAPISchema, ParseSchema } from './expression';
 import { parseType } from './type';
+import { State } from './state';
 
-type RouteDeclarationEnv = {
-  decl: Expression<ts.Expression>;
-  memo: any;
-};
-
-type RouteParseError = string;
-
-type RouteParseStep<R> = RE.ReaderEither<RouteDeclarationEnv, RouteParseError, R>;
-
-const propertySymOfType = (property: string) => (type: Type) =>
-  E.fromNullable(`no property '${property}' in ${type.getText()}`)(
+function propertySymOfType(type: Type, property: string): E.Either<string, Symbol> {
+  return E.fromNullable(`no property '${property}' in ${type.getText()}`)(
     type.getProperty(property),
   );
+}
 
-const typeOfSymbol =
-  (sym: Symbol): RouteParseStep<Type> =>
-  ({ decl }: RouteDeclarationEnv) =>
-    E.right<string, Type>(sym.getTypeAtLocation(decl));
-
-const baseDeclarationType: RouteParseStep<Type> = ({ decl }) => E.right(decl.getType());
-
-const getJsDocParamDescription = (property: Symbol) =>
-  property
+function getJsDocParamDescription(property: Symbol): string[] {
+  return property
     .getJsDocTags()
     .filter((t) => t.getName() === 'param')
     .flatMap((t) => t.getText())
     .map((t) => t.text);
+}
 
-const initializerForPropertySymbol = (sym: Symbol) =>
-  pipe(
+function initializerForPropertySymbol(sym: Symbol): E.Either<string, Expression> {
+  return pipe(
     E.fromNullable(`declaration not found for symbol ${sym.getName()}`)(
       sym.getDeclarations().find((d) => Node.isInitializerExpressionGetable(d)),
     ),
@@ -48,32 +42,37 @@ const initializerForPropertySymbol = (sym: Symbol) =>
     ),
     E.chain((decl) => E.fromNullable('initializer not found')(decl.getInitializer())),
   );
+}
 
-const typeParamOfCodec =
-  (param: 'A' | 'O' | 'I') => (expr: Expression<ts.Expression>) =>
-    pipe(
-      RE.fromEither(
-        E.fromNullable(`Could not get type of ${expr.getText()}`)(
-          expr.getContextualType(),
-        ),
-      ),
-      RE.chainEitherK(propertySymOfType(`_${param}`)),
-      RE.chain(typeOfSymbol),
-    );
-
-const toOpenAPISchema = (init: Expression) => (env: RouteDeclarationEnv) =>
-  pipe(
-    toSchema(init)(env),
-    E.map((schema) => ({ type: 'schema', ...schema })),
+function typeParamOfCodec(
+  expr: Expression<ts.Expression>,
+  param: 'A' | 'O' | 'I',
+): E.Either<string, Type> {
+  return pipe(
+    E.fromNullable(`Could not get type of ${expr.getText()}`)(expr.getContextualType()),
+    E.chain((type) => propertySymOfType(type, `_${param}`)),
+    E.map((sym) => sym.getTypeAtLocation(expr)),
   );
+}
 
-const propsToOpenAPISchema = (props: Type) => (env: RouteDeclarationEnv) =>
-  parseType({ location: env.decl, type: props, memo: env.memo });
-
-const parametersFromCodecOutputSym = (paramIn: 'query' | 'path') =>
-  flow(
-    typeOfSymbol,
-    RE.chainEitherK((type) =>
+function parametersFromCodecOutputSym(
+  state: State,
+  init: Expression,
+  sym: Symbol,
+  paramIn: 'query' | 'path',
+): E.Either<
+  string,
+  readonly {
+    description?: string | undefined;
+    name: any;
+    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
+    required: boolean;
+    in: 'query' | 'path';
+  }[]
+> {
+  return pipe(
+    E.right(sym.getTypeAtLocation(init)),
+    E.chain((type) =>
       pipe(
         RA.fromArray(type.getProperties()),
         RA.traverse(E.Applicative)((sym) =>
@@ -86,17 +85,17 @@ const parametersFromCodecOutputSym = (paramIn: 'query' | 'path') =>
         ),
       ),
     ),
-    RE.chain(
+    E.chain(
       flow(
-        RA.traverse(RE.Applicative)(({ description, name, codec }) =>
+        RA.traverse(E.Applicative)(({ description, name, codec }) =>
           pipe(
-            toOpenAPISchema(codec),
-            RE.chain((result) =>
+            toOpenAPISchema(state, codec),
+            E.chain((result) =>
               result.type === 'unrepresentable'
-                ? RE.left('unrepresentable query param')
-                : RE.right(result),
+                ? E.left('unrepresentable query param')
+                : E.right(result),
             ),
-            RE.map(({ schema, required }) => ({
+            E.map(({ schema, required }) => ({
               name,
               schema,
               required,
@@ -110,51 +109,57 @@ const parametersFromCodecOutputSym = (paramIn: 'query' | 'path') =>
       ),
     ),
   );
+}
 
-const propertySymOfBaseDeclaration = (property: string) =>
-  pipe(baseDeclarationType, RE.chainEitherK(propertySymOfType(property)));
+function propertySymOfBaseDeclaration(
+  decl: Expression,
+  property: string,
+): E.Either<string, Symbol> {
+  const type = decl.getType();
+  return propertySymOfType(type, property);
+}
 
-const stringLiteralValueOfBaseProperty = (property: string) =>
-  pipe(
-    baseDeclarationType,
-    RE.chainEitherK(propertySymOfType(property)),
-    RE.chainEitherK((sym) =>
-      E.fromNullable(`${sym.getName()} has no declaration`)(sym.getValueDeclaration()),
+function stringLiteralValueOfProperty(
+  decl: Expression,
+  name: string,
+): E.Either<string, string> {
+  const type = decl.getType();
+  return pipe(
+    E.fromNullable(`no property '${name}' in ${type.getText()}`)(
+      type.getProperty(name),
     ),
-    RE.chainEitherK((decl) =>
-      Node.isPropertyAssignment(decl)
-        ? E.right(decl)
-        : E.left(`${decl.getText()} is not property assignment`),
+    E.chain((sym) =>
+      E.fromNullable(`no declaration for symbol ${sym.getName()}`)(
+        sym.getDeclarations().find((d) => Node.isPropertyAssignment(d)),
+      ),
     ),
-    RE.chainEitherK((decl) => {
-      const init = decl.getInitializer();
-      return E.fromNullable(`${decl.getText()} has no initializer`)(init);
-    }),
-    RE.chainEitherK((init) =>
-      Node.isStringLiteral(init)
-        ? E.right(init.getLiteralValue())
-        : E.left(`${init.getText()} is not string literal`),
+    E.chain((decl) =>
+      E.fromNullable(`no initializer for ${decl.getText()}`)(
+        Node.isPropertyAssignment(decl) ? decl.getInitializer() : undefined,
+      ),
+    ),
+    E.chain((init) =>
+      E.fromNullable(`initializer is not string literal`)(
+        Node.isStringLiteral(init) ? init.getLiteralValue() : undefined,
+      ),
     ),
   );
+}
 
-const outputTypeOfDeclaredRequestCodec = pipe(
-  propertySymOfBaseDeclaration('request'),
-  RE.chainEitherK(initializerForPropertySymbol),
-  RE.chain(typeParamOfCodec('O')),
-);
-
-const routeSummary = (init: Node) => {
-  const sym = init.getSymbol();
-  if (!sym) {
-    return 'Unknown route';
-  } else {
-    return (sym.getAliasedSymbol() ?? sym).getName();
-  }
-};
-
-const routeDescription = (init: Node): { description?: string; isPrivate: boolean } => {
+function outputTypeOfDeclaredRequestCodec(decl: Expression): E.Either<string, Type> {
   return pipe(
-    E.fromNullable('No symbol for initializer')(init.getSymbol()),
+    propertySymOfBaseDeclaration(decl, 'request'),
+    E.chain(initializerForPropertySymbol),
+    E.chain((sym) => typeParamOfCodec(sym, 'O')),
+  );
+}
+
+function routeDescription(initializer: Node): {
+  description?: string;
+  isPrivate: boolean;
+} {
+  return pipe(
+    E.fromNullable('No symbol for initializer')(initializer.getSymbol()),
     E.chain((sym) =>
       E.fromNullable('No value declaration')(
         (sym.getAliasedSymbol() ?? sym).getValueDeclaration(),
@@ -186,78 +191,136 @@ const routeDescription = (init: Node): { description?: string; isPrivate: boolea
     }),
     E.getOrElseW(() => ({ isPrivate: false })),
   );
+}
+
+function getRouteSummary(expr: Expression) {
+  const sym = expr.getSymbol();
+  if (!sym) {
+    return 'Unknown route';
+  } else {
+    return (sym.getAliasedSymbol() ?? sym).getName();
+  }
+}
+
+function propsToOpenAPISchema(
+  state: State,
+  node: Expression<ts.Expression>,
+  type: Type,
+) {
+  return parseType({
+    location: node,
+    type,
+    parseExpression: (expr) => toOpenAPISchema(state, expr),
+  });
+}
+
+type RouteNode = {
+  readonly description: string;
+  readonly isPrivate: boolean;
+  readonly query: readonly {
+    description?: string | undefined;
+    name: any;
+    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
+    required: boolean;
+    in: 'query' | 'path';
+  }[];
+  readonly path: string;
+  readonly summary: string;
+  readonly method: string;
+  readonly params: readonly {
+    description?: string | undefined;
+    name: any;
+    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
+    required: boolean;
+    in: 'query' | 'path';
+  }[];
+  readonly body: ParseSchema | undefined;
+  readonly responses: readonly {
+    code: string;
+    schema: ParseSchema;
+  }[];
 };
 
-export const schemaForRouteNode = (memo: any) => (node: Expression<ts.Expression>) =>
-  pipe(
-    RE.right(routeDescription(node)),
-    RE.bind('summary', () => RE.right(routeSummary(node))),
-    RE.bind('path', () => stringLiteralValueOfBaseProperty('path')),
-    RE.bind('method', () =>
+export function schemaForRouteNode(
+  state: State,
+  node: Expression<ts.Expression>,
+): E.Either<string, RouteNode> {
+  const description = {
+    ...routeDescription(node),
+    summary: getRouteSummary(node),
+  };
+  const wtf = pipe(
+    E.right(description) as any,
+    E.bind('summary', () => E.right(getRouteSummary(node))),
+    E.bind('path', () => stringLiteralValueOfProperty(node, 'path')),
+  );
+  const bbq = pipe(
+    wtf,
+    E.bind('method', () =>
       pipe(
-        stringLiteralValueOfBaseProperty('method'),
-        RE.map((m) => m.toLowerCase()),
+        stringLiteralValueOfProperty(node, 'method'),
+        E.map((m) => m.toLowerCase()),
       ),
     ),
-    RE.bind('query', () =>
+    E.bind('query', () =>
       pipe(
-        outputTypeOfDeclaredRequestCodec,
-        RE.chainEitherK(propertySymOfType('query')),
-        RE.chain(parametersFromCodecOutputSym('query')),
+        outputTypeOfDeclaredRequestCodec(node),
+        E.chain((type) => propertySymOfType(type, 'query')),
+        E.chain((sym) => parametersFromCodecOutputSym(state, node, sym, 'query')),
       ),
     ),
-    RE.bind('params', () =>
+    E.bind('params', () =>
       pipe(
-        outputTypeOfDeclaredRequestCodec,
-        RE.chainEitherK(propertySymOfType('params')),
-        RE.chain(parametersFromCodecOutputSym('path')),
+        outputTypeOfDeclaredRequestCodec(node),
+        E.chain((type) => propertySymOfType(type, 'params')),
+        E.chain((sym) => parametersFromCodecOutputSym(state, node, sym, 'path')),
       ),
     ),
-    RE.bind('body', () =>
+  );
+  return pipe(
+    bbq as any,
+    E.bind('body', () =>
       pipe(
-        outputTypeOfDeclaredRequestCodec,
-        RE.chainEitherK((typ) =>
-          E.fromNullable(`No body property`)(typ.getProperty('body')),
-        ),
-        RE.map((sym) => sym.getTypeAtLocation(node)),
-        RE.chain(propsToOpenAPISchema),
-        RE.chain((body) =>
+        outputTypeOfDeclaredRequestCodec(node),
+        E.chain((type) => propertySymOfType(type, 'body')),
+        E.map((sym) => sym.getTypeAtLocation(node)),
+        E.chain((type) => propsToOpenAPISchema(state, node, type)),
+        E.chain((body) =>
           body.type === 'unrepresentable'
-            ? RE.left('unrepresentable body type')
-            : RE.right(body),
+            ? E.left('unrepresentable body type')
+            : E.right(body),
         ),
-        RE.orElseW(() => RE.right(undefined)),
+        E.orElseW(() => E.right(undefined)),
       ),
     ),
-    RE.bind('responses', () =>
+    E.bind('responses', () =>
       pipe(
-        baseDeclarationType,
-        RE.chainEitherK(propertySymOfType('response')),
-        RE.chain(typeOfSymbol),
-        RE.map((type) => type.getProperties()),
-        RE.chain(
-          RA.traverse(RE.Applicative)((sym) =>
-            pipe(
-              RE.fromEither(initializerForPropertySymbol(sym)),
-              RE.chain(toOpenAPISchema),
-              RE.chain((response) =>
+        propertySymOfType(node.getType(), 'response'),
+        E.map((sym) => sym.getTypeAtLocation(node)),
+        E.map((type) => type.getProperties()),
+        E.chain((props) => {
+          const result = RA.traverse(E.Applicative)((sym: Symbol) => {
+            return pipe(
+              initializerForPropertySymbol(sym),
+              E.chain((expr) => toOpenAPISchema(state, expr)),
+              E.chain((response) =>
                 response.type === 'unrepresentable'
-                  ? RE.left('unrepresentable response')
-                  : RE.right(response),
+                  ? E.left('unrepresentable response')
+                  : E.right(response),
               ),
-              RE.bindTo('schema'),
-              RE.bind('code', () => {
+              E.bindTo('schema'),
+              E.bind('code', () => {
                 const name = sym.getName();
-                return RE.fromEither(
-                  E.fromNullable('undefined response code name')(name),
-                );
+                return E.fromNullable('undefined response code name')(name);
               }),
-            ),
-          ),
-        ),
+            );
+          })(props);
+          return result;
+        }),
       ),
     ),
-  )({ decl: node, memo });
+  ) as any;
+}
 
 export const apiSpecVersion = (sym: Symbol) =>
   pipe(
@@ -269,8 +332,29 @@ export const apiSpecVersion = (sym: Symbol) =>
     E.getOrElse(() => '0.1.0'),
   );
 
-export const schemaForApiSpec = (memo: any) => (apiSpec: Node) =>
-  pipe(
+function initializerForSymbol(
+  symbol: Symbol,
+): E.Either<string, Node & InitializerExpressionGetableNode> {
+  const decl = symbol.getDeclarations()[0];
+  if (!decl) {
+    return E.left(`no declarations for route symbol ${symbol.getName()}`);
+  }
+  if (!Node.isInitializerExpressionGetable(decl)) {
+    return E.left(`declaration '${decl.getText()}' is not initializer`);
+  }
+  return E.right(decl);
+}
+
+export function routesForApiSpecNode(apiSpec: Node): E.Either<string, readonly Node[]> {
+  const apiActions = apiSpec.getType().getProperties();
+  const routeSymbols = apiActions.flatMap((actionSym) =>
+    actionSym.getTypeAtLocation(apiSpec).getProperties(),
+  );
+  return pipe(routeSymbols, RA.traverse(E.Applicative)(initializerForSymbol));
+}
+
+export function schemaForApiSpec(state: State, apiSpec: Node) {
+  return pipe(
     apiSpec.getType().getProperties(),
     RA.chain((operationSym) => operationSym.getTypeAtLocation(apiSpec).getProperties()),
     RA.traverse(E.Applicative)((routeSym) =>
@@ -283,7 +367,8 @@ export const schemaForApiSpec = (memo: any) => (apiSpec: Node) =>
             ? E.fromNullable('initializer not found')(node.getInitializer())
             : E.left('decl not initializer'),
         ),
-        E.chain(schemaForRouteNode(memo)),
+        E.chain((node) => schemaForRouteNode(state, node)),
       ),
     ),
   );
+}

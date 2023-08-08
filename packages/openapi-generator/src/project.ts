@@ -2,27 +2,29 @@ import { pipe } from 'fp-ts/function';
 import * as A from 'fp-ts/Alt';
 import * as RA from 'fp-ts/ReadonlyArray';
 import * as E from 'fp-ts/Either';
-import * as RE from 'fp-ts/ReaderEither';
 import { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
 import {
   DiagnosticCategory,
   Node,
   Project,
+  SourceFile,
   Symbol,
   VariableDeclaration,
 } from 'ts-morph';
 
 import { apiSpecVersion, schemaForApiSpec } from './route';
 import { Config } from './config';
+import { State } from './state';
+import { filterUnrepresentable, toOpenAPISchema } from './expression';
 
-type Env = {
-  memo: { [K: string]: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject };
+export type Env = {
   config: Config;
+  state: State;
 };
 
-const project = ({
+function project({
   config: { tsConfig, virtualFiles },
-}: Env): E.Either<string, Project> => {
+}: Env): E.Either<string, Project> {
   const project = new Project({
     tsConfigFilePath: tsConfig,
   });
@@ -47,18 +49,21 @@ const project = ({
   }
 
   return E.right(project);
-};
+}
 
-const sourceFile = (filename: string) => (project: Project) =>
-  E.fromNullable(`${filename} not in project`)(project.getSourceFile(filename));
+function sourceFile(project: Project, filename: string): E.Either<string, SourceFile> {
+  return E.fromNullable(`${filename} not in project`)(project.getSourceFile(filename));
+}
 
-const variableDeclarationOfSymbol = (sym: Symbol) => {
+function variableDeclarationOfSymbol(
+  sym: Symbol,
+): E.Either<string, VariableDeclaration> {
   const declaration = sym.getDeclarations().find((d) => Node.isVariableDeclaration(d));
   // Asserting type because control-flow analysis is not narrowing it properly through find()
   return E.fromNullable(`${sym.getName()} has no variable declarations`)(
     declaration as VariableDeclaration,
   );
-};
+}
 
 type PathSpec = { [Path: string]: { [Method: string]: OpenAPIV3_1.OperationObject } };
 
@@ -70,105 +75,133 @@ type PathSpec = { [Path: string]: { [Method: string]: OpenAPIV3_1.OperationObjec
  */
 type ParameterList = (OpenAPIV3.ReferenceObject | OpenAPIV3.ParameterObject)[];
 
-const routesForSymbol =
-  (sym: Symbol): RE.ReaderEither<Env, string, PathSpec> =>
-  ({ config: { includeInternal }, memo }: Env) =>
-    pipe(
-      variableDeclarationOfSymbol(sym),
-      E.chain(schemaForApiSpec(memo)),
-      E.map(
-        RA.reduce(
-          {},
-          (
-            paths: PathSpec,
-            {
-              path,
-              method,
-              query,
-              params,
-              body,
-              responses,
-              summary,
-              description,
-              isPrivate,
-            },
-          ) =>
-            isPrivate && !includeInternal
-              ? paths
-              : {
-                  ...paths,
-                  [path]: {
-                    ...paths[path],
-                    [method]: {
-                      summary,
-                      ...(description !== undefined ? { description } : {}),
-                      ...(isPrivate ? { 'x-internal': true } : {}),
-                      parameters: [
-                        ...(query as ParameterList),
-                        ...(params as ParameterList),
-                      ],
-                      responses: responses.reduce<OpenAPIV3_1.ResponsesObject>(
-                        (acc, { code, schema: { schema } }) => ({
-                          ...acc,
-                          [code]: {
-                            description: '', // DISCUSS: This field actually is required, is there a better default for this?
-                            content: {
-                              'application/json': { schema },
-                            },
+function routesForSymbol(
+  config: Config,
+  state: State,
+  sym: Symbol,
+): E.Either<string, PathSpec> {
+  return pipe(
+    variableDeclarationOfSymbol(sym),
+    E.chain((node) => schemaForApiSpec(state, node)),
+    E.map(
+      RA.reduce(
+        {},
+        (
+          paths: PathSpec,
+          {
+            path,
+            method,
+            query,
+            params,
+            body,
+            responses,
+            summary,
+            description,
+            isPrivate,
+          },
+        ) =>
+          isPrivate && !config.includeInternal
+            ? paths
+            : {
+                ...paths,
+                [path]: {
+                  ...paths[path],
+                  [method]: {
+                    summary,
+                    ...(description !== undefined ? { description } : {}),
+                    ...(isPrivate ? { 'x-internal': true } : {}),
+                    parameters: [
+                      ...(query as ParameterList),
+                      ...(params as ParameterList),
+                    ],
+                    responses: responses.reduce<OpenAPIV3_1.ResponsesObject>(
+                      (acc, { code, schema: { schema } }) => ({
+                        ...acc,
+                        [code]: {
+                          description: '', // DISCUSS: This field actually is required, is there a better default for this?
+                          content: {
+                            'application/json': { schema },
                           },
-                        }),
-                        {},
-                      ),
-                      ...(body !== undefined
-                        ? {
-                            requestBody: {
-                              content: {
-                                'application/json': {
-                                  schema: body.schema,
-                                },
+                        },
+                      }),
+                      {},
+                    ),
+                    ...(body !== undefined
+                      ? {
+                          requestBody: {
+                            content: {
+                              'application/json': {
+                                schema: body.schema,
                               },
-                              required: body.required,
                             },
-                          }
-                        : {}),
-                    },
+                            required: body.required,
+                          },
+                        }
+                      : {}),
                   },
                 },
-        ),
+              },
       ),
-    );
+    ),
+  );
+}
 
 export function componentsForProject(
   config: Config,
 ): E.Either<string, OpenAPIV3_1.Document> {
-  const memo = {};
+  const state: State = new State();
 
   return pipe(
-    project,
-    RE.chainEitherK(sourceFile(config.index)),
-    RE.chain((src) =>
+    project({ config, state }),
+    E.chain((project) => sourceFile(project, config.index)),
+    E.chain((src) =>
       pipe(
         src.getExportSymbols(),
         RA.map((sym) =>
           pipe(
-            RE.Do,
-            RE.bind('paths', () => routesForSymbol(sym)),
-            RE.bind('version', () => RE.right(apiSpecVersion(sym))),
+            E.Do,
+            E.bind('paths', () => routesForSymbol(config, state, sym)),
+            E.bind('version', () => E.right(apiSpecVersion(sym))),
           ),
         ),
-        A.altAll(RE.Alt)(RE.left('no valid route symbols exported')),
+        A.altAll(E.Alt)(E.left('no valid route symbols exported')),
       ),
     ),
-    RE.map(({ paths, version }) => ({
+    E.bind('components', () => {
+      const schemas: Record<string, OpenAPIV3_1.SchemaObject> = {};
+      let sym: Symbol | undefined;
+      while ((sym = state.dequeueRef()) !== undefined) {
+        const name = sym.getName();
+        console.log(`processing ${name}`);
+        const schemaE = pipe(
+          variableDeclarationOfSymbol(sym),
+          E.chain((node) => {
+            const init = node.getInitializer();
+            if (init === undefined) {
+              return E.left(`no initializer for ${name}`);
+            }
+            return toOpenAPISchema(state, init, true);
+          }),
+          E.chain(filterUnrepresentable),
+          E.map((spec) => spec.schema),
+        );
+        if (schemaE._tag === 'Left') {
+          //return schemaE;
+          continue;
+        } else {
+          schemas[name] = schemaE.right;
+        }
+      }
+      return E.right({ schemas });
+    }),
+    E.map(({ components, paths, version }) => ({
       openapi: '3.1.0',
       info: {
         title: config.name,
         version: version,
       },
       paths,
-      components: {
-        schemas: memo,
-      },
+      components,
     })),
-  )({ config, memo });
+  );
 }
