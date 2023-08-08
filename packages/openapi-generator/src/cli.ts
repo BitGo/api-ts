@@ -1,39 +1,24 @@
 #!/usr/bin/env node
 
-import { command, run, option, string, flag, boolean } from 'cmd-ts';
-import { pipe } from 'fp-ts/function';
+import { command, run, option, string, flag, boolean, positional } from 'cmd-ts';
 import * as E from 'fp-ts/Either';
 import * as fs from 'fs';
 import * as p from 'path';
-import { promisify } from 'util';
 
-import { componentsForProject } from './project';
-
-const writeFile = promisify(fs.writeFile.bind(fs));
+import { parseApiSpec } from './apiSpec';
+import { Components, parseRefs } from './ref';
+import { convertRoutesToOpenAPI } from './openapi';
+import type { Route } from './route';
+import type { Schema } from './ir';
+import { Project } from './project';
 
 const app = command({
   name: 'api-ts',
   args: {
-    input: option({
+    input: positional({
       type: string,
-      description: `API route definition file (default: './src/index.ts')`,
-      long: 'input',
-      short: 'i',
-      defaultValue: () => p.join(process.cwd(), 'src', 'index.ts'),
-    }),
-    output: option({
-      type: string,
-      description: `OpenAPI output file (default: './api.json')`,
-      long: 'output',
-      short: 'o',
-      defaultValue: () => p.join(process.cwd(), 'api.json'),
-    }),
-    tsConfig: option({
-      type: string,
-      description: `path to tsconfig.json in project root (default: './tsconfig.json')`,
-      long: 'tsconfig',
-      short: 't',
-      defaultValue: () => p.join(process.cwd(), 'tsconfig.json'),
+      description: `API route definition file`,
+      displayName: 'file',
     }),
     name: option({
       type: string,
@@ -50,6 +35,21 @@ const app = command({
         }
       },
     }),
+    version: option({
+      type: string,
+      description: 'API version',
+      long: 'version',
+      short: 'v',
+      defaultValue: () => {
+        const pkgFile = p.join(process.cwd(), 'package.json');
+        try {
+          const pkgJson = fs.readFileSync(pkgFile, 'utf-8');
+          return JSON.parse(pkgJson)['version'] ?? '0.0.1';
+        } catch (err) {
+          return '0.0.1';
+        }
+      },
+    }),
     includeInternal: flag({
       type: boolean,
       description: 'include routes marked private',
@@ -58,25 +58,79 @@ const app = command({
       defaultValue: () => false,
     }),
   },
-  handler: async ({ input, output, tsConfig, name, includeInternal }) => {
-    const api = pipe(
-      componentsForProject({
-        virtualFiles: {},
-        index: input,
-        tsConfig,
-        name,
-        includeInternal,
-      }),
-      E.matchW(
-        (err) => {
-          console.log(`Error processing project: ${err}`);
-          return process.exit(1);
-        },
-        (api) => api,
-      ),
+  handler: async ({ input, name, version }) => {
+    const filePath = p.resolve(input);
+
+    const project = await new Project().parseEntryPoint(filePath);
+    if (E.isLeft(project)) {
+      console.error(project.left);
+      process.exit(1);
+    }
+
+    const entryPoint = project.right.get(filePath);
+    if (entryPoint === undefined) {
+      console.error(`Could not find entry point ${filePath}`);
+      process.exit(1);
+    }
+
+    let apiSpec: Route[] | undefined;
+    for (const symbol of Object.values(entryPoint.symbols.declarations)) {
+      if (symbol.init === undefined) {
+        continue;
+      } else if (symbol.init.type !== 'CallExpression') {
+        continue;
+      } else if (symbol.init.arguments.length === 0) {
+        continue;
+      }
+
+      const result = parseApiSpec(
+        project.right,
+        entryPoint,
+        symbol.init.arguments[0]!.expression,
+      );
+      if (E.isLeft(result)) {
+        console.error(`Error parsing ${symbol.name}: ${result.left}`);
+        continue;
+      }
+
+      apiSpec = result.right;
+      break;
+    }
+    if (apiSpec === undefined) {
+      console.error(`Could not find API spec in ${filePath}`);
+      process.exit(1);
+    }
+
+    const components: Components = {};
+    const queue: Schema[] = apiSpec.flatMap((route) => {
+      return [
+        ...route.parameters.map((p) => p.schema),
+        ...(route.body !== undefined ? [route.body] : []),
+        ...Object.values(route.response),
+      ];
+    });
+    let schema: Schema | undefined;
+    while (((schema = queue.pop()), schema !== undefined)) {
+      const newComponents = parseRefs(project.right, schema);
+      for (const [name, schema] of Object.entries(newComponents)) {
+        if (components[name] !== undefined) {
+          continue;
+        }
+        components[name] = schema;
+        queue.push(schema);
+      }
+    }
+
+    const openapi = convertRoutesToOpenAPI(
+      {
+        title: name,
+        version: version,
+      },
+      apiSpec,
+      components,
     );
-    const formattedApi = JSON.stringify(api, null, 2) + '\n';
-    await writeFile(output, formattedApi);
+
+    console.log(JSON.stringify(openapi, null, 2));
   },
 });
 

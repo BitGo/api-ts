@@ -1,289 +1,252 @@
-import { parse as parseComment } from 'comment-parser';
-import { flow, pipe } from 'fp-ts/function';
+import type { Block } from 'comment-parser';
 import * as E from 'fp-ts/Either';
-import * as RA from 'fp-ts/ReadonlyArray';
-import * as RE from 'fp-ts/ReaderEither';
-import { Expression, Node, Symbol, ts, Type } from 'ts-morph';
 
-import { toOpenAPISchema as toSchema } from './expression';
-import { parseType } from './type';
+import { parseCodecInitializer } from './codec';
+import type { CombinedType, Schema } from './ir';
+import type { Project } from './project';
+import { findSymbolInitializer } from './resolveInit';
 
-type RouteDeclarationEnv = {
-  decl: Expression<ts.Expression>;
-  memo: any;
+export type Parameter = {
+  type: 'path' | 'query';
+  name: string;
+  schema: Schema;
+  explode?: boolean;
+  required: boolean;
 };
 
-type RouteParseError = string;
+export type Route = {
+  path: string;
+  method: string;
+  parameters: Parameter[];
+  body?: Schema;
+  response: Record<number, Schema>;
+  comment?: Block;
+};
 
-type RouteParseStep<R> = RE.ReaderEither<RouteDeclarationEnv, RouteParseError, R>;
+type Request = {
+  parameters: Parameter[];
+  body?: Schema;
+};
 
-const propertySymOfType = (property: string) => (type: Type) =>
-  E.fromNullable(`no property '${property}' in ${type.getText()}`)(
-    type.getProperty(property),
-  );
-
-const typeOfSymbol =
-  (sym: Symbol): RouteParseStep<Type> =>
-  ({ decl }: RouteDeclarationEnv) =>
-    E.right<string, Type>(sym.getTypeAtLocation(decl));
-
-const baseDeclarationType: RouteParseStep<Type> = ({ decl }) => E.right(decl.getType());
-
-const getJsDocParamDescription = (property: Symbol) =>
-  property
-    .getJsDocTags()
-    .filter((t) => t.getName() === 'param')
-    .flatMap((t) => t.getText())
-    .map((t) => t.text);
-
-const initializerForPropertySymbol = (sym: Symbol) =>
-  pipe(
-    E.fromNullable(`declaration not found for symbol ${sym.getName()}`)(
-      sym.getDeclarations().find((d) => Node.isInitializerExpressionGetable(d)),
-    ),
-    E.chain((decl) =>
-      Node.isPropertyAssignment(decl)
-        ? E.right(decl)
-        : E.left('declaration is not assignment'),
-    ),
-    E.chain((decl) => E.fromNullable('initializer not found')(decl.getInitializer())),
-  );
-
-const typeParamOfCodec =
-  (param: 'A' | 'O' | 'I') => (expr: Expression<ts.Expression>) =>
-    pipe(
-      RE.fromEither(
-        E.fromNullable(`Could not get type of ${expr.getText()}`)(
-          expr.getContextualType(),
-        ),
-      ),
-      RE.chainEitherK(propertySymOfType(`_${param}`)),
-      RE.chain(typeOfSymbol),
-    );
-
-const toOpenAPISchema = (init: Expression) => (env: RouteDeclarationEnv) =>
-  pipe(
-    toSchema(init)(env),
-    E.map((schema) => ({ type: 'schema', ...schema })),
-  );
-
-const propsToOpenAPISchema = (props: Type) => (env: RouteDeclarationEnv) =>
-  parseType({ location: env.decl, type: props, memo: env.memo });
-
-const parametersFromCodecOutputSym = (paramIn: 'query' | 'path') =>
-  flow(
-    typeOfSymbol,
-    RE.chainEitherK((type) =>
-      pipe(
-        RA.fromArray(type.getProperties()),
-        RA.traverse(E.Applicative)((sym) =>
-          pipe(
-            E.Do,
-            E.bind('name', () => E.right(sym.getName())),
-            E.bind('description', () => E.right(getJsDocParamDescription(sym))),
-            E.bind('codec', () => initializerForPropertySymbol(sym)),
-          ),
-        ),
-      ),
-    ),
-    RE.chain(
-      flow(
-        RA.traverse(RE.Applicative)(({ description, name, codec }) =>
-          pipe(
-            toOpenAPISchema(codec),
-            RE.chain((result) =>
-              result.type === 'unrepresentable'
-                ? RE.left('unrepresentable query param')
-                : RE.right(result),
-            ),
-            RE.map(({ schema, required }) => ({
-              name,
-              schema,
-              required,
-              in: paramIn,
-              ...(description.length > 0
-                ? { description: description[description.length - 1] }
-                : {}),
-            })),
-          ),
-        ),
-      ),
-    ),
-  );
-
-const propertySymOfBaseDeclaration = (property: string) =>
-  pipe(baseDeclarationType, RE.chainEitherK(propertySymOfType(property)));
-
-const stringLiteralValueOfBaseProperty = (property: string) =>
-  pipe(
-    baseDeclarationType,
-    RE.chainEitherK(propertySymOfType(property)),
-    RE.chainEitherK((sym) =>
-      E.fromNullable(`${sym.getName()} has no declaration`)(sym.getValueDeclaration()),
-    ),
-    RE.chainEitherK((decl) =>
-      Node.isPropertyAssignment(decl)
-        ? E.right(decl)
-        : E.left(`${decl.getText()} is not property assignment`),
-    ),
-    RE.chainEitherK((decl) => {
-      const init = decl.getInitializer();
-      return E.fromNullable(`${decl.getText()} has no initializer`)(init);
-    }),
-    RE.chainEitherK((init) =>
-      Node.isStringLiteral(init)
-        ? E.right(init.getLiteralValue())
-        : E.left(`${init.getText()} is not string literal`),
-    ),
-  );
-
-const outputTypeOfDeclaredRequestCodec = pipe(
-  propertySymOfBaseDeclaration('request'),
-  RE.chainEitherK(initializerForPropertySymbol),
-  RE.chain(typeParamOfCodec('O')),
-);
-
-const routeSummary = (init: Node) => {
-  const sym = init.getSymbol();
-  if (!sym) {
-    return 'Unknown route';
+function derefRequestSchema(
+  project: Project,
+  schema: Schema,
+): E.Either<string, Schema> {
+  if (schema.type === 'ref') {
+    const sourceFile = project.get(schema.location);
+    if (sourceFile === undefined) {
+      return E.left(`Could not find source file ${schema.location}`);
+    }
+    const initE = findSymbolInitializer(project, sourceFile, schema.name);
+    if (E.isLeft(initE)) {
+      return initE;
+    }
+    const [newSourceFile, init] = initE.right;
+    return parseCodecInitializer(project, newSourceFile, init);
   } else {
-    return (sym.getAliasedSymbol() ?? sym).getName();
+    return E.right(schema);
   }
-};
+}
 
-const routeDescription = (init: Node): { description?: string; isPrivate: boolean } => {
-  return pipe(
-    E.fromNullable('No symbol for initializer')(init.getSymbol()),
-    E.chain((sym) =>
-      E.fromNullable('No value declaration')(
-        (sym.getAliasedSymbol() ?? sym).getValueDeclaration(),
-      ),
-    ),
-    E.chain((decl): E.Either<string, { description?: string; isPrivate: boolean }> => {
-      let current: Node | undefined = decl;
-      while (current !== undefined) {
-        const comments = current.getLeadingCommentRanges();
-        if (comments.length > 0) {
-          // Just taking the first one for now
-          const comment = parseComment(comments[0]!.getText());
-          if (comment.length === 0) {
-            return E.left('no parsed comment');
-          }
-          const description = comment[0]!.description;
-          const isPrivate =
-            comment[0]!.tags.findIndex(({ tag }) => tag === 'private') >= 0;
-          return E.right({ description, isPrivate });
-        } else {
-          const next = current.getParent();
-          if (!next || next.getPos() === current.getPos()) {
-            break;
-          }
-          current = next;
-        }
+function parseRequestObject(schema: Schema): E.Either<string, Request> {
+  if (schema.type !== 'object') {
+    return E.left('request must be an object');
+  }
+  const parameters: Parameter[] = [];
+  const querySchema = schema.properties['query'];
+  if (querySchema !== undefined) {
+    if (querySchema.type !== 'object') {
+      return E.left('Route query must be an object');
+    } else {
+      for (const [name, prop] of Object.entries(querySchema.properties)) {
+        parameters.push({
+          type: 'query',
+          name,
+          schema: prop,
+          required: querySchema.required.includes(name),
+        });
       }
-      return E.left('no comment found');
-    }),
-    E.getOrElseW(() => ({ isPrivate: false })),
-  );
-};
+    }
+  }
+  const pathSchema = schema.properties['params'];
+  if (pathSchema !== undefined) {
+    if (pathSchema.type !== 'object') {
+      return E.left('Route path must be an object');
+    }
+    for (const [name, prop] of Object.entries(pathSchema.properties)) {
+      parameters.push({
+        type: 'path',
+        name,
+        schema: prop,
+        required: pathSchema.required.includes(name),
+      });
+    }
+  }
 
-export const schemaForRouteNode = (memo: any) => (node: Expression<ts.Expression>) =>
-  pipe(
-    RE.right(routeDescription(node)),
-    RE.bind('summary', () => RE.right(routeSummary(node))),
-    RE.bind('path', () => stringLiteralValueOfBaseProperty('path')),
-    RE.bind('method', () =>
-      pipe(
-        stringLiteralValueOfBaseProperty('method'),
-        RE.map((m) => m.toLowerCase()),
-      ),
-    ),
-    RE.bind('query', () =>
-      pipe(
-        outputTypeOfDeclaredRequestCodec,
-        RE.chainEitherK(propertySymOfType('query')),
-        RE.chain(parametersFromCodecOutputSym('query')),
-      ),
-    ),
-    RE.bind('params', () =>
-      pipe(
-        outputTypeOfDeclaredRequestCodec,
-        RE.chainEitherK(propertySymOfType('params')),
-        RE.chain(parametersFromCodecOutputSym('path')),
-      ),
-    ),
-    RE.bind('body', () =>
-      pipe(
-        outputTypeOfDeclaredRequestCodec,
-        RE.chainEitherK((typ) =>
-          E.fromNullable(`No body property`)(typ.getProperty('body')),
-        ),
-        RE.map((sym) => sym.getTypeAtLocation(node)),
-        RE.chain(propsToOpenAPISchema),
-        RE.chain((body) =>
-          body.type === 'unrepresentable'
-            ? RE.left('unrepresentable body type')
-            : RE.right(body),
-        ),
-        RE.orElseW(() => RE.right(undefined)),
-      ),
-    ),
-    RE.bind('responses', () =>
-      pipe(
-        baseDeclarationType,
-        RE.chainEitherK(propertySymOfType('response')),
-        RE.chain(typeOfSymbol),
-        RE.map((type) => type.getProperties()),
-        RE.chain(
-          RA.traverse(RE.Applicative)((sym) =>
-            pipe(
-              RE.fromEither(initializerForPropertySymbol(sym)),
-              RE.chain(toOpenAPISchema),
-              RE.chain((response) =>
-                response.type === 'unrepresentable'
-                  ? RE.left('unrepresentable response')
-                  : RE.right(response),
-              ),
-              RE.bindTo('schema'),
-              RE.bind('code', () => {
-                const name = sym.getName();
-                return RE.fromEither(
-                  E.fromNullable('undefined response code name')(name),
-                );
-              }),
-            ),
-          ),
-        ),
-      ),
-    ),
-  )({ decl: node, memo });
+  return E.right({
+    parameters,
+    body: schema.properties['body'],
+  });
+}
 
-export const apiSpecVersion = (sym: Symbol) =>
-  pipe(
-    E.fromNullable('no version tag for symbol')(
-      sym.getJsDocTags().find((tag) => tag.getName() === 'version'),
-    ),
-    E.chain((tag) => E.fromNullable('no text for version tag')(tag.getText()[0])),
-    E.map((text) => text.text),
-    E.getOrElse(() => '0.1.0'),
-  );
+function parseRequestUnion(
+  project: Project,
+  schema: Schema,
+): E.Either<string, Request> {
+  if (schema.type !== 'union') {
+    return E.left('request must be a union');
+  }
 
-export const schemaForApiSpec = (memo: any) => (apiSpec: Node) =>
-  pipe(
-    apiSpec.getType().getProperties(),
-    RA.chain((operationSym) => operationSym.getTypeAtLocation(apiSpec).getProperties()),
-    RA.traverse(E.Applicative)((routeSym) =>
-      pipe(
-        E.fromNullable(`no declarations for route symbol ${routeSym.getName()}`)(
-          routeSym.getDeclarations()[0],
-        ),
-        E.chain((node) =>
-          Node.isInitializerExpressionGetable(node)
-            ? E.fromNullable('initializer not found')(node.getInitializer())
-            : E.left('decl not initializer'),
-        ),
-        E.chain(schemaForRouteNode(memo)),
-      ),
-    ),
-  );
+  // For query params and body, construct a union of the related sub-schemas
+  // For path params, just take them from the first sub-schema
+  // This isn't perfect but it's about as good as we can do in openapi
+  const parameters: Parameter[] = [];
+  const querySchema: Schema = { type: 'union', schemas: [] };
+  let body: Schema | undefined;
+
+  for (let subSchema of schema.schemas) {
+    if (subSchema.type === 'ref') {
+      let derefE = derefRequestSchema(project, subSchema);
+      if (E.isLeft(derefE)) {
+        return derefE;
+      }
+      subSchema = derefE.right;
+    }
+
+    if (subSchema.type !== 'object') {
+      return E.left('Route request union must be all objects');
+    }
+    if (subSchema.properties['query'] !== undefined) {
+      querySchema.schemas.push(subSchema.properties['query']);
+    }
+    if (subSchema.properties['body'] !== undefined) {
+      if (body === undefined) {
+        body = { type: 'union', schemas: [] };
+      }
+      (body as CombinedType).schemas.push(subSchema.properties['body']);
+    }
+  }
+  if (querySchema.schemas.length > 0) {
+    parameters.push({
+      type: 'query',
+      name: 'union',
+      explode: true,
+      required: true,
+      schema: querySchema,
+    });
+  }
+
+  const firstSubSchema = schema.schemas[0];
+  if (firstSubSchema !== undefined && firstSubSchema.type === 'object') {
+    const pathSchema = firstSubSchema.properties['params'];
+    if (pathSchema !== undefined && pathSchema.type === 'object') {
+      for (const [name, prop] of Object.entries(pathSchema.properties)) {
+        parameters.push({
+          type: 'path',
+          name,
+          schema: prop,
+          required: pathSchema.required.includes(name),
+        });
+      }
+    }
+  }
+
+  return E.right({ parameters, body });
+}
+
+function parseRequestIntersection(
+  project: Project,
+  schema: Schema,
+): E.Either<string, Request> {
+  if (schema.type !== 'intersection') {
+    return E.left('request must be an intersection');
+  }
+  const result: Request = {
+    parameters: [],
+    body: { type: 'intersection', schemas: [] },
+  };
+  for (const subSchema of schema.schemas) {
+    const subResultE = parseRequestSchema(project, subSchema);
+    if (E.isLeft(subResultE)) {
+      return subResultE;
+    }
+    result.parameters.push(...subResultE.right.parameters);
+    if (subResultE.right.body !== undefined) {
+      (result.body as CombinedType).schemas.push(subResultE.right.body);
+    }
+  }
+  if ((result.body as CombinedType).schemas.length === 0) {
+    delete result.body;
+  }
+  return E.right(result);
+}
+
+function parseRequestSchema(
+  project: Project,
+  schema: Schema,
+): E.Either<string, Request> {
+  if (schema.type === 'ref') {
+    const derefE = derefRequestSchema(project, schema);
+    if (E.isLeft(derefE)) {
+      return derefE;
+    }
+    return parseRequestSchema(project, derefE.right);
+  } else if (schema.type === 'object') {
+    return parseRequestObject(schema);
+  } else if (schema.type === 'union') {
+    return parseRequestUnion(project, schema);
+  } else if (schema.type === 'intersection') {
+    return parseRequestIntersection(project, schema);
+  } else {
+    return E.left(`Unsupported request type ${schema.type}`);
+  }
+}
+
+export function parseRoute(project: Project, schema: Schema): E.Either<string, Route> {
+  if (schema.type !== 'object') {
+    return E.left('Route must be an object');
+  }
+
+  if (schema.properties['path'] === undefined) {
+    return E.left('Route must have a path');
+  } else if (
+    schema.properties['path'].type !== 'literal' ||
+    schema.properties['path'].kind !== 'string'
+  ) {
+    return E.left('Route path must be a string literal');
+  }
+
+  if (schema.properties['method'] === undefined) {
+    return E.left('Route must have a method');
+  } else if (
+    schema.properties['method'].type !== 'literal' ||
+    schema.properties['method'].kind !== 'string'
+  ) {
+    return E.left('Route method must be a string literal');
+  }
+
+  const requestSchema = schema.properties['request'];
+  if (requestSchema === undefined) {
+    return E.left('Route must have a request');
+  }
+  const requestPropertiesE = parseRequestSchema(project, requestSchema);
+  if (E.isLeft(requestPropertiesE)) {
+    return requestPropertiesE;
+  }
+  const { parameters, body } = requestPropertiesE.right;
+
+  if (schema.properties['response'] === undefined) {
+    return E.left('Route must have responses');
+  } else if (schema.properties['response'].type !== 'object') {
+    return E.left('Route responses must be an object');
+  }
+
+  return E.right({
+    path: schema.properties['path'].value as string,
+    method: schema.properties['method'].value as string,
+    parameters,
+    response: schema.properties['response'].properties,
+    ...(body !== undefined ? { body } : {}),
+    ...(schema.comment !== undefined ? { comment: schema.comment } : {}),
+  });
+}
