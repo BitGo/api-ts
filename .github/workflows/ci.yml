@@ -36,7 +36,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          # `@swc/core` has a postinstall hook that in GHA pulls in the wasm version of swc. This pulls in the native
+          # binary version instead, which is faster and more reliable. Also, the wasm version seems to fail with a
+          # strange serde error in CI. ("Error: invalid type: unit value, expected struct Options")
+          # See: https://github.com/swc-project/swc/blob/main/postinstall.js#L197-L200
+          core_version="$(jq --raw-output '.packages."node_modules/@swc/core".optionalDependencies."@swc/core-linux-x64-gnu"' < ./package-lock.json)"
+          npm install -no-save --loglevel=error --prefer-offline --no-audit --progress=false "@swc/core-linux-x64-gnu@${core_version}"
 
       - name: Restore Turbo Cache
         uses: actions/cache@v3
