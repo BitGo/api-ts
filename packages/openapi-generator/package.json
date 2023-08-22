@@ -36,6 +36,10 @@
     "memfs": "4.2.1",
     "typescript": "4.7.4"
   },
+  "optionalDependencies": {
+    "@swc/core-linux-x64-gnu": "1.3.76",
+    "@swc/core-darwin-arm64": "1.3.76"
+  },
   "publishConfig": {
     "access": "public"
   }
