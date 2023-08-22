@@ -1,0 +1,186 @@
+import * as E from 'fp-ts/Either';
+import { pipe } from 'fp-ts/lib/function';
+
+import type { Schema } from './ir';
+
+export type DerefFn = (ref: Schema, fn: KnownCodec) => E.Either<string, Schema>;
+export type KnownCodec = (
+  deref: DerefFn,
+  ...schemas: Schema[]
+) => E.Either<string, Schema>;
+
+export type KnownImportEntry = Record<string, KnownCodec>;
+
+export type KnownImports = Record<string, KnownImportEntry>;
+
+function isOptional(schema: Schema): boolean {
+  if (schema.type === 'undefined') {
+    return true;
+  } else if (schema.type === 'union') {
+    return schema.schemas.findIndex(isOptional) >= 0;
+  } else {
+    return false;
+  }
+}
+
+// TODO: Read this from a JSON (or YAML?) file
+
+export const KNOWN_IMPORTS: KnownImports = {
+  'io-ts': {
+    string: () => E.right({ type: 'primitive', value: 'string' }),
+    number: () => E.right({ type: 'primitive', value: 'number' }),
+    boolean: () => E.right({ type: 'primitive', value: 'boolean' }),
+    null: () => E.right({ type: 'primitive', value: 'null' }),
+    array: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
+    type: (deref, schema) => {
+      return deref(schema, (_, schema) => {
+        if (schema.type !== 'object') {
+          return E.left('typeC parameter must be object');
+        }
+        const props = Object.entries(schema.properties).reduce((acc, [key, prop]) => {
+          return { ...acc, [key]: prop };
+        }, {});
+        return E.right({
+          type: 'object',
+          properties: props,
+          required: Object.keys(props),
+        });
+      });
+    },
+    partial: (deref, schema) => {
+      return deref(schema, (_, schema) => {
+        if (schema.type !== 'object') {
+          return E.left('typeC parameter must be object');
+        }
+        const props = Object.entries(schema.properties).reduce((acc, [key, prop]) => {
+          return { ...acc, [key]: prop };
+        }, {});
+        return E.right({ type: 'object', properties: props, required: [] });
+      });
+    },
+    record: (_, _domain, codomain) => {
+      if (!codomain) {
+        return E.left('Codomain of record must be specified');
+      } else {
+        return E.right({ type: 'record', codomain });
+      }
+    },
+    union: (deref, schema) => {
+      return deref(schema, (_, schema) => {
+        if (schema.type !== 'tuple') {
+          return E.left('unionC parameter must be array');
+        }
+        return E.right({ type: 'union', schemas: schema.schemas });
+      });
+    },
+    intersection: (deref, schema) => {
+      return deref(schema, (_, schema) => {
+        if (schema.type !== 'tuple') {
+          return E.left('unionC parameter must be array');
+        }
+        return E.right({ type: 'intersection', schemas: schema.schemas });
+      });
+    },
+    literal: (deref, arg) => {
+      return deref(arg, (_, arg) => {
+        if (arg.type !== 'literal') {
+          return E.left(`Unimplemented literal type ${arg.type}`);
+        } else {
+          return E.right(arg);
+        }
+      });
+    },
+    keyof: (deref, arg) => {
+      return deref(arg, (_, arg) => {
+        if (arg.type !== 'object') {
+          return E.left(`Unimplemented keyof type ${arg.type}`);
+        }
+        const schemas: E.Either<string, Schema>[] = Object.keys(arg.properties).map(
+          (prop) => {
+            return E.right({ type: 'literal', kind: 'string', value: prop });
+          },
+        );
+        return pipe(
+          schemas,
+          E.sequenceArray,
+          E.map((schemas) => ({ type: 'union', schemas: [...schemas] })),
+        );
+      });
+    },
+    brand: (_, arg) => E.right(arg),
+  },
+  'io-ts-types': {
+    nonEmptyArray: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
+    NonEmptyString: () => E.right({ type: 'primitive', value: 'string' }),
+    DateFromISOString: () => E.right({ type: 'primitive', value: 'string' }),
+    NumberFromString: () => E.right({ type: 'primitive', value: 'number' }),
+    BooleanFromString: () => E.right({ type: 'primitive', value: 'boolean' }),
+    UUID: () => E.right({ type: 'primitive', value: 'string' }),
+  },
+  '@api-ts/io-ts-http': {
+    optional: (_, innerSchema) =>
+      E.right({ type: 'union', schemas: [innerSchema, { type: 'undefined' }] }),
+    optionalized: (deref, props) => {
+      return deref(props, (_, props) => {
+        if (props.type !== 'object') {
+          return E.left('optionalized parameter must be object');
+        }
+        const required = Object.keys(props.properties).filter(
+          (key) => !isOptional(props.properties[key]!),
+        );
+        return E.right({ type: 'object', properties: props.properties, required });
+      });
+    },
+    httpRequest: (deref, arg) => {
+      if (arg.type !== 'object') {
+        return E.left(`Unimplemented httpRequest type ${arg.type}`);
+      }
+      const properties: Record<string, Schema> = {};
+      for (const [outerKey, outerValue] of Object.entries(arg.properties)) {
+        const innerPropsE = deref(outerValue, (_, innerProps) => {
+          return E.right(innerProps);
+        });
+
+        if (E.isLeft(innerPropsE)) {
+          return innerPropsE;
+        }
+        const innerProps = innerPropsE.right;
+        if (innerProps.type !== 'object') {
+          return E.left(`Unimplemented httpRequest type ${innerProps.type}`);
+        }
+
+        innerProps.required = innerProps.required.filter(
+          (key) => !isOptional(innerProps.properties[key]!),
+        );
+        properties[outerKey] = innerProps;
+      }
+
+      return E.right({
+        type: 'object',
+        properties,
+        required: Object.keys(properties).filter(
+          (key) => !isOptional(properties[key]!),
+        ),
+      });
+    },
+    httpRoute: (deref, schema) => {
+      return deref(schema, (_, schema) => {
+        if (schema.type !== 'object') {
+          return E.left('httpRoute parameter must be object');
+        }
+        const props = Object.entries(schema.properties).reduce((acc, [key, prop]) => {
+          const derefedE = deref(prop, (_, derefed) => E.right(derefed));
+          if (E.isLeft(derefedE)) {
+            return acc;
+          }
+          return { ...acc, [key]: derefedE.right };
+        }, {});
+        return E.right({
+          type: 'object',
+          properties: props,
+          required: Object.keys(props),
+        });
+      });
+    },
+  },
+};

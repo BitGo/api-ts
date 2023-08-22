@@ -1,174 +1,89 @@
-import { pipe } from 'fp-ts/function';
-import * as A from 'fp-ts/Alt';
-import * as RA from 'fp-ts/ReadonlyArray';
+import * as fs from 'fs';
+import * as p from 'path';
+import { promisify } from 'util';
 import * as E from 'fp-ts/Either';
-import * as RE from 'fp-ts/ReaderEither';
-import { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
-import {
-  DiagnosticCategory,
-  Node,
-  Project,
-  Symbol,
-  VariableDeclaration,
-} from 'ts-morph';
+import resolve from 'resolve';
 
-import { apiSpecVersion, schemaForApiSpec } from './route';
-import { Config } from './config';
+import { parseSource, type SourceFile } from './sourceFile';
 
-type Env = {
-  memo: { [K: string]: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject };
-  config: Config;
-};
+const readFile = promisify(fs.readFile);
 
-const project = ({
-  config: { tsConfig, virtualFiles },
-}: Env): E.Either<string, Project> => {
-  const project = new Project({
-    tsConfigFilePath: tsConfig,
-  });
-  for (const [filename, source] of Object.entries(virtualFiles)) {
-    project.createSourceFile(filename, source);
+export class Project {
+  private files: Record<string, SourceFile>;
+
+  constructor(files: Record<string, SourceFile> = {}) {
+    this.files = files;
   }
 
-  const errors = project
-    .getPreEmitDiagnostics()
-    .filter((diag) => diag.getCategory() === DiagnosticCategory.Error);
+  add(path: string, sourceFile: SourceFile): void {
+    this.files[path] = sourceFile;
+  }
 
-  if (errors.length > 0) {
-    const messages = errors.map((err) => {
-      const message = err.getMessageText();
-      if (typeof message === 'string') {
-        return message;
-      } else {
-        return message.getMessageText();
+  get(path: string): SourceFile | undefined {
+    return this.files[path];
+  }
+
+  has(path: string): boolean {
+    return this.files.hasOwnProperty(path);
+  }
+
+  async parseEntryPoint(entryPoint: string): Promise<E.Either<string, Project>> {
+    const queue: string[] = [entryPoint];
+    let path: string | undefined;
+    while (((path = queue.pop()), path !== undefined)) {
+      if (!['.ts', '.js'].includes(p.extname(path))) {
+        continue;
       }
-    });
-    return E.left(`Errors found in project:\n${messages.join('\n')}`);
+
+      const src = await this.readFile(path);
+      const sourceFile = await parseSource(path, src);
+
+      this.add(path, sourceFile);
+
+      for (const sym of Object.values(sourceFile.symbols.imports)) {
+        if (!sym.from.startsWith('.')) {
+          continue;
+        }
+
+        const filePath = p.dirname(path);
+        const absImportPathE = this.resolve(filePath, sym.from);
+        if (E.isLeft(absImportPathE)) {
+          return absImportPathE;
+        } else if (!this.has(absImportPathE.right)) {
+          queue.push(absImportPathE.right);
+        }
+      }
+      for (const starExport of sourceFile.symbols.exportStarFiles) {
+        const filePath = p.dirname(path);
+        const absImportPathE = this.resolve(filePath, starExport);
+        if (E.isLeft(absImportPathE)) {
+          return absImportPathE;
+        } else if (!this.has(absImportPathE.right)) {
+          queue.push(absImportPathE.right);
+        }
+      }
+    }
+
+    return E.right(this);
   }
 
-  return E.right(project);
-};
+  async readFile(filename: string): Promise<string> {
+    return await readFile(filename, 'utf8');
+  }
 
-const sourceFile = (filename: string) => (project: Project) =>
-  E.fromNullable(`${filename} not in project`)(project.getSourceFile(filename));
-
-const variableDeclarationOfSymbol = (sym: Symbol) => {
-  const declaration = sym.getDeclarations().find((d) => Node.isVariableDeclaration(d));
-  // Asserting type because control-flow analysis is not narrowing it properly through find()
-  return E.fromNullable(`${sym.getName()} has no variable declarations`)(
-    declaration as VariableDeclaration,
-  );
-};
-
-type PathSpec = { [Path: string]: { [Method: string]: OpenAPIV3_1.OperationObject } };
-
-/**
- * There seems to be a bug in the openapi-types declaration for 3.1 parameters where their
- * schemas use the 3.0 schema object type that disallows nulls. I've checked with a schema
- * validator and it appears to accept null parameter (though why would you need this?), so
- * to work around the type definition bug, the parameter definitions can just be asserted.
- */
-type ParameterList = (OpenAPIV3.ReferenceObject | OpenAPIV3.ParameterObject)[];
-
-const routesForSymbol =
-  (sym: Symbol): RE.ReaderEither<Env, string, PathSpec> =>
-  ({ config: { includeInternal }, memo }: Env) =>
-    pipe(
-      variableDeclarationOfSymbol(sym),
-      E.chain(schemaForApiSpec(memo)),
-      E.map(
-        RA.reduce(
-          {},
-          (
-            paths: PathSpec,
-            {
-              path,
-              method,
-              query,
-              params,
-              body,
-              responses,
-              summary,
-              description,
-              isPrivate,
-            },
-          ) =>
-            isPrivate && !includeInternal
-              ? paths
-              : {
-                  ...paths,
-                  [path]: {
-                    ...paths[path],
-                    [method]: {
-                      summary,
-                      ...(description !== undefined ? { description } : {}),
-                      ...(isPrivate ? { 'x-internal': true } : {}),
-                      parameters: [
-                        ...(query as ParameterList),
-                        ...(params as ParameterList),
-                      ],
-                      responses: responses.reduce<OpenAPIV3_1.ResponsesObject>(
-                        (acc, { code, schema: { schema } }) => ({
-                          ...acc,
-                          [code]: {
-                            description: '', // DISCUSS: This field actually is required, is there a better default for this?
-                            content: {
-                              'application/json': { schema },
-                            },
-                          },
-                        }),
-                        {},
-                      ),
-                      ...(body !== undefined
-                        ? {
-                            requestBody: {
-                              content: {
-                                'application/json': {
-                                  schema: body.schema,
-                                },
-                              },
-                              required: body.required,
-                            },
-                          }
-                        : {}),
-                    },
-                  },
-                },
-        ),
-      ),
-    );
-
-export function componentsForProject(
-  config: Config,
-): E.Either<string, OpenAPIV3_1.Document> {
-  const memo = {};
-
-  return pipe(
-    project,
-    RE.chainEitherK(sourceFile(config.index)),
-    RE.chain((src) =>
-      pipe(
-        src.getExportSymbols(),
-        RA.map((sym) =>
-          pipe(
-            RE.Do,
-            RE.bind('paths', () => routesForSymbol(sym)),
-            RE.bind('version', () => RE.right(apiSpecVersion(sym))),
-          ),
-        ),
-        A.altAll(RE.Alt)(RE.left('no valid route symbols exported')),
-      ),
-    ),
-    RE.map(({ paths, version }) => ({
-      openapi: '3.1.0',
-      info: {
-        title: config.name,
-        version: version,
-      },
-      paths,
-      components: {
-        schemas: memo,
-      },
-    })),
-  )({ config, memo });
+  resolve(basedir: string, path: string): E.Either<string, string> {
+    try {
+      const result = resolve.sync(path, {
+        basedir,
+        extensions: ['.ts', '.js'],
+      });
+      return E.right(result);
+    } catch (e: any) {
+      if (typeof e === 'object' && e.hasOwnProperty('message')) {
+        return E.left(e.message);
+      } else {
+        return E.left(JSON.stringify(e));
+      }
+    }
+  }
 }
