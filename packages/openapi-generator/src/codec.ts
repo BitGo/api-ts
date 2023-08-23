@@ -122,7 +122,10 @@ function parseObjectExpression(
       if (E.isLeft(initE)) {
         return initE;
       }
-      const [newSourceFile, init] = initE.right;
+      let [newSourceFile, init] = initE.right;
+      if (init.type === 'TsAsExpression' || init.type === 'TsConstAssertion') {
+        init = init.expression;
+      }
       if (init.type !== 'ObjectExpression') {
         return E.left('Spread element must be object');
       }
@@ -209,6 +212,8 @@ export function parsePlainInitializer(
     return E.right({ type: 'literal', kind: 'null', value: null });
   } else if (init.type === 'Identifier' && init.value === 'undefined') {
     return E.right({ type: 'undefined' });
+  } else if (init.type === 'TsConstAssertion' || init.type === 'TsAsExpression') {
+    return parsePlainInitializer(project, source, init.expression);
   } else if (
     init.type === 'Identifier' ||
     init.type === 'MemberExpression' ||
@@ -253,23 +258,21 @@ export function parseCodecInitializer(
       return E.right(identifier);
     }
 
-    function deref(source: SourceFile): DerefFn {
-      return (schema, fn) => {
-        if (schema.type !== 'ref') {
-          return fn(deref(source), schema);
-        } else {
-          const initE = findSymbolInitializer(project, source, schema.name);
-          if (E.isLeft(initE)) {
-            return initE;
-          }
-          const [newSourceFile, init] = initE.right;
-          const newSchemaE = parsePlainInitializer(project, newSourceFile, init);
-          if (E.isLeft(newSchemaE)) {
-            return newSchemaE;
-          }
-          return fn(deref(newSourceFile), newSchemaE.right);
+    function deref(schema: Schema): E.Either<string, Schema> {
+      if (schema.type !== 'ref') {
+        return E.right(schema);
+      } else {
+        const refSource = project.get(schema.location);
+        if (refSource === undefined) {
+          return E.left(`Unknown source ${schema.location}`);
         }
-      };
+        const initE = findSymbolInitializer(project, refSource, schema.name);
+        if (E.isLeft(initE)) {
+          return initE;
+        }
+        const [newSourceFile, init] = initE.right;
+        return parsePlainInitializer(project, newSourceFile, init);
+      }
     }
     const args = init.arguments.map<E.Either<string, Schema>>(({ expression }) => {
       return parsePlainInitializer(project, source, expression);
@@ -278,7 +281,8 @@ export function parseCodecInitializer(
     return pipe(
       args,
       E.sequenceArray,
-      E.chain((args) => identifier.schema(deref(source), ...args)),
+      E.chain((args) => pipe(args.map(deref), E.sequenceArray)),
+      E.chain((args) => identifier.schema(deref, ...args)),
     );
   } else {
     return E.left(`Unimplemented initializer type ${init.type}`);
