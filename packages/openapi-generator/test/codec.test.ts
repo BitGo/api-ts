@@ -259,6 +259,33 @@ testCase('record type is parsed', RECORD, {
   FOO: { type: 'record', codomain: { type: 'primitive', value: 'number' } },
 });
 
+const ENUM = `
+import * as t from 'io-ts';
+enum Foo {
+  Foo = 'foo',
+  Bar = 'bar',
+}
+export const TEST = t.keyof(Foo);
+`;
+
+testCase('enum type is parsed', ENUM, {
+  Foo: {
+    type: 'object',
+    properties: {
+      Foo: { type: 'literal', kind: 'string', value: 'foo' },
+      Bar: { type: 'literal', kind: 'string', value: 'bar' },
+    },
+    required: ['Foo', 'Bar'],
+  },
+  TEST: {
+    type: 'union',
+    schemas: [
+      { type: 'literal', kind: 'string', value: 'Foo' },
+      { type: 'literal', kind: 'string', value: 'Bar' },
+    ],
+  },
+});
+
 const STRING_LITERAL = `
 import * as t from 'io-ts';
 export const FOO = t.literal('foo');
