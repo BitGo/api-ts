@@ -18,6 +18,32 @@ export function parseApiSpec(
 
   const result: Route[] = [];
   for (const apiAction of Object.values(expr.properties)) {
+    if (apiAction.type === 'SpreadElement') {
+      const spreadExprE = resolveLiteralOrIdentifier(
+        project,
+        sourceFile,
+        apiAction.arguments,
+      );
+      if (E.isLeft(spreadExprE)) {
+        return spreadExprE;
+      }
+      let [spreadSourceFile, spreadExpr] = spreadExprE.right;
+      // TODO: This is just assuming that a `CallExpression` here is to `h.apiSpec`
+      if (spreadExpr.type === 'CallExpression') {
+        const arg = spreadExpr.arguments[0];
+        if (arg === undefined) {
+          return E.left(`unimplemented spread argument type ${arg}`);
+        }
+        spreadExpr = arg.expression;
+      }
+      const spreadSpecE = parseApiSpec(project, spreadSourceFile, spreadExpr);
+      if (E.isLeft(spreadSpecE)) {
+        return spreadSpecE;
+      }
+      result.push(...spreadSpecE.right);
+      continue;
+    }
+
     if (apiAction.type !== 'KeyValueProperty') {
       return E.left(`unimplemented route property type ${apiAction.type}`);
     }
