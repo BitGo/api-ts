@@ -23,6 +23,10 @@ updates:
     allow:
       - dependency-type: direct
     versioning-strategy: increase-if-necessary
+    groups:
+      dependencies:
+        patterns:
+          - '@swc/core-*'
     ignore:
       # Ignore all @types/nodes patch updates, since
       # this package updates so frequently
