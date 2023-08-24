@@ -150,6 +150,45 @@ function parseDeclaration(
         }
       }
     });
+  } else if (subDeclaration.type === 'TsEnumDeclaration') {
+    const comment =
+      prev !== undefined
+        ? leadingComment(src, srcSpanStart, prev.span.end, decl.span.start)[0]
+        : undefined;
+    // Construct a synthetic object declaration
+    const properties: swc.KeyValueProperty[] = subDeclaration.members.map((member) => {
+      return {
+        type: 'KeyValueProperty',
+        key: {
+          type: 'Identifier',
+          value: member.id.value,
+          span: member.id.span,
+          optional: false,
+        },
+        value: member.init ?? {
+          type: 'StringLiteral',
+          value: member.id.value,
+          span: member.id.span,
+        },
+      };
+    });
+    const syntheticObject: swc.ObjectExpression = {
+      type: 'ObjectExpression',
+      span: subDeclaration.span,
+      properties,
+    };
+    result.declarations.push({
+      name: subDeclaration.id.value,
+      init: syntheticObject,
+      comment,
+    });
+    if (decl.type === 'ExportDeclaration') {
+      result.exports.push({
+        type: 'named',
+        exportedName: subDeclaration.id.value,
+        localName: subDeclaration.id.value,
+      });
+    }
   }
   return result;
 }
@@ -179,7 +218,8 @@ export function parseTopLevelSymbols(
       symbols.imports.push(...newSyms);
     } else if (
       item.type === 'VariableDeclaration' ||
-      item.type === 'ExportDeclaration'
+      item.type === 'ExportDeclaration' ||
+      item.type === 'TsEnumDeclaration'
     ) {
       const newSyms = parseDeclaration(src, srcSpanStart, items[idx - 1], item);
       addTable(newSyms);

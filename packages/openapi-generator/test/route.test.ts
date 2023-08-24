@@ -2,13 +2,8 @@ import * as E from 'fp-ts/lib/Either';
 import assert from 'node:assert';
 import test from 'node:test';
 
-import {
-  parseSource,
-  parseRoute,
-  parsePlainInitializer,
-  Project,
-  type Route,
-} from '../src';
+import { TestProject } from './testProject';
+import { parseRoute, parsePlainInitializer, type Route } from '../src';
 
 async function testCase(
   description: string,
@@ -17,9 +12,16 @@ async function testCase(
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
-    const sourceFile = await parseSource('./index.ts', src);
+    const project = new TestProject({
+      '/index.ts': src,
+    });
+    await project.parseEntryPoint('/index.ts');
 
-    const project = new Project();
+    const sourceFile = project.get('/index.ts');
+    if (sourceFile === undefined) {
+      throw new Error(`could not find source file /index.ts`);
+    }
+
     const actual: Record<string, Route> = {};
     const errors: string[] = [];
     for (const symbol of sourceFile.symbols.declarations) {

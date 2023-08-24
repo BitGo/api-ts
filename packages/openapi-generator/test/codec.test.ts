@@ -2,7 +2,8 @@ import * as E from 'fp-ts/lib/Either';
 import assert from 'node:assert';
 import test from 'node:test';
 
-import { parseSource, parsePlainInitializer, Project, type Schema } from '../src';
+import { TestProject } from './testProject';
+import { parsePlainInitializer, type Schema } from '../src';
 
 async function testCase(
   description: string,
@@ -11,13 +12,18 @@ async function testCase(
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
-    const sourceFile = await parseSource('./index.ts', src);
+    const project = new TestProject({ '/index.ts': src });
+    await project.parseEntryPoint('/index.ts');
+    const sourceFile = project.get('/index.ts');
+    if (sourceFile === undefined) {
+      throw new Error('Source file not found');
+    }
 
     const actual: Record<string, Schema> = {};
     const errors: string[] = [];
     for (const symbol of sourceFile.symbols.declarations) {
       if (symbol.init !== undefined) {
-        const result = parsePlainInitializer(new Project(), sourceFile, symbol.init);
+        const result = parsePlainInitializer(project, sourceFile, symbol.init);
         if (E.isLeft(result)) {
           errors.push(result.left);
         } else {
@@ -117,6 +123,86 @@ testCase('spread property is parsed', SPREAD_PROPERTY, {
   },
 });
 
+const CONST_ASSERTION = `
+import * as t from 'io-ts';
+const props = { foo: t.number } as const;
+export const FOO = t.type(props);
+`;
+
+testCase('const assertion is parsed', CONST_ASSERTION, {
+  FOO: {
+    type: 'object',
+    properties: { foo: { type: 'primitive', value: 'number' } },
+    required: ['foo'],
+  },
+  props: {
+    type: 'object',
+    properties: { foo: { type: 'primitive', value: 'number' } },
+    required: ['foo'],
+  },
+});
+
+const SPREAD_CONST_ASSERTION = `
+import * as t from 'io-ts';
+const props = { foo: t.number } as const;
+export const FOO = t.type({
+  ...props,
+});
+`;
+
+testCase('spread const assertion is parsed', SPREAD_CONST_ASSERTION, {
+  FOO: {
+    type: 'object',
+    properties: { foo: { type: 'primitive', value: 'number' } },
+    required: ['foo'],
+  },
+  props: {
+    type: 'object',
+    properties: { foo: { type: 'primitive', value: 'number' } },
+    required: ['foo'],
+  },
+});
+
+const AS_ASSERTION = `
+import * as t from 'io-ts';
+const props = { foo: t.number } as { foo: t.NumberC };
+export const FOO = t.type(props);
+`;
+
+testCase('as assertion is parsed', AS_ASSERTION, {
+  FOO: {
+    type: 'object',
+    properties: { foo: { type: 'primitive', value: 'number' } },
+    required: ['foo'],
+  },
+  props: {
+    type: 'object',
+    properties: { foo: { type: 'primitive', value: 'number' } },
+    required: ['foo'],
+  },
+});
+
+const SPREAD_AS_ASSERTION = `
+import * as t from 'io-ts';
+const props = { foo: t.number } as { foo: t.NumberC };
+export const FOO = t.type({
+  ...props,
+});
+`;
+
+testCase('spread const assertion is parsed', SPREAD_AS_ASSERTION, {
+  FOO: {
+    type: 'object',
+    properties: { foo: { type: 'primitive', value: 'number' } },
+    required: ['foo'],
+  },
+  props: {
+    type: 'object',
+    properties: { foo: { type: 'primitive', value: 'number' } },
+    required: ['foo'],
+  },
+});
+
 const ARRAY = `
 import * as t from 'io-ts';
 export const FOO = t.array(t.number);
@@ -171,6 +257,33 @@ export const FOO = t.record(t.string, t.number);
 
 testCase('record type is parsed', RECORD, {
   FOO: { type: 'record', codomain: { type: 'primitive', value: 'number' } },
+});
+
+const ENUM = `
+import * as t from 'io-ts';
+enum Foo {
+  Foo = 'foo',
+  Bar = 'bar',
+}
+export const TEST = t.keyof(Foo);
+`;
+
+testCase('enum type is parsed', ENUM, {
+  Foo: {
+    type: 'object',
+    properties: {
+      Foo: { type: 'literal', kind: 'string', value: 'foo' },
+      Bar: { type: 'literal', kind: 'string', value: 'bar' },
+    },
+    required: ['Foo', 'Bar'],
+  },
+  TEST: {
+    type: 'union',
+    schemas: [
+      { type: 'literal', kind: 'string', value: 'Foo' },
+      { type: 'literal', kind: 'string', value: 'Bar' },
+    ],
+  },
 });
 
 const STRING_LITERAL = `
@@ -263,7 +376,7 @@ testCase('local ref is parsed', LOCAL_REF, {
   },
   BAR: {
     type: 'object',
-    properties: { bar: { type: 'ref', name: 'FOO', location: './index.ts' } },
+    properties: { bar: { type: 'ref', name: 'FOO', location: '/index.ts' } },
     required: ['bar'],
   },
 });
@@ -282,7 +395,7 @@ testCase('local exported ref is parsed', LOCAL_EXPORTED_REF, {
   },
   BAR: {
     type: 'object',
-    properties: { bar: { type: 'ref', name: 'FOO', location: './index.ts' } },
+    properties: { bar: { type: 'ref', name: 'FOO', location: '/index.ts' } },
     required: ['bar'],
   },
 });
