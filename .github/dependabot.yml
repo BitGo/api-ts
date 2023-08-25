@@ -26,7 +26,7 @@ updates:
     groups:
       dependencies:
         patterns:
-          - '@swc/core-*'
+          - '@swc/core*'
     ignore:
       # Ignore all @types/nodes patch updates, since
       # this package updates so frequently
