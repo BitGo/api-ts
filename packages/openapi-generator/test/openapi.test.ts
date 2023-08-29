@@ -167,7 +167,7 @@ testCase('simple route', SIMPLE, {
         ],
         responses: {
           200: {
-            description: '',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
