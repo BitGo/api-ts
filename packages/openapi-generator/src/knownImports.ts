@@ -53,6 +53,20 @@ export const KNOWN_IMPORTS: KnownImports = {
       }, {});
       return E.right({ type: 'object', properties: props, required: [] });
     },
+    strict: (_, schema) => E.right(schema),
+    exact: (_, schema) => {
+      if (schema.type !== 'object') {
+        return E.left('exactC parameter must be object');
+      }
+      const props = Object.entries(schema.properties).reduce((acc, [key, prop]) => {
+        return { ...acc, [key]: prop };
+      }, {});
+      return E.right({
+        type: 'object',
+        properties: props,
+        required: Object.keys(props),
+      });
+    },
     record: (_, _domain, codomain) => {
       if (!codomain) {
         return E.left('Codomain of record must be specified');
