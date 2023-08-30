@@ -100,7 +100,7 @@ const GetHelloWorld = async (params: { id: string }) =>
   ({
     type: 'ok',
     payload: params,
-  } as const);
+  }) as const;
 
 test('should offer a delightful developer experience', async () => {
   const app = createServer(ApiSpec, (app: express.Application) => {

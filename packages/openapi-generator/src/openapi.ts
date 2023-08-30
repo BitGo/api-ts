@@ -24,14 +24,17 @@ function schemaToOpenAPI(
     case 'object':
       return {
         type: 'object',
-        properties: Object.entries(schema.properties).reduce((acc, [name, prop]) => {
-          const innerSchema = schemaToOpenAPI(prop);
-          if (innerSchema === undefined) {
-            return acc;
-          }
+        properties: Object.entries(schema.properties).reduce(
+          (acc, [name, prop]) => {
+            const innerSchema = schemaToOpenAPI(prop);
+            if (innerSchema === undefined) {
+              return acc;
+            }
 
-          return { ...acc, [name]: innerSchema };
-        }, {} as Record<string, OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject>),
+            return { ...acc, [name]: innerSchema };
+          },
+          {} as Record<string, OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject>,
+        ),
         required: schema.required,
       };
     case 'intersection':
@@ -127,21 +130,27 @@ export function convertRoutesToOpenAPI(
   routes: Route[],
   schemas: Components,
 ): OpenAPIV3_1.Document {
-  const paths = routes.reduce((acc, route) => {
-    const [path, method, pathItem] = routeToOpenAPI(route);
-    let pathObject = acc[path] ?? {};
-    pathObject[method] = pathItem;
-    return { ...acc, [path]: pathObject };
-  }, {} as Record<string, Record<string, OpenAPIV3_1.PathItemObject>>);
+  const paths = routes.reduce(
+    (acc, route) => {
+      const [path, method, pathItem] = routeToOpenAPI(route);
+      let pathObject = acc[path] ?? {};
+      pathObject[method] = pathItem;
+      return { ...acc, [path]: pathObject };
+    },
+    {} as Record<string, Record<string, OpenAPIV3_1.PathItemObject>>,
+  );
 
-  const openapiSchemas = Object.entries(schemas).reduce((acc, [name, schema]) => {
-    const openapiSchema = schemaToOpenAPI(schema);
-    if (openapiSchema === undefined) {
-      return acc;
-    } else {
-      return { ...acc, [name]: openapiSchema };
-    }
-  }, {} as Record<string, OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject>);
+  const openapiSchemas = Object.entries(schemas).reduce(
+    (acc, [name, schema]) => {
+      const openapiSchema = schemaToOpenAPI(schema);
+      if (openapiSchema === undefined) {
+        return acc;
+      } else {
+        return { ...acc, [name]: openapiSchema };
+      }
+    },
+    {} as Record<string, OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject>,
+  );
 
   return {
     openapi: '3.1.0',
