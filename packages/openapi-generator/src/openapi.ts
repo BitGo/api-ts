@@ -1,5 +1,6 @@
 import { OpenAPIV3_1 } from 'openapi-types';
 
+import { STATUS_CODES } from 'http';
 import { parseCommentBlock } from './jsdoc';
 import type { Components } from './ref';
 import type { Route } from './route';
@@ -106,7 +107,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3_1.OperationObj
         ? { requestBody: schemaToOpenAPI(route.body) as any }
         : {}),
       responses: Object.entries(route.response).reduce((acc, [code, response]) => {
-        const description = response.comment?.description ?? '';
+        const description = response.comment?.description ?? STATUS_CODES[code] ?? '';
 
         return {
           ...acc,
