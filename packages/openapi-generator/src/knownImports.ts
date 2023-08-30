@@ -53,6 +53,20 @@ export const KNOWN_IMPORTS: KnownImports = {
       }, {});
       return E.right({ type: 'object', properties: props, required: [] });
     },
+    strict: (_, schema) => E.right(schema),
+    exact: (_, schema) => {
+      if (schema.type !== 'object') {
+        return E.left('exactC parameter must be object');
+      }
+      const props = Object.entries(schema.properties).reduce((acc, [key, prop]) => {
+        return { ...acc, [key]: prop };
+      }, {});
+      return E.right({
+        type: 'object',
+        properties: props,
+        required: Object.keys(props),
+      });
+    },
     record: (_, _domain, codomain) => {
       if (!codomain) {
         return E.left('Codomain of record must be specified');
@@ -96,11 +110,19 @@ export const KNOWN_IMPORTS: KnownImports = {
     brand: (_, arg) => E.right(arg),
   },
   'io-ts-types': {
+    BigIntFromString: () => E.right({ type: 'primitive', value: 'string' }),
+    BooleanFromNumber: () => E.right({ type: 'primitive', value: 'number' }),
+    BooleanFromString: () => E.right({ type: 'primitive', value: 'string' }),
+    DateFromISOString: () => E.right({ type: 'primitive', value: 'string' }),
+    DateFromNumber: () => E.right({ type: 'primitive', value: 'number' }),
+    DateFromUnixTime: () => E.right({ type: 'primitive', value: 'number' }),
+    IntFromString: () => E.right({ type: 'primitive', value: 'string' }),
+    JsonFromString: () => E.right({ type: 'primitive', value: 'string' }),
     nonEmptyArray: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
     NonEmptyString: () => E.right({ type: 'primitive', value: 'string' }),
-    DateFromISOString: () => E.right({ type: 'primitive', value: 'string' }),
-    NumberFromString: () => E.right({ type: 'primitive', value: 'number' }),
-    BooleanFromString: () => E.right({ type: 'primitive', value: 'boolean' }),
+    NumberFromString: () => E.right({ type: 'primitive', value: 'string' }),
+    readonlyNonEmptyArray: (_, innerSchema) =>
+      E.right({ type: 'array', items: innerSchema }),
     UUID: () => E.right({ type: 'primitive', value: 'string' }),
   },
   '@api-ts/io-ts-http': {
