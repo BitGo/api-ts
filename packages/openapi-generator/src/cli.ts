@@ -1,6 +1,15 @@
 #!/usr/bin/env node
 
-import { command, run, option, string, flag, boolean, positional } from 'cmd-ts';
+import {
+  command,
+  run,
+  option,
+  string,
+  optional,
+  flag,
+  boolean,
+  positional,
+} from 'cmd-ts';
 import * as E from 'fp-ts/Either';
 import * as fs from 'fs';
 import * as p from 'path';
@@ -11,6 +20,7 @@ import { convertRoutesToOpenAPI } from './openapi';
 import type { Route } from './route';
 import type { Schema } from './ir';
 import { Project } from './project';
+import { KNOWN_IMPORTS } from './knownImports';
 
 const app = command({
   name: 'api-ts',
@@ -57,11 +67,30 @@ const app = command({
       short: 'i',
       defaultValue: () => false,
     }),
+    codecFile: option({
+      type: optional(string),
+      description: 'Custom codec definition file',
+      long: 'codec-file',
+      short: 'c',
+      defaultValue: () => undefined,
+    }),
   },
-  handler: async ({ input, name, version }) => {
+  handler: async ({ input, name, version, codecFile }) => {
     const filePath = p.resolve(input);
 
-    const project = await new Project().parseEntryPoint(filePath);
+    let knownImports = KNOWN_IMPORTS;
+    if (codecFile !== undefined) {
+      const codecFilePath = p.resolve(codecFile);
+      const codecModule = await import(codecFilePath);
+      if (codecModule.default === undefined) {
+        console.error(`Could not find default export in ${codecFilePath}`);
+        process.exit(1);
+      }
+      const customCodecs = codecModule.default(E);
+      knownImports = { ...knownImports, ...customCodecs };
+    }
+
+    const project = await new Project({}, knownImports).parseEntryPoint(filePath);
     if (E.isLeft(project)) {
       console.error(project.left);
       process.exit(1);
