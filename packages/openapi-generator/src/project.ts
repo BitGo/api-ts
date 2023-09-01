@@ -4,15 +4,19 @@ import { promisify } from 'util';
 import * as E from 'fp-ts/Either';
 import resolve from 'resolve';
 
+import { KNOWN_IMPORTS, type KnownCodec } from './knownImports';
 import { parseSource, type SourceFile } from './sourceFile';
 
 const readFile = promisify(fs.readFile);
 
 export class Project {
+  readonly knownImports: Record<string, Record<string, KnownCodec>>;
+
   private files: Record<string, SourceFile>;
 
-  constructor(files: Record<string, SourceFile> = {}) {
+  constructor(files: Record<string, SourceFile> = {}, knownImports = KNOWN_IMPORTS) {
     this.files = files;
+    this.knownImports = knownImports;
   }
 
   add(path: string, sourceFile: SourceFile): void {
