@@ -82,6 +82,17 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3_1.OperationObj
   const tag = jsdoc.tags?.tag ?? '';
   const isInternal = jsdoc.tags?.private !== undefined;
 
+  const requestBody =
+    route.body === undefined
+      ? {}
+      : {
+          requestBody: {
+            content: {
+              'application/json': { schema: schemaToOpenAPI(route.body) },
+            },
+          },
+        };
+
   return [
     route.path,
     route.method.toLowerCase(),
@@ -106,9 +117,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3_1.OperationObj
           schema: schema as any, // TODO: Something to disallow arrays
         };
       }),
-      ...(route.body !== undefined
-        ? { requestBody: schemaToOpenAPI(route.body) as any }
-        : {}),
+      ...requestBody,
       responses: Object.entries(route.response).reduce((acc, [code, response]) => {
         const description = response.comment?.description ?? STATUS_CODES[code] ?? '';
 
