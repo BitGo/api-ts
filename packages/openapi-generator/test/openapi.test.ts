@@ -107,7 +107,7 @@ export const internalRoute = h.httpRoute({
 `;
 
 testCase('simple route', SIMPLE, {
-  openapi: '3.1.0',
+  openapi: '3.0.0',
   info: {
     title: 'Test',
     version: '1.0.0',
@@ -205,7 +205,7 @@ export const route = h.httpRoute({
 `;
 
 testCase('request body route', REQUEST_BODY, {
-  openapi: '3.1.0',
+  openapi: '3.0.0',
   info: {
     title: 'Test',
     version: '1.0.0',
@@ -276,7 +276,7 @@ export const route = h.httpRoute({
 `;
 
 testCase('request union route', UNION, {
-  openapi: '3.1.0',
+  openapi: '3.0.0',
   info: {
     title: 'Test',
     version: '1.0.0',
