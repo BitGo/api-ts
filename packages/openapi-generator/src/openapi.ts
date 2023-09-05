@@ -1,4 +1,4 @@
-import { OpenAPIV3_1 } from 'openapi-types';
+import { OpenAPIV3 } from 'openapi-types';
 
 import { STATUS_CODES } from 'http';
 import { parseCommentBlock } from './jsdoc';
@@ -8,12 +8,24 @@ import type { Schema } from './ir';
 
 function schemaToOpenAPI(
   schema: Schema,
-): OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject | undefined {
+): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined {
   switch (schema.type) {
     case 'primitive':
-      return { type: schema.value };
+      if (schema.value === 'integer') {
+        return { type: 'number' };
+      } else if (schema.value === 'null') {
+        // TODO: OpenAPI v3 does not have an explicit null type, is there a better way to represent this?
+        // Or should we just conflate explicit null and undefined properties?
+        return { nullable: true, enum: [] };
+      } else {
+        return { type: schema.value };
+      }
     case 'literal':
-      return { type: schema.kind, enum: [schema.value] };
+      if (schema.kind === 'null') {
+        return { nullable: true, enum: [] };
+      } else {
+        return { type: schema.kind, enum: [schema.value] };
+      }
     case 'ref':
       return { $ref: `#/components/schemas/${schema.name}` };
     case 'array':
@@ -34,7 +46,7 @@ function schemaToOpenAPI(
 
             return { ...acc, [name]: innerSchema };
           },
-          {} as Record<string, OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject>,
+          {} as Record<string, OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject>,
         ),
         required: schema.required,
       };
@@ -76,7 +88,7 @@ function schemaToOpenAPI(
   }
 }
 
-function routeToOpenAPI(route: Route): [string, string, OpenAPIV3_1.OperationObject] {
+function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObject] {
   const jsdoc = route.comment !== undefined ? parseCommentBlock(route.comment) : {};
   const operationId = jsdoc.tags?.operationId;
   const tag = jsdoc.tags?.tag ?? '';
@@ -136,10 +148,10 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3_1.OperationObj
 }
 
 export function convertRoutesToOpenAPI(
-  info: OpenAPIV3_1.InfoObject,
+  info: OpenAPIV3.InfoObject,
   routes: Route[],
   schemas: Components,
-): OpenAPIV3_1.Document {
+): OpenAPIV3.Document {
   const paths = routes.reduce(
     (acc, route) => {
       const [path, method, pathItem] = routeToOpenAPI(route);
@@ -147,7 +159,7 @@ export function convertRoutesToOpenAPI(
       pathObject[method] = pathItem;
       return { ...acc, [path]: pathObject };
     },
-    {} as Record<string, Record<string, OpenAPIV3_1.PathItemObject>>,
+    {} as Record<string, Record<string, OpenAPIV3.PathItemObject>>,
   );
 
   const openapiSchemas = Object.entries(schemas).reduce(
@@ -159,11 +171,11 @@ export function convertRoutesToOpenAPI(
         return { ...acc, [name]: openapiSchema };
       }
     },
-    {} as Record<string, OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject>,
+    {} as Record<string, OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject>,
   );
 
   return {
-    openapi: '3.1.0',
+    openapi: '3.0.0',
     info,
     paths,
     components: {
