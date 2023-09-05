@@ -185,6 +185,70 @@ testCase('simple route', SIMPLE, {
   },
 });
 
+const REQUEST_BODY = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    body: {
+      foo: t.string,
+    },
+  }),
+  response: {
+    /** foo response */
+    200: t.string
+  },
+});
+`;
+
+testCase('request body route', REQUEST_BODY, {
+  openapi: '3.1.0',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  foo: {
+                    type: 'string',
+                  },
+                },
+                required: ['foo'],
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'foo response',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
+
 const UNION = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
