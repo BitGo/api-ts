@@ -53,8 +53,8 @@ export const KNOWN_IMPORTS: KnownImports = {
       }, {});
       return E.right({ type: 'object', properties: props, required: [] });
     },
-    strict: (_, schema) => E.right(schema),
-    exact: (_, schema) => {
+    exact: (_, schema) => E.right(schema),
+    strict: (_, schema) => {
       if (schema.type !== 'object') {
         return E.left('exactC parameter must be object');
       }
