@@ -31,6 +31,7 @@ export const KNOWN_IMPORTS: KnownImports = {
     boolean: () => E.right({ type: 'primitive', value: 'boolean' }),
     null: () => E.right({ type: 'primitive', value: 'null' }),
     array: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
+    readonlyArray: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
     type: (_, schema) => {
       if (schema.type !== 'object') {
         return E.left('typeC parameter must be object');
@@ -53,8 +54,8 @@ export const KNOWN_IMPORTS: KnownImports = {
       }, {});
       return E.right({ type: 'object', properties: props, required: [] });
     },
-    strict: (_, schema) => E.right(schema),
-    exact: (_, schema) => {
+    exact: (_, schema) => E.right(schema),
+    strict: (_, schema) => {
       if (schema.type !== 'object') {
         return E.left('exactC parameter must be object');
       }
