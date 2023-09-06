@@ -32,7 +32,7 @@ function codecIdentifier(
     } else if (imp.type === 'star') {
       return E.left(`Tried to use star import as codec ${id.value}`);
     }
-    const knownImport = project.knownImports[imp.from]?.[imp.importedName];
+    const knownImport = project.resolveKnownImport(imp.from, imp.importedName);
     if (knownImport !== undefined) {
       return E.right({ type: 'codec', schema: knownImport });
     }
@@ -67,7 +67,7 @@ function codecIdentifier(
     }
 
     const name = id.property.value;
-    const knownImport = project.knownImports[objectSym.from]?.[name];
+    const knownImport = project.resolveKnownImport(objectSym.from, name);
     if (knownImport !== undefined) {
       return E.right({ type: 'codec', schema: knownImport });
     }
