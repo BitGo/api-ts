@@ -4,12 +4,13 @@ import resolve from 'resolve';
 import { promisify } from 'util';
 
 import { Project } from '../src';
+import type { KnownImports } from '../src/knownImports';
 
 export class TestProject extends Project {
   private volume: ReturnType<(typeof Volume)['fromJSON']>;
 
-  constructor(files: NestedDirectoryJSON) {
-    super();
+  constructor(files: NestedDirectoryJSON, knownImports?: KnownImports) {
+    super({}, knownImports);
     this.volume = Volume.fromNestedJSON(files, '/');
   }
 

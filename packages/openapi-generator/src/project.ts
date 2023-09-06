@@ -10,7 +10,7 @@ import { parseSource, type SourceFile } from './sourceFile';
 const readFile = promisify(fs.readFile);
 
 export class Project {
-  readonly knownImports: Record<string, Record<string, KnownCodec>>;
+  private readonly knownImports: Record<string, Record<string, KnownCodec>>;
 
   private files: Record<string, SourceFile>;
 
@@ -89,5 +89,10 @@ export class Project {
         return E.left(JSON.stringify(e));
       }
     }
+  }
+
+  resolveKnownImport(path: string, name: string): KnownCodec | undefined {
+    const baseKey = path.startsWith('.') ? '.' : path;
+    return this.knownImports[baseKey]?.[name];
   }
 }
