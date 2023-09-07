@@ -30,6 +30,7 @@ export const KNOWN_IMPORTS: KnownImports = {
     number: () => E.right({ type: 'primitive', value: 'number' }),
     boolean: () => E.right({ type: 'primitive', value: 'boolean' }),
     null: () => E.right({ type: 'primitive', value: 'null' }),
+    undefined: () => E.right({ type: 'undefined' }),
     array: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
     readonlyArray: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
     type: (_, schema) => {
