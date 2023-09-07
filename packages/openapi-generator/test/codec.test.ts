@@ -227,6 +227,44 @@ testCase('union type is parsed', UNION, {
   },
 });
 
+const UNION_SPREAD = `
+import * as t from 'io-ts';
+
+const common = [t.string];
+
+export const FOO = t.union([...common, t.number]);
+`;
+
+testCase('union type with spread is parsed', UNION_SPREAD, {
+  FOO: {
+    type: 'union',
+    schemas: [
+      { type: 'primitive', value: 'string' },
+      { type: 'primitive', value: 'number' },
+    ],
+  },
+  common: {
+    type: 'tuple',
+    schemas: [{ type: 'primitive', value: 'string' }],
+  },
+});
+
+const UNION_INLINE_SPREAD = `
+import * as t from 'io-ts';
+
+export const FOO = t.union([...[t.string], t.number]);
+`;
+
+testCase('union type with inline spread is parsed', UNION_INLINE_SPREAD, {
+  FOO: {
+    type: 'union',
+    schemas: [
+      { type: 'primitive', value: 'string' },
+      { type: 'primitive', value: 'number' },
+    ],
+  },
+});
+
 const INTERSECTION = `
 import * as t from 'io-ts';
 export const FOO = t.intersection([t.type({ foo: t.number }), t.partial({ bar: t.string })]);
