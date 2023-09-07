@@ -188,7 +188,31 @@ function parseArrayExpression(
     if (E.isLeft(valueE)) {
       return valueE;
     }
-    result.push(valueE.right);
+    // swc sometimes sets this to `null` even though it is supposed to be `undefined`
+    if (element.spread) {
+      let init = valueE.right;
+      if (init.type === 'ref') {
+        const realInitE = findSymbolInitializer(project, source, init.name);
+        if (E.isLeft(realInitE)) {
+          return realInitE;
+        }
+        const schemaE = parsePlainInitializer(
+          project,
+          realInitE.right[0],
+          realInitE.right[1],
+        );
+        if (E.isLeft(schemaE)) {
+          return schemaE;
+        }
+        init = schemaE.right;
+      }
+      if (init.type !== 'tuple') {
+        return E.left('Spread element must be array literal');
+      }
+      result.push(...init.schemas);
+    } else {
+      result.push(valueE.right);
+    }
   }
   return E.right({ type: 'tuple', schemas: result });
 }
