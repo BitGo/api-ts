@@ -322,6 +322,15 @@ testCase('null literal type is parsed', NULL_LITERAL, {
   FOO: { type: 'literal', kind: 'null', value: null },
 });
 
+const UNDEFINED_LITERAL = `
+import * as t from 'io-ts';
+export const FOO = t.undefined;
+`;
+
+testCase('undefined literal type is parsed', UNDEFINED_LITERAL, {
+  FOO: { type: 'undefined' },
+});
+
 const KEYOF = `
 import * as t from 'io-ts';
 export const FOO = t.keyof({ foo: null, bar: null });
