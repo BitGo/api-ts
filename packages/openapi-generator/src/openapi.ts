@@ -2,7 +2,6 @@ import { OpenAPIV3 } from 'openapi-types';
 
 import { STATUS_CODES } from 'http';
 import { parseCommentBlock } from './jsdoc';
-import type { Components } from './ref';
 import type { Route } from './route';
 import type { Schema } from './ir';
 
@@ -150,7 +149,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
 export function convertRoutesToOpenAPI(
   info: OpenAPIV3.InfoObject,
   routes: Route[],
-  schemas: Components,
+  schemas: Record<string, Schema>,
 ): OpenAPIV3.Document {
   const paths = routes.reduce(
     (acc, route) => {

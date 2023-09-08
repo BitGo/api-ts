@@ -15,12 +15,14 @@ import * as fs from 'fs';
 import * as p from 'path';
 
 import { parseApiSpec } from './apiSpec';
-import { Components, parseRefs } from './ref';
+import { getRefs } from './ref';
 import { convertRoutesToOpenAPI } from './openapi';
 import type { Route } from './route';
 import type { Schema } from './ir';
 import { Project } from './project';
 import { KNOWN_IMPORTS } from './knownImports';
+import { findSymbolInitializer } from './resolveInit';
+import { parseCodecInitializer } from './codec';
 
 const app = command({
   name: 'api-ts',
@@ -130,7 +132,7 @@ const app = command({
       process.exit(1);
     }
 
-    const components: Components = {};
+    const components: Record<string, Schema> = {};
     const queue: Schema[] = apiSpec.flatMap((route) => {
       return [
         ...route.parameters.map((p) => p.schema),
@@ -140,13 +142,33 @@ const app = command({
     });
     let schema: Schema | undefined;
     while (((schema = queue.pop()), schema !== undefined)) {
-      const newComponents = parseRefs(project.right, schema);
-      for (const [name, schema] of Object.entries(newComponents)) {
-        if (components[name] !== undefined) {
+      const refs = getRefs(schema);
+      for (const ref of refs) {
+        if (components[ref.name] !== undefined) {
           continue;
         }
-        components[name] = schema;
-        queue.push(schema);
+        const sourceFile = project.right.get(ref.location);
+        if (sourceFile === undefined) {
+          console.error(`Could not find source file '${ref.location}'`);
+          process.exit(1);
+        }
+        const initE = findSymbolInitializer(project.right, sourceFile, ref.name);
+        if (E.isLeft(initE)) {
+          console.error(
+            `Could not find symbol '${ref.name}' in '${ref.location}': ${initE.left}`,
+          );
+          process.exit(1);
+        }
+        const [newSourceFile, init] = initE.right;
+        const codecE = parseCodecInitializer(project.right, newSourceFile, init);
+        if (E.isLeft(codecE)) {
+          console.error(
+            `Could not parse codec '${ref.name}' in '${ref.location}': ${codecE.left}`,
+          );
+          process.exit(1);
+        }
+        components[ref.name] = codecE.right;
+        queue.push(codecE.right);
       }
     }
 
