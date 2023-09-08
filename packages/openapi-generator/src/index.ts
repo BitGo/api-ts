@@ -3,6 +3,7 @@ export { parseCodecInitializer, parsePlainInitializer } from './codec';
 export { parseCommentBlock, type JSDoc } from './jsdoc';
 export { convertRoutesToOpenAPI } from './openapi';
 export { Project } from './project';
+export { getRefs } from './ref';
 export { parseRoute, type Route } from './route';
 export { parseSource } from './sourceFile';
 export { parseTopLevelSymbols } from './symbol';
