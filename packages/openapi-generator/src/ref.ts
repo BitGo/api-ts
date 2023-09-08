@@ -26,7 +26,11 @@ export function parseRefs(project: Project, schema: Schema): Record<string, Sche
     return { [schema.name]: codec };
   } else if (schema.type === 'array') {
     return parseRefs(project, schema.items);
-  } else if (schema.type === 'intersection' || schema.type === 'union') {
+  } else if (
+    schema.type === 'intersection' ||
+    schema.type === 'union' ||
+    schema.type === 'tuple'
+  ) {
     return schema.schemas.reduce((acc, member) => {
       return { ...acc, ...parseRefs(project, member) };
     }, {});
