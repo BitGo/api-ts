@@ -17,13 +17,7 @@ function schemaToOpenAPI(
         // Or should we just conflate explicit null and undefined properties?
         return { nullable: true, enum: [] };
       } else {
-        return { type: schema.value };
-      }
-    case 'literal':
-      if (schema.kind === 'null') {
-        return { nullable: true, enum: [] };
-      } else {
-        return { type: schema.kind, enum: [schema.value] };
+        return { type: schema.value, ...(schema.enum ?? {}) };
       }
     case 'ref':
       return { $ref: `#/components/schemas/${schema.name}` };

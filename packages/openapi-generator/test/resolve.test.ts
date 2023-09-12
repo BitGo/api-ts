@@ -106,8 +106,8 @@ testCase(
     FOO: {
       type: 'union',
       schemas: [
-        { type: 'literal', kind: 'string', value: 'foo' },
-        { type: 'literal', kind: 'string', value: 'bar' },
+        { type: 'primitive', value: 'string', enum: ['foo'] },
+        { type: 'primitive', value: 'string', enum: ['bar'] },
       ],
     },
   },
@@ -125,7 +125,7 @@ testCase(
   { '/index.ts': LITERAL_CONST },
   '/index.ts',
   {
-    FOO: { type: 'literal', kind: 'number', value: 42 },
+    FOO: { type: 'primitive', value: 'number', enum: [42] },
   },
   ['Unimplemented initializer type NumericLiteral'],
 );
