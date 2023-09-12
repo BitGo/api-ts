@@ -2,22 +2,25 @@ import { OpenAPIV3 } from 'openapi-types';
 
 import { STATUS_CODES } from 'http';
 import { parseCommentBlock } from './jsdoc';
+import { optimize } from './optimize';
 import type { Route } from './route';
 import type { Schema } from './ir';
 
 function schemaToOpenAPI(
   schema: Schema,
 ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined {
+  schema = optimize(schema);
+
   switch (schema.type) {
     case 'primitive':
       if (schema.value === 'integer') {
-        return { type: 'number' };
+        return { type: 'number', ...(schema.enum ? { enum: schema.enum } : {}) };
       } else if (schema.value === 'null') {
         // TODO: OpenAPI v3 does not have an explicit null type, is there a better way to represent this?
         // Or should we just conflate explicit null and undefined properties?
         return { nullable: true, enum: [] };
       } else {
-        return { type: schema.value, ...(schema.enum ?? {}) };
+        return { type: schema.value, ...(schema.enum ? { enum: schema.enum } : {}) };
       }
     case 'ref':
       return { $ref: `#/components/schemas/${schema.name}` };
