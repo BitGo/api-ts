@@ -17,7 +17,7 @@
     "clean": "rm -rf -- dist",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "test": "c8 --all --src src node -r @swc-node/register --test test/*.test.ts"
+    "test": "c8 --all --src src node --require @swc-node/register --test test/*.test.ts"
   },
   "dependencies": {
     "cmd-ts": "0.13.0",

@@ -14,7 +14,7 @@
     "clean": "rm -rf -- dist",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "test": "c8 --all node --loader tsx --test test/*.ts"
+    "test": "c8 --all node --require @swc-node/register --test test/*.ts"
   },
   "dependencies": {
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
@@ -25,9 +25,9 @@
   },
   "devDependencies": {
     "@api-ts/superagent-wrapper": "0.0.0-semantically-released",
+    "@swc-node/register": "1.6.7",
     "c8": "8.0.1",
-    "typescript": "4.7.4",
-    "tsx": "3.12.8"
+    "typescript": "4.7.4"
   },
   "publishConfig": {
     "access": "public"
