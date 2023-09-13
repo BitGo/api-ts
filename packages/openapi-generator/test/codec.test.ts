@@ -310,16 +310,16 @@ testCase('enum type is parsed', ENUM, {
   Foo: {
     type: 'object',
     properties: {
-      Foo: { type: 'literal', kind: 'string', value: 'foo' },
-      Bar: { type: 'literal', kind: 'string', value: 'bar' },
+      Foo: { type: 'primitive', value: 'string', enum: ['foo'] },
+      Bar: { type: 'primitive', value: 'string', enum: ['bar'] },
     },
     required: ['Foo', 'Bar'],
   },
   TEST: {
     type: 'union',
     schemas: [
-      { type: 'literal', kind: 'string', value: 'Foo' },
-      { type: 'literal', kind: 'string', value: 'Bar' },
+      { type: 'primitive', value: 'string', enum: ['Foo'] },
+      { type: 'primitive', value: 'string', enum: ['Bar'] },
     ],
   },
 });
@@ -330,7 +330,7 @@ export const FOO = t.literal('foo');
 `;
 
 testCase('string literal type is parsed', STRING_LITERAL, {
-  FOO: { type: 'literal', kind: 'string', value: 'foo' },
+  FOO: { type: 'primitive', value: 'string', enum: ['foo'] },
 });
 
 const NUMBER_LITERAL = `
@@ -339,7 +339,7 @@ export const FOO = t.literal(42);
 `;
 
 testCase('number literal type is parsed', NUMBER_LITERAL, {
-  FOO: { type: 'literal', kind: 'number', value: 42 },
+  FOO: { type: 'primitive', value: 'number', enum: [42] },
 });
 
 const BOOLEAN_LITERAL = `
@@ -348,7 +348,7 @@ export const FOO = t.literal(true);
 `;
 
 testCase('boolean literal type is parsed', BOOLEAN_LITERAL, {
-  FOO: { type: 'literal', kind: 'boolean', value: true },
+  FOO: { type: 'primitive', value: 'boolean', enum: [true] },
 });
 
 const NULL_LITERAL = `
@@ -357,7 +357,7 @@ export const FOO = t.literal(null);
 `;
 
 testCase('null literal type is parsed', NULL_LITERAL, {
-  FOO: { type: 'literal', kind: 'null', value: null },
+  FOO: { type: 'primitive', value: 'null', enum: [null] },
 });
 
 const UNDEFINED_LITERAL = `
@@ -378,8 +378,8 @@ testCase('keyof type is parsed', KEYOF, {
   FOO: {
     type: 'union',
     schemas: [
-      { type: 'literal', kind: 'string', value: 'foo' },
-      { type: 'literal', kind: 'string', value: 'bar' },
+      { type: 'primitive', value: 'string', enum: ['foo'] },
+      { type: 'primitive', value: 'string', enum: ['bar'] },
     ],
   },
 });

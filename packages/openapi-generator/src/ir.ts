@@ -12,12 +12,7 @@ export type UndefinedValue = {
 export type Primitive = {
   type: 'primitive';
   value: 'string' | 'number' | 'integer' | 'boolean' | 'null';
-};
-
-export type Literal = {
-  type: 'literal';
-  kind: 'string' | 'number' | 'integer' | 'boolean' | 'null';
-  value: string | number | boolean | null | PseudoBigInt;
+  enum?: (string | number | boolean | null | PseudoBigInt)[];
 };
 
 export type Array = {
@@ -49,7 +44,6 @@ export type Reference = {
 
 export type BaseSchema =
   | Primitive
-  | Literal
   | Array
   | Object
   | RecordObject

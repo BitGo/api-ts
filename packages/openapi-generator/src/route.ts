@@ -210,8 +210,9 @@ export function parseRoute(project: Project, schema: Schema): E.Either<string, R
   if (schema.properties['path'] === undefined) {
     return E.left('Route must have a path');
   } else if (
-    schema.properties['path'].type !== 'literal' ||
-    schema.properties['path'].kind !== 'string'
+    schema.properties['path'].type !== 'primitive' ||
+    schema.properties['path'].value !== 'string' ||
+    schema.properties['path'].enum?.length !== 1
   ) {
     return E.left('Route path must be a string literal');
   }
@@ -219,8 +220,9 @@ export function parseRoute(project: Project, schema: Schema): E.Either<string, R
   if (schema.properties['method'] === undefined) {
     return E.left('Route must have a method');
   } else if (
-    schema.properties['method'].type !== 'literal' ||
-    schema.properties['method'].kind !== 'string'
+    schema.properties['method'].type !== 'primitive' ||
+    schema.properties['method'].value !== 'string' ||
+    schema.properties['method'].enum?.length !== 1
   ) {
     return E.left('Route method must be a string literal');
   }
@@ -242,8 +244,8 @@ export function parseRoute(project: Project, schema: Schema): E.Either<string, R
   }
 
   return E.right({
-    path: schema.properties['path'].value as string,
-    method: schema.properties['method'].value as string,
+    path: schema.properties['path'].enum![0] as string,
+    method: schema.properties['method'].enum![0] as string,
     parameters,
     response: schema.properties['response'].properties,
     ...(body !== undefined ? { body } : {}),

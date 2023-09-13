@@ -89,7 +89,7 @@ export const KNOWN_IMPORTS: KnownImports = {
       return E.right({ type: 'intersection', schemas: schema.schemas });
     },
     literal: (_, arg) => {
-      if (arg.type !== 'literal') {
+      if (arg.type !== 'primitive' || arg.enum === undefined) {
         return E.left(`Unimplemented literal type ${arg.type}`);
       } else {
         return E.right(arg);
@@ -100,9 +100,9 @@ export const KNOWN_IMPORTS: KnownImports = {
         return E.left(`Unimplemented keyof type ${arg.type}`);
       }
       const schemas: Schema[] = Object.keys(arg.properties).map((prop) => ({
-        type: 'literal',
-        kind: 'string',
-        value: prop,
+        type: 'primitive',
+        value: 'string',
+        enum: [prop],
       }));
       return E.right({
         type: 'union',
