@@ -5,7 +5,13 @@ import * as t from 'io-ts';
 import express from 'express';
 import supertest from 'supertest';
 
-import { ApiSpec, apiSpec, httpRequest, httpRoute, optional } from '@api-ts/io-ts-http';
+import {
+  type ApiSpec,
+  apiSpec,
+  httpRequest,
+  httpRoute,
+  optional,
+} from '@api-ts/io-ts-http';
 import { buildApiClient, supertestRequestFactory } from '@api-ts/superagent-wrapper';
 
 import { createServer, middlewareFn, routeHandler } from '../src';
