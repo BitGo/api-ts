@@ -6,7 +6,7 @@ import { leadingComment } from './comments';
 import type { Object, Schema } from './ir';
 import type { DerefFn } from './knownImports';
 import type { Project } from './project';
-import { findSymbolInitializer, resolveLiteralOrIdentifier } from './resolveInit';
+import { findSymbolInitializer } from './resolveInit';
 import type { SourceFile } from './sourceFile';
 
 import type { KnownCodec } from './knownImports';
@@ -181,30 +181,31 @@ function parseObjectExpression(
       result.required.push(name);
       continue;
     } else if (property.type === 'SpreadElement') {
-      const initE = resolveLiteralOrIdentifier(project, source, property.arguments);
-      if (E.isLeft(initE)) {
-        return initE;
+      const schemaE = parsePlainInitializer(project, source, property.arguments);
+      if (E.isLeft(schemaE)) {
+        return schemaE;
       }
-      let [newSourceFile, init] = initE.right;
-      if (init.type === 'TsAsExpression' || init.type === 'TsConstAssertion') {
-        init = init.expression;
+      let schema = schemaE.right;
+      if (schema.type === 'ref') {
+        const realInitE = findSymbolInitializer(project, source, schema.name);
+        if (E.isLeft(realInitE)) {
+          return realInitE;
+        }
+        const schemaE = parsePlainInitializer(
+          project,
+          realInitE.right[0],
+          realInitE.right[1],
+        );
+        if (E.isLeft(schemaE)) {
+          return schemaE;
+        }
+        schema = schemaE.right;
       }
-      if (init.type !== 'ObjectExpression') {
-        return E.left('Spread element must be object');
+      if (schema.type !== 'object') {
+        return E.left(`Spread element must be object`);
       }
-      const valueE = parseObjectExpression(
-        project,
-        newSourceFile,
-        init.span.start,
-        init,
-      );
-      if (E.isLeft(valueE)) {
-        return valueE;
-      } else if (valueE.right.type !== 'object') {
-        return E.left('Spread element must be object');
-      }
-      result.properties = { ...result.properties, ...valueE.right.properties };
-      result.required = [...result.required, ...valueE.right.required];
+      Object.assign(result.properties, schema.properties);
+      result.required.push(...schema.required);
       continue;
     } else if (property.type !== 'KeyValueProperty') {
       return E.left(`Unimplemented property type ${property.type}`);
