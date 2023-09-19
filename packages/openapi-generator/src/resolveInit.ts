@@ -63,7 +63,7 @@ export function findSymbolInitializer(
         return findExportedDeclaration(project, impSourceFile.right, name[1]);
       }
     }
-    return E.left(`Unknown identifier ${name[0]}.${name[1]}`);
+    name = name[0];
   }
   for (const declaration of sourceFile.symbols.declarations) {
     if (declaration.name === name) {
