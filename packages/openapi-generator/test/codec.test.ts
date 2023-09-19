@@ -719,3 +719,34 @@ testCase('httpRequest combinator is parsed', HTTP_REQUEST_COMBINATOR, {
     required: ['params', 'query'],
   },
 });
+
+const OBJECT_PROPERTY = `
+import * as t from 'io-ts';
+
+const props = {
+  foo: t.number,
+  bar: t.string,
+};
+
+export const FOO = t.type({
+  baz: props.foo,
+});
+`;
+
+testCase('object property is parsed', OBJECT_PROPERTY, {
+  FOO: {
+    type: 'object',
+    properties: {
+      baz: { type: 'primitive', value: 'number' },
+    },
+    required: ['baz'],
+  },
+  props: {
+    type: 'object',
+    properties: {
+      foo: { type: 'primitive', value: 'number' },
+      bar: { type: 'primitive', value: 'string' },
+    },
+    required: ['foo', 'bar'],
+  },
+});

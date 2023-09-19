@@ -515,3 +515,35 @@ testCase('cross-file star multi export is parsed', STAR_MULTI_EXPORT, '/index.ts
     required: ['baz'],
   },
 });
+
+const IMPORT_MEMBER_EXPRESSION = {
+  '/foo.ts': `
+    import * as t from 'io-ts';
+    export const Foos = {
+      foo: t.number,
+    }
+  `,
+  '/index.ts': `
+    import * as t from 'io-ts';
+    import { Foos } from './foo';
+    export const FOO = t.type({ foo: Foos.foo });
+  `,
+};
+
+testCase(
+  'cross-file import member expression is parsed',
+  IMPORT_MEMBER_EXPRESSION,
+  '/index.ts',
+  {
+    FOO: {
+      type: 'object',
+      properties: {
+        foo: {
+          type: 'primitive',
+          value: 'number',
+        },
+      },
+      required: ['foo'],
+    },
+  },
+);

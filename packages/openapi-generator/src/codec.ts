@@ -11,9 +11,7 @@ import type { SourceFile } from './sourceFile';
 
 import type { KnownCodec } from './knownImports';
 
-type ResolvedRef = { type: 'ref'; name: string; location: string };
-
-type ResolvedIdentifier = ResolvedRef | { type: 'codec'; schema: KnownCodec };
+type ResolvedIdentifier = Schema | { type: 'codec'; schema: KnownCodec };
 
 function codecIdentifier(
   project: Project,
@@ -57,34 +55,99 @@ function codecIdentifier(
     if (object.type !== 'Identifier') {
       return E.left(`Unimplemented object type ${object.type}`);
     }
-    const objectSym = source.symbols.imports.find(
+
+    // Parse member expressions that come from `* as foo` imports
+    const starImportSym = source.symbols.imports.find(
       (s) => s.localName === object.value && s.type === 'star',
     );
-    if (objectSym === undefined) {
-      return E.left(`Unknown symbol ${object.value}`);
+    if (starImportSym !== undefined) {
+      if (id.property.type !== 'Identifier') {
+        return E.left(`Unimplemented property type ${id.property.type}`);
+      }
+
+      const name = id.property.value;
+      const knownImport = project.resolveKnownImport(starImportSym.from, name);
+      if (knownImport !== undefined) {
+        return E.right({ type: 'codec', schema: knownImport });
+      }
+
+      if (!starImportSym.from.startsWith('.')) {
+        return E.right({ type: 'ref', name, location: starImportSym.from });
+      }
+
+      const newInitE = findSymbolInitializer(project, source, [
+        starImportSym.localName,
+        name,
+      ]);
+      if (E.isLeft(newInitE)) {
+        return newInitE;
+      }
+
+      return E.right({ type: 'ref', name, location: newInitE.right[0].path });
+    }
+
+    // Parse member expressions that come from `import { foo } from 'foo'` imports
+    const objectImportSym = source.symbols.imports.find(
+      (s) => s.localName === object.value && s.type === 'named',
+    );
+    if (objectImportSym !== undefined) {
+      if (id.property.type !== 'Identifier') {
+        return E.left(`Unimplemented property type ${id.property.type}`);
+      }
+      const name = id.property.value;
+
+      if (!objectImportSym.from.startsWith('.')) {
+        return E.left(
+          `Unimplemented named member reference '${objectImportSym.localName}.${name}' from '${objectImportSym.from}'`,
+        );
+      }
+
+      const newInitE = findSymbolInitializer(project, source, [
+        objectImportSym.localName,
+        name,
+      ]);
+      if (E.isLeft(newInitE)) {
+        return newInitE;
+      }
+      const [newSourceFile, newInit] = newInitE.right;
+
+      const objectSchemaE = parsePlainInitializer(project, newSourceFile, newInit);
+      if (E.isLeft(objectSchemaE)) {
+        return objectSchemaE;
+      } else if (objectSchemaE.right.type !== 'object') {
+        return E.left(`Expected object, got '${objectSchemaE.right.type}'`);
+      } else if (objectSchemaE.right.properties[name] === undefined) {
+        return E.left(
+          `Unknown property '${name}' in '${objectImportSym.localName}' from '${objectImportSym.from}'`,
+        );
+      } else {
+        return E.right(objectSchemaE.right.properties[name]!);
+      }
+    }
+
+    // Parse locally declared member expressions
+    const declarationSym = source.symbols.declarations.find(
+      (s) => s.name === object.value,
+    );
+    if (declarationSym === undefined) {
+      return E.left(`Unknown identifier ${object.value}`);
     } else if (id.property.type !== 'Identifier') {
       return E.left(`Unimplemented property type ${id.property.type}`);
     }
-
-    const name = id.property.value;
-    const knownImport = project.resolveKnownImport(objectSym.from, name);
-    if (knownImport !== undefined) {
-      return E.right({ type: 'codec', schema: knownImport });
+    const schemaE = parsePlainInitializer(project, source, declarationSym.init);
+    if (E.isLeft(schemaE)) {
+      return schemaE;
+    } else if (schemaE.right.type !== 'object') {
+      return E.left(
+        `Expected object, got '${schemaE.right.type}' for '${declarationSym.name}'`,
+      );
+    } else if (schemaE.right.properties[id.property.value] === undefined) {
+      return E.left(
+        `Unknown property '${id.property.value}' in '${declarationSym.name}'`,
+      );
+    } else {
+      return E.right(schemaE.right.properties[id.property.value]!);
     }
-
-    if (!objectSym.from.startsWith('.')) {
-      return E.right({ type: 'ref', name, location: objectSym.from });
-    }
-
-    const newInitE = findSymbolInitializer(project, source, [
-      objectSym.localName,
-      name,
-    ]);
-    if (E.isLeft(newInitE)) {
-      return newInitE;
-    }
-
-    return E.right({ type: 'ref', name, location: newInitE.right[0].path });
   } else {
     return E.left(`Unimplemented codec type ${id}`);
   }
@@ -261,7 +324,7 @@ export function parseCodecInitializer(
     }
     const identifier = identifierE.right;
 
-    if (identifier.type === 'ref') {
+    if (identifier.type !== 'codec') {
       return E.right(identifier);
     }
 
@@ -278,7 +341,7 @@ export function parseCodecInitializer(
     }
     const identifier = identifierE.right;
 
-    if (identifier.type === 'ref') {
+    if (identifier.type !== 'codec') {
       return E.right(identifier);
     }
 
