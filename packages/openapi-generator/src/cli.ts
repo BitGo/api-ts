@@ -19,6 +19,7 @@ import { getRefs } from './ref';
 import { convertRoutesToOpenAPI } from './openapi';
 import type { Route } from './route';
 import type { Schema } from './ir';
+import { getPackageJsonPath } from './packageInfo';
 import { Project } from './project';
 import { KNOWN_IMPORTS } from './knownImports';
 import { findSymbolInitializer } from './resolveInit';
@@ -33,34 +34,16 @@ const app = command({
       displayName: 'file',
     }),
     name: option({
-      type: string,
+      type: optional(string),
       description: 'API name',
       long: 'name',
       short: 'n',
-      defaultValue: () => {
-        const pkgFile = p.join(process.cwd(), 'package.json');
-        try {
-          const pkgJson = fs.readFileSync(pkgFile, 'utf-8');
-          return JSON.parse(pkgJson)['name'] ?? 'openapi-generator';
-        } catch (err) {
-          return 'openapi-generator';
-        }
-      },
     }),
     version: option({
-      type: string,
+      type: optional(string),
       description: 'API version',
       long: 'version',
       short: 'v',
-      defaultValue: () => {
-        const pkgFile = p.join(process.cwd(), 'package.json');
-        try {
-          const pkgJson = fs.readFileSync(pkgFile, 'utf-8');
-          return JSON.parse(pkgJson)['version'] ?? '0.0.1';
-        } catch (err) {
-          return '0.0.1';
-        }
-      },
     }),
     includeInternal: flag({
       type: boolean,
@@ -74,11 +57,34 @@ const app = command({
       description: 'Custom codec definition file',
       long: 'codec-file',
       short: 'c',
-      defaultValue: () => undefined,
     }),
   },
-  handler: async ({ input, name, version, codecFile }) => {
+  handler: async ({
+    input,
+    name: nameParam,
+    version: versionParam,
+    codecFile: codecFileParam,
+  }) => {
     const filePath = p.resolve(input);
+
+    const packageJsonPath = await getPackageJsonPath(filePath);
+    let packageJson: Record<string, any> = {};
+    if (packageJsonPath !== undefined) {
+      packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+    }
+
+    const name = nameParam ?? packageJson['name'] ?? 'openapi-generator';
+    const version = versionParam ?? packageJson['version'] ?? '0.0.1';
+
+    let codecFile: string | undefined = codecFileParam;
+    if (
+      codecFileParam === undefined &&
+      packageJsonPath !== undefined &&
+      packageJson['openapi-generator']?.['codec-file'] !== undefined
+    ) {
+      const relativeCodecFilePath = packageJson['openapi-generator']['codec-file'];
+      codecFile = p.join(p.dirname(packageJsonPath), relativeCodecFilePath);
+    }
 
     let knownImports = KNOWN_IMPORTS;
     if (codecFile !== undefined) {
