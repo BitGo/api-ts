@@ -51,12 +51,12 @@ type SuperagentLike<Req> = {
   [K in h.Method]: (url: string) => Req;
 };
 
-type Response = {
+export type Response = {
   body: unknown;
   status: number;
 };
 
-interface SuperagentRequest<Res extends Response> extends Promise<Res> {
+export interface SuperagentRequest<Res extends Response> extends Promise<Res> {
   ok(callback: (response: Res) => boolean): this;
   query(params: Record<string, string | string[]>): this;
   set(name: string, value: string): this;
