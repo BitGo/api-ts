@@ -1,15 +1,21 @@
 import * as h from '@api-ts/io-ts-http';
-import type { SuperAgentRequest } from 'superagent';
+import type { SuperagentRequest, Response } from './request';
 
 import { requestForRoute, BoundRequestFactory, RequestFactory } from './request';
 
-export type ApiClient<Req extends SuperAgentRequest, Spec extends h.ApiSpec> = {
+export type ApiClient<
+  Req extends SuperagentRequest<Response>,
+  Spec extends h.ApiSpec,
+> = {
   [A in keyof Spec]: {
     [B in keyof Spec[A] & h.Method]: BoundRequestFactory<Req, NonNullable<Spec[A][B]>>;
   };
 };
 
-export const buildApiClient = <Req extends SuperAgentRequest, Spec extends h.ApiSpec>(
+export const buildApiClient = <
+  Req extends SuperagentRequest<Response>,
+  Spec extends h.ApiSpec,
+>(
   requestFactory: RequestFactory<Req>,
   spec: Spec,
 ): ApiClient<Req, Spec> => {
