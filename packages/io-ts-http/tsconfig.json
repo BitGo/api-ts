@@ -3,7 +3,10 @@
   "include": ["src/**/*", "test/**/*"],
   "compilerOptions": {
     "outDir": "dist",
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
+    "paths": {
+      "io-ts": ["../../node_modules/@types/io-ts/lib/index.d.ts"]
+    }
   },
   "references": [
     {

@@ -2,7 +2,13 @@
   "extends": "../../tsconfig.json",
   "include": ["src/**/*", "test/**/*"],
   "compilerOptions": {
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "paths": {
+      "io-ts": ["../../node_modules/@types/io-ts/lib"],
+      "io-ts/lib/PathReporter": [
+        "../../node_modules/@types/io-ts/lib/PathReporter.d.ts"
+      ]
+    }
   },
   "references": [
     {

@@ -54,7 +54,7 @@ In your new directory, create a `package.json` file:
     "io-ts": "2.1.3"
   },
   "devDependencies": {
-    "typescript": "4.7.4"
+    "typescript": "5.2.2"
   }
 }
 ```
