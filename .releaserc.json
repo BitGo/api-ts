@@ -2,6 +2,12 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/exec",
+      {
+        "publishCmd": "cat package.json"
+      }
+    ],
     "@semantic-release/npm",
     "@semantic-release-extras/github-comment-specific"
   ]
