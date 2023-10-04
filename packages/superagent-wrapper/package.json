@@ -33,8 +33,8 @@
     "express": "4.18.2",
     "io-ts-types": "0.5.19",
     "superagent": "8.1.2",
-    "typescript": "5.2.2",
-    "supertest": "6.3.3"
+    "supertest": "6.3.3",
+    "typescript": "5.2.2"
   },
   "peerDependencies": {
     "superagent": "*"

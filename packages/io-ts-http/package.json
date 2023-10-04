@@ -26,8 +26,8 @@
   },
   "devDependencies": {
     "@swc-node/register": "1.6.8",
-    "typescript": "5.2.2",
-    "c8": "8.0.1"
+    "c8": "8.0.1",
+    "typescript": "5.2.2"
   },
   "publishConfig": {
     "access": "public"
