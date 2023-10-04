@@ -17,10 +17,10 @@
     "format:fix": "prettier --write .",
     "clean": "rm -rf -- dist"
   },
-  "devDependencies": {
-    "typescript": "5.2.2"
-  },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "5.2.2"
   }
 }
