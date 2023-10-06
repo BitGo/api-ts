@@ -18,15 +18,9 @@
   ],
   "packageManager": "npm@8.5.0",
   "scripts": {
-    "build": "turbo run build",
-    "clean": "turbo run clean",
-    "predistclean": "turbo run clean",
     "distclean": "rm -rf node_modules packages/*/node_modules",
-    "format": "turbo run format",
-    "format:fix": "turbo run format:fix",
     "lint-staged": "lint-staged",
-    "postinstall": "patch-package",
-    "test": "turbo run test"
+    "postinstall": "patch-package"
   },
   "pre-commit": "lint-staged",
   "devDependencies": {
@@ -38,7 +32,6 @@
     "patch-package": "8.0.0",
     "pre-commit": "1.2.2",
     "prettier": "3.0.3",
-    "turbo": "1.10.15",
     "typescript": "4.6.4"
   },
   "engines": {

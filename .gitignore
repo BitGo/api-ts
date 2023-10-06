@@ -1,6 +1,5 @@
 .direnv/
 .drone.yml
-.turbo/
 coverage/
 dist/
 node_modules/
