@@ -57,15 +57,25 @@ function schemaToOpenAPI(
         }),
       };
     case 'union':
-      return {
-        oneOf: schema.schemas.flatMap((s) => {
-          const innerSchema = schemaToOpenAPI(s);
-          if (innerSchema === undefined) {
-            return [];
-          }
-          return [innerSchema];
-        }),
-      };
+      let nullable = false;
+      let oneOf: (OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject)[] = [];
+      for (const s of schema.schemas) {
+        if (s.type === 'primitive' && s.value === 'null') {
+          nullable = true;
+          continue;
+        }
+        const innerSchema = schemaToOpenAPI(s);
+        if (innerSchema !== undefined) {
+          oneOf.push(innerSchema);
+        }
+      }
+      if (oneOf.length === 0) {
+        return undefined;
+      } else if (oneOf.length === 1) {
+        return { ...(nullable ? { nullable } : {}), ...oneOf[0] };
+      } else {
+        return { ...(nullable ? { nullable } : {}), oneOf };
+      }
     case 'record':
       const additionalProperties = schemaToOpenAPI(schema.codomain);
       if (additionalProperties === undefined) {
