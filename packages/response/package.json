@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "build": "tsc --build --incremental --verbose .",
+    "test": "echo 'No tests defined'",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "clean": "rm -rf -- dist"
