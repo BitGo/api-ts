@@ -43,7 +43,7 @@ jobs:
         run: npm run build --workspaces
 
       - name: Test
-        run: npm test --workspaces
+        run: npm test --workspaces --if-present
 
   # Only run CI for GitHub Pages on Node.js 16 because docusaurus doesn't support
   # earlier Node.js versions.
