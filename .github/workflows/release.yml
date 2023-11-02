@@ -37,7 +37,7 @@ jobs:
       # Run tests before releasing to verify the code behaves as expected. We expect
       # this step to identify some (but not all) semantic merge conflicts
       - name: Test
-        run: npm test --workspaces
+        run: npm test --workspaces --if-present
 
       # DISCUSS: Use `jq` or just a small node script to create/modify `.npmrc` in case
       # one gets added in the future
