@@ -85,50 +85,64 @@ export type MiddlewareChainOutput<
 > = Chain extends []
   ? Input
   : Chain extends [infer A]
-  ? MiddlewareResult<Input, A>
-  : Chain extends [infer A, infer B]
-  ? MiddlewareResult<MiddlewareResult<Input, A>, B>
-  : Chain extends [infer A, infer B, infer C]
-  ? MiddlewareResult<MiddlewareResult<MiddlewareResult<Input, A>, B>, C>
-  : Chain extends [infer A, infer B, infer C, infer D]
-  ? MiddlewareResult<
-      MiddlewareResult<MiddlewareResult<MiddlewareResult<Input, A>, B>, C>,
-      D
-    >
-  : Chain extends [infer A, infer B, infer C, infer D, infer E]
-  ? MiddlewareResult<
-      MiddlewareResult<
-        MiddlewareResult<MiddlewareResult<MiddlewareResult<Input, A>, B>, C>,
-        D
-      >,
-      E
-    >
-  : Chain extends [infer A, infer B, infer C, infer D, infer E, infer F]
-  ? MiddlewareResult<
-      MiddlewareResult<
-        MiddlewareResult<
-          MiddlewareResult<MiddlewareResult<MiddlewareResult<Input, A>, B>, C>,
-          D
-        >,
-        E
-      >,
-      F
-    >
-  : Chain extends [infer A, infer B, infer C, infer D, infer E, infer F, infer G]
-  ? MiddlewareResult<
-      MiddlewareResult<
-        MiddlewareResult<
-          MiddlewareResult<
-            MiddlewareResult<MiddlewareResult<MiddlewareResult<Input, A>, B>, C>,
-            D
-          >,
-          E
-        >,
-        F
-      >,
-      G
-    >
-  : never;
+    ? MiddlewareResult<Input, A>
+    : Chain extends [infer A, infer B]
+      ? MiddlewareResult<MiddlewareResult<Input, A>, B>
+      : Chain extends [infer A, infer B, infer C]
+        ? MiddlewareResult<MiddlewareResult<MiddlewareResult<Input, A>, B>, C>
+        : Chain extends [infer A, infer B, infer C, infer D]
+          ? MiddlewareResult<
+              MiddlewareResult<MiddlewareResult<MiddlewareResult<Input, A>, B>, C>,
+              D
+            >
+          : Chain extends [infer A, infer B, infer C, infer D, infer E]
+            ? MiddlewareResult<
+                MiddlewareResult<
+                  MiddlewareResult<MiddlewareResult<MiddlewareResult<Input, A>, B>, C>,
+                  D
+                >,
+                E
+              >
+            : Chain extends [infer A, infer B, infer C, infer D, infer E, infer F]
+              ? MiddlewareResult<
+                  MiddlewareResult<
+                    MiddlewareResult<
+                      MiddlewareResult<
+                        MiddlewareResult<MiddlewareResult<Input, A>, B>,
+                        C
+                      >,
+                      D
+                    >,
+                    E
+                  >,
+                  F
+                >
+              : Chain extends [
+                    infer A,
+                    infer B,
+                    infer C,
+                    infer D,
+                    infer E,
+                    infer F,
+                    infer G,
+                  ]
+                ? MiddlewareResult<
+                    MiddlewareResult<
+                      MiddlewareResult<
+                        MiddlewareResult<
+                          MiddlewareResult<
+                            MiddlewareResult<MiddlewareResult<Input, A>, B>,
+                            C
+                          >,
+                          D
+                        >,
+                        E
+                      >,
+                      F
+                    >,
+                    G
+                  >
+                : never;
 
 /**
  * Runs a middleware chain, and adds any properties returned by middleware..
