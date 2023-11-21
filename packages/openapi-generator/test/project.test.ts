@@ -47,7 +47,7 @@ async function testCase(
 
 const EXTERNAL_CUSTOM_CODEC: KnownImports = {
   foo: {
-    bar: () => E.right({ type: 'primitive', value: 'string' }),
+    bar: () => E.right({ type: 'string' }),
   },
 };
 
@@ -62,13 +62,13 @@ testCase(
   EXTERNAL_CUSTOM_CODEC_SRC,
   EXTERNAL_CUSTOM_CODEC,
   {
-    FOO: { type: 'primitive', value: 'string' },
+    FOO: { type: 'string' },
   },
 );
 
 const INTERNAL_CODEC_OVERRIDE: KnownImports = {
   '.': {
-    bar: () => E.right({ type: 'primitive', value: 'string' }),
+    bar: () => E.right({ type: 'string' }),
   },
 };
 
@@ -87,7 +87,7 @@ testCase(
     FOO: {
       type: 'object',
       properties: {
-        bar: { type: 'primitive', value: 'string' },
+        bar: { type: 'string' },
       },
       required: ['bar'],
     },

@@ -1,4 +1,4 @@
-import type { Schema } from './ir';
+import { isPrimitive, type Primitive, type Schema } from './ir';
 
 export type OptimizeFn = (schema: Schema) => Schema;
 
@@ -42,7 +42,7 @@ export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
 
   const innerSchemas = schema.schemas.map(optimize);
 
-  const literals: Record<(Schema & { type: 'primitive' })['value'], any[]> = {
+  const literals: Record<Primitive['type'], any[]> = {
     string: [],
     number: [],
     integer: [],
@@ -51,8 +51,8 @@ export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
   };
   const remainder: Schema[] = [];
   innerSchemas.forEach((innerSchema) => {
-    if (innerSchema.type === 'primitive' && innerSchema.enum !== undefined) {
-      literals[innerSchema.value].push(...innerSchema.enum);
+    if (isPrimitive(innerSchema) && innerSchema.enum !== undefined) {
+      literals[innerSchema.type].push(...innerSchema.enum);
     } else {
       remainder.push(innerSchema);
     }
@@ -63,11 +63,7 @@ export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
   };
   for (const [key, value] of Object.entries(literals)) {
     if (value.length > 0) {
-      result.schemas.push({
-        type: 'primitive',
-        value: key as any,
-        enum: value,
-      });
+      result.schemas.push({ type: key as any, enum: value });
     }
   }
 

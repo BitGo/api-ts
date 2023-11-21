@@ -291,13 +291,13 @@ export function parsePlainInitializer(
   } else if (init.type === 'ArrayExpression') {
     return parseArrayExpression(project, source, init);
   } else if (init.type === 'StringLiteral') {
-    return E.right({ type: 'primitive', value: 'string', enum: [init.value] });
+    return E.right({ type: 'string', enum: [init.value] });
   } else if (init.type === 'NumericLiteral') {
-    return E.right({ type: 'primitive', value: 'number', enum: [init.value] });
+    return E.right({ type: 'number', enum: [init.value] });
   } else if (init.type === 'BooleanLiteral') {
-    return E.right({ type: 'primitive', value: 'boolean', enum: [init.value] });
+    return E.right({ type: 'boolean', enum: [init.value] });
   } else if (init.type === 'NullLiteral') {
-    return E.right({ type: 'primitive', value: 'null', enum: [null] });
+    return E.right({ type: 'null', enum: [null] });
   } else if (init.type === 'Identifier' && init.value === 'undefined') {
     return E.right({ type: 'undefined' });
   } else if (init.type === 'TsConstAssertion' || init.type === 'TsAsExpression') {

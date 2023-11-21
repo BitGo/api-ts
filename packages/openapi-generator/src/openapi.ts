@@ -12,16 +12,16 @@ function schemaToOpenAPI(
   schema = optimize(schema);
 
   switch (schema.type) {
-    case 'primitive':
-      if (schema.value === 'integer') {
-        return { type: 'number', ...(schema.enum ? { enum: schema.enum } : {}) };
-      } else if (schema.value === 'null') {
-        // TODO: OpenAPI v3 does not have an explicit null type, is there a better way to represent this?
-        // Or should we just conflate explicit null and undefined properties?
-        return { nullable: true, enum: [] };
-      } else {
-        return { type: schema.value, ...(schema.enum ? { enum: schema.enum } : {}) };
-      }
+    case 'boolean':
+    case 'string':
+    case 'number':
+      return { type: schema.type, ...(schema.enum ? { enum: schema.enum } : {}) };
+    case 'integer':
+      return { type: 'number', ...(schema.enum ? { enum: schema.enum } : {}) };
+    case 'null':
+      // TODO: OpenAPI v3 does not have an explicit null type, is there a better way to represent this?
+      // Or should we just conflate explicit null and undefined properties?
+      return { nullable: true, enum: [] };
     case 'ref':
       return { $ref: `#/components/schemas/${schema.name}` };
     case 'array':
@@ -60,7 +60,7 @@ function schemaToOpenAPI(
       let nullable = false;
       let oneOf: (OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject)[] = [];
       for (const s of schema.schemas) {
-        if (s.type === 'primitive' && s.value === 'null') {
+        if (s.type === 'null') {
           nullable = true;
           continue;
         }
