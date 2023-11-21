@@ -10,10 +10,19 @@ export type UndefinedValue = {
 };
 
 export type Primitive = {
-  type: 'primitive';
-  value: 'string' | 'number' | 'integer' | 'boolean' | 'null';
+  type: 'string' | 'number' | 'integer' | 'boolean' | 'null';
   enum?: (string | number | boolean | null | PseudoBigInt)[];
 };
+
+export function isPrimitive(schema: Schema): schema is Primitive {
+  return (
+    schema.type === 'string' ||
+    schema.type === 'number' ||
+    schema.type === 'integer' ||
+    schema.type === 'boolean' ||
+    schema.type === 'null'
+  );
+}
 
 export type Array = {
   type: 'array';

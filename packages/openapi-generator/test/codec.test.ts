@@ -46,7 +46,7 @@ export const FOO = t.number;
 `;
 
 testCase('simple codec is parsed', SIMPLE, {
-  FOO: { type: 'primitive', value: 'number' },
+  FOO: { type: 'number' },
 });
 
 const DIRECT = `
@@ -55,7 +55,7 @@ export const FOO = number;
 `;
 
 testCase('direct import is parsed', DIRECT, {
-  FOO: { type: 'primitive', value: 'number' },
+  FOO: { type: 'number' },
 });
 
 const TYPE = `
@@ -66,7 +66,7 @@ export const FOO = t.type({ foo: t.number });
 testCase('type is parsed', TYPE, {
   FOO: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
 });
@@ -79,7 +79,7 @@ export const FOO = t.partial({ foo: t.number });
 testCase('partial type is parsed', PARTIAL, {
   FOO: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: [],
   },
 });
@@ -91,10 +91,10 @@ export const FOO = t.type({ bar });
 `;
 
 testCase('shorthand property is parsed', SHORTHAND_PROPERTY, {
-  bar: { type: 'primitive', value: 'number' },
+  bar: { type: 'number' },
   FOO: {
     type: 'object',
-    properties: { bar: { type: 'primitive', value: 'number' } },
+    properties: { bar: { type: 'number' } },
     required: ['bar'],
   },
 });
@@ -110,14 +110,14 @@ export const TEST = t.type({ ...foo, bar: t.string });
 testCase('spread property is parsed', SPREAD_PROPERTY, {
   foo: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
   TEST: {
     type: 'object',
     properties: {
-      foo: { type: 'primitive', value: 'number' },
-      bar: { type: 'primitive', value: 'string' },
+      foo: { type: 'number' },
+      bar: { type: 'string' },
     },
     required: ['foo', 'bar'],
   },
@@ -132,12 +132,12 @@ export const FOO = t.type(props);
 testCase('const assertion is parsed', CONST_ASSERTION, {
   FOO: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
   props: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
 });
@@ -153,12 +153,12 @@ export const FOO = t.type({
 testCase('spread const assertion is parsed', SPREAD_CONST_ASSERTION, {
   FOO: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
   props: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
 });
@@ -172,12 +172,12 @@ export const FOO = t.type(props);
 testCase('as assertion is parsed', AS_ASSERTION, {
   FOO: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
   props: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
 });
@@ -193,12 +193,12 @@ export const FOO = t.type({
 testCase('spread const assertion is parsed', SPREAD_AS_ASSERTION, {
   FOO: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
   props: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
 });
@@ -209,7 +209,7 @@ export const FOO = t.array(t.number);
 `;
 
 testCase('array type is parsed', ARRAY, {
-  FOO: { type: 'array', items: { type: 'primitive', value: 'number' } },
+  FOO: { type: 'array', items: { type: 'number' } },
 });
 
 const UNION = `
@@ -220,10 +220,7 @@ export const FOO = t.union([t.string, t.number]);
 testCase('union type is parsed', UNION, {
   FOO: {
     type: 'union',
-    schemas: [
-      { type: 'primitive', value: 'string' },
-      { type: 'primitive', value: 'number' },
-    ],
+    schemas: [{ type: 'string' }, { type: 'number' }],
   },
 });
 
@@ -238,14 +235,11 @@ export const FOO = t.union([...common, t.number]);
 testCase('union type with spread is parsed', UNION_SPREAD, {
   FOO: {
     type: 'union',
-    schemas: [
-      { type: 'primitive', value: 'string' },
-      { type: 'primitive', value: 'number' },
-    ],
+    schemas: [{ type: 'string' }, { type: 'number' }],
   },
   common: {
     type: 'tuple',
-    schemas: [{ type: 'primitive', value: 'string' }],
+    schemas: [{ type: 'string' }],
   },
 });
 
@@ -258,10 +252,7 @@ export const FOO = t.union([...[t.string], t.number]);
 testCase('union type with inline spread is parsed', UNION_INLINE_SPREAD, {
   FOO: {
     type: 'union',
-    schemas: [
-      { type: 'primitive', value: 'string' },
-      { type: 'primitive', value: 'number' },
-    ],
+    schemas: [{ type: 'string' }, { type: 'number' }],
   },
 });
 
@@ -276,12 +267,12 @@ testCase('intersection type is parsed', INTERSECTION, {
     schemas: [
       {
         type: 'object',
-        properties: { foo: { type: 'primitive', value: 'number' } },
+        properties: { foo: { type: 'number' } },
         required: ['foo'],
       },
       {
         type: 'object',
-        properties: { bar: { type: 'primitive', value: 'string' } },
+        properties: { bar: { type: 'string' } },
         required: [],
       },
     ],
@@ -294,7 +285,7 @@ export const FOO = t.record(t.string, t.number);
 `;
 
 testCase('record type is parsed', RECORD, {
-  FOO: { type: 'record', codomain: { type: 'primitive', value: 'number' } },
+  FOO: { type: 'record', codomain: { type: 'number' } },
 });
 
 const ENUM = `
@@ -310,16 +301,16 @@ testCase('enum type is parsed', ENUM, {
   Foo: {
     type: 'object',
     properties: {
-      Foo: { type: 'primitive', value: 'string', enum: ['foo'] },
-      Bar: { type: 'primitive', value: 'string', enum: ['bar'] },
+      Foo: { type: 'string', enum: ['foo'] },
+      Bar: { type: 'string', enum: ['bar'] },
     },
     required: ['Foo', 'Bar'],
   },
   TEST: {
     type: 'union',
     schemas: [
-      { type: 'primitive', value: 'string', enum: ['Foo'] },
-      { type: 'primitive', value: 'string', enum: ['Bar'] },
+      { type: 'string', enum: ['Foo'] },
+      { type: 'string', enum: ['Bar'] },
     ],
   },
 });
@@ -330,7 +321,7 @@ export const FOO = t.literal('foo');
 `;
 
 testCase('string literal type is parsed', STRING_LITERAL, {
-  FOO: { type: 'primitive', value: 'string', enum: ['foo'] },
+  FOO: { type: 'string', enum: ['foo'] },
 });
 
 const NUMBER_LITERAL = `
@@ -339,7 +330,7 @@ export const FOO = t.literal(42);
 `;
 
 testCase('number literal type is parsed', NUMBER_LITERAL, {
-  FOO: { type: 'primitive', value: 'number', enum: [42] },
+  FOO: { type: 'number', enum: [42] },
 });
 
 const BOOLEAN_LITERAL = `
@@ -348,7 +339,7 @@ export const FOO = t.literal(true);
 `;
 
 testCase('boolean literal type is parsed', BOOLEAN_LITERAL, {
-  FOO: { type: 'primitive', value: 'boolean', enum: [true] },
+  FOO: { type: 'boolean', enum: [true] },
 });
 
 const NULL_LITERAL = `
@@ -357,7 +348,7 @@ export const FOO = t.literal(null);
 `;
 
 testCase('null literal type is parsed', NULL_LITERAL, {
-  FOO: { type: 'primitive', value: 'null', enum: [null] },
+  FOO: { type: 'null', enum: [null] },
 });
 
 const UNDEFINED_LITERAL = `
@@ -378,8 +369,8 @@ testCase('keyof type is parsed', KEYOF, {
   FOO: {
     type: 'union',
     schemas: [
-      { type: 'primitive', value: 'string', enum: ['foo'] },
-      { type: 'primitive', value: 'string', enum: ['bar'] },
+      { type: 'string', enum: ['foo'] },
+      { type: 'string', enum: ['bar'] },
     ],
   },
 });
@@ -390,7 +381,7 @@ export const FOO = test;
 `;
 
 testCase('aliased import is parsed', ALIAS, {
-  FOO: { type: 'primitive', value: 'string' },
+  FOO: { type: 'string' },
 });
 
 const BRAND = `
@@ -403,10 +394,7 @@ export const FOO = t.brand(t.string, (s): s is FooBranded => s === 'foo', 'Foo')
 `;
 
 testCase('brand type is parsed', BRAND, {
-  FOO: {
-    type: 'primitive',
-    value: 'string',
-  },
+  FOO: { type: 'string' },
 });
 
 const LOCAL_REF = `
@@ -418,7 +406,7 @@ export const BAR = t.type({ bar: FOO });
 testCase('local ref is parsed', LOCAL_REF, {
   FOO: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
   BAR: {
@@ -437,7 +425,7 @@ export const BAR = t.type({ bar: FOO });
 testCase('local exported ref is parsed', LOCAL_EXPORTED_REF, {
   FOO: {
     type: 'object',
-    properties: { foo: { type: 'primitive', value: 'number' } },
+    properties: { foo: { type: 'number' } },
     required: ['foo'],
   },
   BAR: {
@@ -487,8 +475,7 @@ export const FOO = t.number;
 
 testCase('declaration comment is parsed', DECLARATION_COMMENT, {
   FOO: {
-    type: 'primitive',
-    value: 'number',
+    type: 'number',
     comment: {
       description: 'Test codec',
       tags: [],
@@ -566,8 +553,7 @@ testCase('first property comment is parsed', FIRST_PROPERTY_COMMENT, {
     type: 'object',
     properties: {
       foo: {
-        type: 'primitive',
-        value: 'number',
+        type: 'number',
         comment: {
           description: 'this is a comment',
           problems: [],
@@ -612,10 +598,9 @@ testCase('second property comment is parsed', SECOND_PROPERTY_COMMENT, {
   FOO: {
     type: 'object',
     properties: {
-      foo: { type: 'primitive', value: 'number' },
+      foo: { type: 'number' },
       bar: {
-        type: 'primitive',
-        value: 'string',
+        type: 'string',
         comment: {
           description: 'this is a comment',
           problems: [],
@@ -656,7 +641,7 @@ export const FOO = h.optional(t.string);
 testCase('optional combinator is parsed', OPTIONAL_COMBINATOR, {
   FOO: {
     type: 'union',
-    schemas: [{ type: 'primitive', value: 'string' }, { type: 'undefined' }],
+    schemas: [{ type: 'string' }, { type: 'undefined' }],
   },
 });
 
@@ -673,10 +658,10 @@ testCase('optionalized combinator is parsed', OPTIONALIZED_COMBINATOR, {
   FOO: {
     type: 'object',
     properties: {
-      foo: { type: 'primitive', value: 'string' },
+      foo: { type: 'string' },
       bar: {
         type: 'union',
-        schemas: [{ type: 'primitive', value: 'number' }, { type: 'undefined' }],
+        schemas: [{ type: 'number' }, { type: 'undefined' }],
       },
     },
     required: ['foo'],
@@ -702,7 +687,7 @@ testCase('httpRequest combinator is parsed', HTTP_REQUEST_COMBINATOR, {
     properties: {
       params: {
         type: 'object',
-        properties: { foo: { type: 'primitive', value: 'string' } },
+        properties: { foo: { type: 'string' } },
         required: ['foo'],
       },
       query: {
@@ -710,7 +695,7 @@ testCase('httpRequest combinator is parsed', HTTP_REQUEST_COMBINATOR, {
         properties: {
           bar: {
             type: 'union',
-            schemas: [{ type: 'primitive', value: 'number' }, { type: 'undefined' }],
+            schemas: [{ type: 'number' }, { type: 'undefined' }],
           },
         },
         required: [],
@@ -737,15 +722,15 @@ testCase('object property is parsed', OBJECT_PROPERTY, {
   FOO: {
     type: 'object',
     properties: {
-      baz: { type: 'primitive', value: 'number' },
+      baz: { type: 'number' },
     },
     required: ['baz'],
   },
   props: {
     type: 'object',
     properties: {
-      foo: { type: 'primitive', value: 'number' },
-      bar: { type: 'primitive', value: 'string' },
+      foo: { type: 'number' },
+      bar: { type: 'string' },
     },
     required: ['foo', 'bar'],
   },

@@ -48,13 +48,12 @@ create a JS file with the following format:
 module.exports = (E) => {
   return {
     'io-ts-bigint': {
-      BigIntFromString: () => E.right({ type: 'primitive', value: 'string' }),
-      NonZeroBigInt: () => E.right({ type: 'primitive', value: 'number' }),
-      NonZeroBigIntFromString: () => E.right({ type: 'primitive', value: 'string' }),
-      NegativeBigIntFromString: () => E.right({ type: 'primitive', value: 'string' }),
-      NonNegativeBigIntFromString: () =>
-        E.right({ type: 'primitive', value: 'string' }),
-      PositiveBigIntFromString: () => E.right({ type: 'primitive', value: 'string' }),
+      BigIntFromString: () => E.right({ type: 'string' }),
+      NonZeroBigInt: () => E.right({ type: 'number' }),
+      NonZeroBigIntFromString: () => E.right({ type: 'string' }),
+      NegativeBigIntFromString: () => E.right({ type: 'string' }),
+      NonNegativeBigIntFromString: () => E.right({ type: 'string' }),
+      PositiveBigIntFromString: () => E.right({ type: 'string' }),
     },
     // ... and so on for other packages
   };

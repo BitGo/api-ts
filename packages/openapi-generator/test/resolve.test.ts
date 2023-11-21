@@ -60,7 +60,7 @@ testCase(
   {
     FOO: {
       type: 'object',
-      properties: { foo: { type: 'primitive', value: 'string' } },
+      properties: { foo: { type: 'string' } },
       required: ['foo'],
     },
   },
@@ -80,10 +80,7 @@ testCase(
   {
     FOO: {
       type: 'union',
-      schemas: [
-        { type: 'primitive', value: 'string' },
-        { type: 'primitive', value: 'number' },
-      ],
+      schemas: [{ type: 'string' }, { type: 'number' }],
     },
   },
   ['Unimplemented initializer type ArrayExpression'],
@@ -106,8 +103,8 @@ testCase(
     FOO: {
       type: 'union',
       schemas: [
-        { type: 'primitive', value: 'string', enum: ['foo'] },
-        { type: 'primitive', value: 'string', enum: ['bar'] },
+        { type: 'string', enum: ['foo'] },
+        { type: 'string', enum: ['bar'] },
       ],
     },
   },
@@ -125,7 +122,7 @@ testCase(
   { '/index.ts': LITERAL_CONST },
   '/index.ts',
   {
-    FOO: { type: 'primitive', value: 'number', enum: [42] },
+    FOO: { type: 'number', enum: [42] },
   },
   ['Unimplemented initializer type NumericLiteral'],
 );
@@ -538,10 +535,7 @@ testCase(
     FOO: {
       type: 'object',
       properties: {
-        foo: {
-          type: 'primitive',
-          value: 'number',
-        },
+        foo: { type: 'number' },
       },
       required: ['foo'],
     },

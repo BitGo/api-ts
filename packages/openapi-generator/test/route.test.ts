@@ -84,15 +84,13 @@ testCase('simple route', SIMPLE, {
         name: 'foo',
         required: true,
         schema: {
-          type: 'primitive',
-          value: 'string',
+          type: 'string',
         },
       },
     ],
     response: {
       200: {
-        type: 'primitive',
-        value: 'string',
+        type: 'string',
       },
     },
   },
@@ -125,8 +123,7 @@ testCase('path params route', PATH_PARAMS, {
         name: 'bar',
         required: true,
         schema: {
-          type: 'primitive',
-          value: 'string',
+          type: 'string',
         },
       },
     ],
@@ -168,14 +165,13 @@ testCase('optional query param route', OPTIONAL_QUERY_PARAM, {
         required: false,
         schema: {
           type: 'union',
-          schemas: [{ type: 'primitive', value: 'string' }, { type: 'undefined' }],
+          schemas: [{ type: 'string' }, { type: 'undefined' }],
         },
       },
     ],
     response: {
       200: {
-        type: 'primitive',
-        value: 'string',
+        type: 'string',
       },
     },
   },
@@ -204,8 +200,7 @@ testCase('const request route', REQUEST_REF, {
     parameters: [],
     response: {
       200: {
-        type: 'primitive',
-        value: 'string',
+        type: 'string',
       },
     },
   },
@@ -233,10 +228,7 @@ testCase('const response route', RESPONSE_REF, {
     method: 'GET',
     parameters: [],
     response: {
-      200: {
-        type: 'primitive',
-        value: 'string',
-      },
+      200: { type: 'string' },
     },
   },
 });
@@ -281,20 +273,14 @@ testCase('query param union route', QUERY_PARAM_UNION, {
             {
               type: 'object',
               properties: {
-                foo: {
-                  type: 'primitive',
-                  value: 'string',
-                },
+                foo: { type: 'string' },
               },
               required: ['foo'],
             },
             {
               type: 'object',
               properties: {
-                bar: {
-                  type: 'primitive',
-                  value: 'string',
-                },
+                bar: { type: 'string' },
               },
               required: ['bar'],
             },
@@ -303,10 +289,7 @@ testCase('query param union route', QUERY_PARAM_UNION, {
       },
     ],
     response: {
-      200: {
-        type: 'primitive',
-        value: 'string',
-      },
+      200: { type: 'string' },
     },
   },
 });
@@ -357,20 +340,14 @@ testCase('path param union route', PATH_PARAM_UNION, {
             {
               type: 'object',
               properties: {
-                foo: {
-                  type: 'primitive',
-                  value: 'string',
-                },
+                foo: { type: 'string' },
               },
               required: ['foo'],
             },
             {
               type: 'object',
               properties: {
-                bar: {
-                  type: 'primitive',
-                  value: 'string',
-                },
+                bar: { type: 'string' },
               },
               required: ['bar'],
             },
@@ -381,17 +358,11 @@ testCase('path param union route', PATH_PARAM_UNION, {
         type: 'path',
         name: 'id',
         required: true,
-        schema: {
-          type: 'primitive',
-          value: 'string',
-        },
+        schema: { type: 'string' },
       },
     ],
     response: {
-      200: {
-        type: 'primitive',
-        value: 'string',
-      },
+      200: { type: 'string' },
     },
   },
 });
@@ -431,30 +402,21 @@ testCase('body union route', BODY_UNION, {
         {
           type: 'object',
           properties: {
-            foo: {
-              type: 'primitive',
-              value: 'string',
-            },
+            foo: { type: 'string' },
           },
           required: ['foo'],
         },
         {
           type: 'object',
           properties: {
-            bar: {
-              type: 'primitive',
-              value: 'string',
-            },
+            bar: { type: 'string' },
           },
           required: ['bar'],
         },
       ],
     },
     response: {
-      200: {
-        type: 'primitive',
-        value: 'string',
-      },
+      200: { type: 'string' },
     },
   },
 });
@@ -492,26 +454,17 @@ testCase('request intersection route', REQUEST_INTERSECTION, {
         type: 'query',
         name: 'foo',
         required: true,
-        schema: {
-          type: 'primitive',
-          value: 'string',
-        },
+        schema: { type: 'string' },
       },
       {
         type: 'query',
         name: 'bar',
         required: true,
-        schema: {
-          type: 'primitive',
-          value: 'string',
-        },
+        schema: { type: 'string' },
       },
     ],
     response: {
-      200: {
-        type: 'primitive',
-        value: 'string',
-      },
+      200: { type: 'string' },
     },
   },
 });
@@ -551,30 +504,21 @@ testCase('request body intersection route', BODY_INTERSECTION, {
         {
           type: 'object',
           properties: {
-            foo: {
-              type: 'primitive',
-              value: 'string',
-            },
+            foo: { type: 'string' },
           },
           required: ['foo'],
         },
         {
           type: 'object',
           properties: {
-            bar: {
-              type: 'primitive',
-              value: 'string',
-            },
+            bar: { type: 'string' },
           },
           required: ['bar'],
         },
       ],
     },
     response: {
-      200: {
-        type: 'primitive',
-        value: 'string',
-      },
+      200: { type: 'string' },
     },
   },
 });
@@ -612,15 +556,13 @@ testCase('route with operationId', WITH_OPERATION_ID, {
         name: 'foo',
         required: true,
         schema: {
-          type: 'primitive',
-          value: 'string',
+          type: 'string',
         },
       },
     ],
     response: {
       200: {
-        type: 'primitive',
-        value: 'string',
+        type: 'string',
       },
     },
     comment: {

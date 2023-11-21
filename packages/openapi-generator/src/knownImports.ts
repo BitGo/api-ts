@@ -1,6 +1,6 @@
 import * as E from 'fp-ts/Either';
 
-import type { Schema } from './ir';
+import { isPrimitive, type Schema } from './ir';
 
 export type DerefFn = (ref: Schema) => E.Either<string, Schema>;
 export type KnownCodec = (
@@ -26,10 +26,10 @@ function isOptional(schema: Schema): boolean {
 
 export const KNOWN_IMPORTS: KnownImports = {
   'io-ts': {
-    string: () => E.right({ type: 'primitive', value: 'string' }),
-    number: () => E.right({ type: 'primitive', value: 'number' }),
-    boolean: () => E.right({ type: 'primitive', value: 'boolean' }),
-    null: () => E.right({ type: 'primitive', value: 'null' }),
+    string: () => E.right({ type: 'string' }),
+    number: () => E.right({ type: 'number' }),
+    boolean: () => E.right({ type: 'boolean' }),
+    null: () => E.right({ type: 'null' }),
     undefined: () => E.right({ type: 'undefined' }),
     array: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
     readonlyArray: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
@@ -89,7 +89,7 @@ export const KNOWN_IMPORTS: KnownImports = {
       return E.right({ type: 'intersection', schemas: schema.schemas });
     },
     literal: (_, arg) => {
-      if (arg.type !== 'primitive' || arg.enum === undefined) {
+      if (!isPrimitive(arg) || arg.enum === undefined) {
         return E.left(`Unimplemented literal type ${arg.type}`);
       } else {
         return E.right(arg);
@@ -100,8 +100,7 @@ export const KNOWN_IMPORTS: KnownImports = {
         return E.left(`Unimplemented keyof type ${arg.type}`);
       }
       const schemas: Schema[] = Object.keys(arg.properties).map((prop) => ({
-        type: 'primitive',
-        value: 'string',
+        type: 'string',
         enum: [prop],
       }));
       return E.right({
@@ -112,20 +111,20 @@ export const KNOWN_IMPORTS: KnownImports = {
     brand: (_, arg) => E.right(arg),
   },
   'io-ts-types': {
-    BigIntFromString: () => E.right({ type: 'primitive', value: 'string' }),
-    BooleanFromNumber: () => E.right({ type: 'primitive', value: 'number' }),
-    BooleanFromString: () => E.right({ type: 'primitive', value: 'string' }),
-    DateFromISOString: () => E.right({ type: 'primitive', value: 'string' }),
-    DateFromNumber: () => E.right({ type: 'primitive', value: 'number' }),
-    DateFromUnixTime: () => E.right({ type: 'primitive', value: 'number' }),
-    IntFromString: () => E.right({ type: 'primitive', value: 'string' }),
-    JsonFromString: () => E.right({ type: 'primitive', value: 'string' }),
+    BigIntFromString: () => E.right({ type: 'string' }),
+    BooleanFromNumber: () => E.right({ type: 'number' }),
+    BooleanFromString: () => E.right({ type: 'string' }),
+    DateFromISOString: () => E.right({ type: 'string' }),
+    DateFromNumber: () => E.right({ type: 'number' }),
+    DateFromUnixTime: () => E.right({ type: 'number' }),
+    IntFromString: () => E.right({ type: 'string' }),
+    JsonFromString: () => E.right({ type: 'string' }),
     nonEmptyArray: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
-    NonEmptyString: () => E.right({ type: 'primitive', value: 'string' }),
-    NumberFromString: () => E.right({ type: 'primitive', value: 'string' }),
+    NonEmptyString: () => E.right({ type: 'string' }),
+    NumberFromString: () => E.right({ type: 'string' }),
     readonlyNonEmptyArray: (_, innerSchema) =>
       E.right({ type: 'array', items: innerSchema }),
-    UUID: () => E.right({ type: 'primitive', value: 'string' }),
+    UUID: () => E.right({ type: 'string' }),
   },
   '@api-ts/io-ts-http': {
     optional: (_, innerSchema) =>
