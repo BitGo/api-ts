@@ -125,6 +125,9 @@ export const KNOWN_IMPORTS: KnownImports = {
     readonlyNonEmptyArray: (_, innerSchema) =>
       E.right({ type: 'array', items: innerSchema }),
     UUID: () => E.right({ type: 'string' }),
+    Json: () => E.right({ type: 'any' }),
+    withFallback: (_, schema, fallback) =>
+      E.right({ type: 'union', schemas: [schema, fallback] }),
   },
   '@api-ts/io-ts-http': {
     optional: (_, innerSchema) =>
