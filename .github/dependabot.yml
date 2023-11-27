@@ -38,3 +38,5 @@ updates:
         versions: ['>4.8']
       - dependency-name: whatwg-url
         versions: ['>=13']
+      - dependency-name: '@semantic-release-extras/github-comment-specific'
+        versions: ['>1.0.7']
