@@ -352,7 +352,7 @@ export function parseCodecInitializer(
       } else {
         const refSource = project.get(schema.location);
         if (refSource === undefined) {
-          return E.left(`Unknown source ${schema.location}`);
+          return E.left(`Cannot find '${schema.name}' from '${schema.location}'`);
         }
         const initE = findSymbolInitializer(project, refSource, schema.name);
         if (E.isLeft(initE)) {
