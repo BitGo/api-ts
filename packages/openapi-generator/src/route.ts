@@ -35,7 +35,7 @@ function derefRequestSchema(
   if (schema.type === 'ref') {
     const sourceFile = project.get(schema.location);
     if (sourceFile === undefined) {
-      return E.left(`Could not find source file ${schema.location}`);
+      return E.left(`Could not find '${schema.name}' from '${schema.location}'`);
     }
     const initE = findSymbolInitializer(project, sourceFile, schema.name);
     if (E.isLeft(initE)) {

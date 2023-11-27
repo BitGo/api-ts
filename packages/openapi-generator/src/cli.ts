@@ -155,7 +155,7 @@ const app = command({
         }
         const sourceFile = project.right.get(ref.location);
         if (sourceFile === undefined) {
-          console.error(`Could not find source file '${ref.location}'`);
+          console.error(`Could not find '${ref.name}' from '${ref.location}'`);
           process.exit(1);
         }
         const initE = findSymbolInitializer(project.right, sourceFile, ref.name);
