@@ -19,7 +19,7 @@ function resolveImportPath(
   }
   const importSourceFile = project.get(importPathE.right);
   if (importSourceFile === undefined) {
-    return E.left(`Unknown import ${importPathE.right}`);
+    return E.left(importPathE.right);
   }
   return E.right(importSourceFile);
 }
@@ -37,7 +37,7 @@ function findExportedDeclaration(
   for (const starExport of sourceFile.symbols.exportStarFiles) {
     const starSourceFile = resolveImportPath(project, sourceFile, starExport);
     if (E.isLeft(starSourceFile)) {
-      return starSourceFile;
+      return E.left(`Cannot resolve * export from '${starExport}'`);
     }
     const starExportE = findExportedDeclaration(project, starSourceFile.right, name);
     if (E.isRight(starExportE)) {
@@ -77,7 +77,7 @@ export function findSymbolInitializer(
     if (imp.localName === name) {
       const impSourceFile = resolveImportPath(project, sourceFile, imp.from);
       if (E.isLeft(impSourceFile)) {
-        return impSourceFile;
+        return E.left(`Cannot resolve import '${imp.localName}' from '${imp.from}'`);
       }
       return findExportedDeclaration(project, impSourceFile.right, imp.importedName);
     }
