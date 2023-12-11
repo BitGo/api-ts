@@ -31,6 +31,8 @@ export const KNOWN_IMPORTS: KnownImports = {
     boolean: () => E.right({ type: 'boolean' }),
     null: () => E.right({ type: 'null' }),
     undefined: () => E.right({ type: 'undefined' }),
+    unknown: () => E.right({ type: 'any' }),
+    any: () => E.right({ type: 'any' }),
     array: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
     readonlyArray: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
     type: (_, schema) => {
@@ -109,6 +111,7 @@ export const KNOWN_IMPORTS: KnownImports = {
       });
     },
     brand: (_, arg) => E.right(arg),
+    UnknownRecord: () => E.right({ type: 'record', codomain: { type: 'any' } }),
   },
   'io-ts-types': {
     BigIntFromString: () => E.right({ type: 'string' }),
