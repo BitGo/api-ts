@@ -577,7 +577,7 @@ testCase('route with operationId', WITH_OPERATION_ID, {
           problems: [],
           source: [
             {
-              number: 5,
+              number: 3,
               source: ' * @operationId foo',
               tokens: {
                 start: ' ',
@@ -595,7 +595,7 @@ testCase('route with operationId', WITH_OPERATION_ID, {
               },
             },
             {
-              number: 6,
+              number: 4,
               source: ' */',
               tokens: {
                 start: ' ',
@@ -617,7 +617,7 @@ testCase('route with operationId', WITH_OPERATION_ID, {
       ],
       source: [
         {
-          number: 2,
+          number: 0,
           source: '/**',
           tokens: {
             start: '',
@@ -635,7 +635,7 @@ testCase('route with operationId', WITH_OPERATION_ID, {
           },
         },
         {
-          number: 3,
+          number: 1,
           source: ' * A route',
           tokens: {
             start: ' ',
@@ -653,7 +653,7 @@ testCase('route with operationId', WITH_OPERATION_ID, {
           },
         },
         {
-          number: 4,
+          number: 2,
           source: ' *',
           tokens: {
             start: ' ',
@@ -671,7 +671,7 @@ testCase('route with operationId', WITH_OPERATION_ID, {
           },
         },
         {
-          number: 5,
+          number: 3,
           source: ' * @operationId foo',
           tokens: {
             start: ' ',
@@ -689,7 +689,7 @@ testCase('route with operationId', WITH_OPERATION_ID, {
           },
         },
         {
-          number: 6,
+          number: 4,
           source: ' */',
           tokens: {
             start: ' ',

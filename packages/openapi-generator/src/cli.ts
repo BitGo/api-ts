@@ -110,7 +110,7 @@ const app = command({
       process.exit(1);
     }
 
-    let apiSpec: Route[] | undefined;
+    let apiSpec: Route[] = [];
     for (const symbol of Object.values(entryPoint.symbols.declarations)) {
       if (symbol.init === undefined) {
         continue;
@@ -130,10 +130,9 @@ const app = command({
         continue;
       }
 
-      apiSpec = result.right;
-      break;
+      apiSpec.push(...result.right);
     }
-    if (apiSpec === undefined) {
+    if (apiSpec.length === 0) {
       console.error(`Could not find API spec in ${filePath}`);
       process.exit(1);
     }
