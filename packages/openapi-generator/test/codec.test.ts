@@ -481,7 +481,7 @@ testCase('declaration comment is parsed', DECLARATION_COMMENT, {
       tags: [],
       source: [
         {
-          number: 2,
+          number: 0,
           source: '/**',
           tokens: {
             start: '',
@@ -499,7 +499,7 @@ testCase('declaration comment is parsed', DECLARATION_COMMENT, {
           },
         },
         {
-          number: 3,
+          number: 1,
           source: ' * Test codec',
           tokens: {
             start: ' ',
@@ -517,7 +517,7 @@ testCase('declaration comment is parsed', DECLARATION_COMMENT, {
           },
         },
         {
-          number: 4,
+          number: 2,
           source: ' */',
           tokens: {
             start: ' ',

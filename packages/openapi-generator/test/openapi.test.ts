@@ -399,3 +399,72 @@ testCase('nullable property route', NULLABLE_PROPERTY, {
     schemas: {},
   },
 });
+
+const HEADER_COMMENT = `
+/*
+ * This is a comment
+ */
+
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route
+ *
+ * ## How to call the route
+ *
+ * \`\`\`
+ * curl -X GET http://localhost:3000/foo?foo=bar
+ * \`\`\`
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+testCase('source file with a header comment', HEADER_COMMENT, {
+  openapi: '3.0.0',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route',
+        description:
+          '## How to call the route\n' +
+          '\n' +
+          '```\n' +
+          'curl -X GET http://localhost:3000/foo?foo=bar\n' +
+          '```',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        parameters: [],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
