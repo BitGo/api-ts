@@ -3,11 +3,11 @@
   "include": ["src/**/*", "test/**/*"],
   "compilerOptions": {
     "outDir": "dist",
-    "exactOptionalPropertyTypes": true
+    "exactOptionalPropertyTypes": true,
   },
   "references": [
     {
-      "path": "../response"
-    }
-  ]
+      "path": "../response",
+    },
+  ],
 }
