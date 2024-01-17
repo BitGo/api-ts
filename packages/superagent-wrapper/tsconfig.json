@@ -4,11 +4,11 @@
   "compilerOptions": {
     "lib": ["dom", "es2019"],
     "outDir": "dist",
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": false,
   },
   "references": [
     {
-      "path": "../io-ts-http"
-    }
-  ]
+      "path": "../io-ts-http",
+    },
+  ],
 }
