@@ -25,6 +25,26 @@ function isOptional(schema: Schema): boolean {
 // TODO: Read this from a JSON (or YAML?) file
 
 export const KNOWN_IMPORTS: KnownImports = {
+  global: {
+    'Object.assign': (_, ...schemas) => {
+      if (schemas.length < 2) {
+        return E.left('assign must have at least 2 arguments');
+      }
+      const [target, ...sources] = schemas;
+      if (target === undefined) {
+        return E.left('assign target must be object');
+      } else if (target.type !== 'object') {
+        return E.left('assign target must be object');
+      }
+      const properties = sources.reduce((acc, source) => {
+        if (source.type !== 'object') {
+          return acc;
+        }
+        return { ...acc, ...source.properties };
+      }, target.properties);
+      return E.right({ type: 'object', properties, required: Object.keys(properties) });
+    },
+  },
   'io-ts': {
     string: () => E.right({ type: 'string' }),
     number: () => E.right({ type: 'number' }),

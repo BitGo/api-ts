@@ -735,3 +735,33 @@ testCase('object property is parsed', OBJECT_PROPERTY, {
     required: ['foo', 'bar'],
   },
 });
+
+const OBJECT_ASSIGN = `
+import * as t from 'io-ts';
+
+const props = Object.assign({}, {
+  foo: t.number,
+  bar: t.string,
+});
+
+export const FOO = t.type(props);
+`;
+
+testCase('object assign is parsed', OBJECT_ASSIGN, {
+  FOO: {
+    type: 'object',
+    properties: {
+      foo: { type: 'number' },
+      bar: { type: 'string' },
+    },
+    required: ['foo', 'bar'],
+  },
+  props: {
+    type: 'object',
+    properties: {
+      foo: { type: 'number' },
+      bar: { type: 'string' },
+    },
+    required: ['foo', 'bar'],
+  },
+});
