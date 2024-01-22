@@ -125,32 +125,42 @@ function codecIdentifier(
       }
     }
 
+    if (id.property.type !== 'Identifier') {
+      return E.left(`Unimplemented property type ${id.property.type}`);
+    }
+
     // Parse locally declared member expressions
     const declarationSym = source.symbols.declarations.find(
       (s) => s.name === object.value,
     );
-    if (declarationSym === undefined) {
-      return E.left(`Unknown identifier ${object.value}`);
-    } else if (id.property.type !== 'Identifier') {
-      return E.left(`Unimplemented property type ${id.property.type}`);
+    if (declarationSym !== undefined) {
+      const schemaE = parsePlainInitializer(project, source, declarationSym.init);
+      if (E.isLeft(schemaE)) {
+        return schemaE;
+      } else if (schemaE.right.type !== 'object') {
+        return E.left(
+          `Expected object, got '${schemaE.right.type}' for '${declarationSym.name}'`,
+        );
+      } else if (schemaE.right.properties[id.property.value] === undefined) {
+        return E.left(
+          `Unknown property '${id.property.value}' in '${declarationSym.name}'`,
+        );
+      } else {
+        return E.right(schemaE.right.properties[id.property.value]!);
+      }
     }
-    const schemaE = parsePlainInitializer(project, source, declarationSym.init);
-    if (E.isLeft(schemaE)) {
-      return schemaE;
-    } else if (schemaE.right.type !== 'object') {
-      return E.left(
-        `Expected object, got '${schemaE.right.type}' for '${declarationSym.name}'`,
-      );
-    } else if (schemaE.right.properties[id.property.value] === undefined) {
-      return E.left(
-        `Unknown property '${id.property.value}' in '${declarationSym.name}'`,
-      );
-    } else {
-      return E.right(schemaE.right.properties[id.property.value]!);
+
+    // Parse global expressions
+    const knownImport = project.resolveKnownImport(
+      'global',
+      `${object.value}.${id.property.value}`,
+    );
+    if (knownImport !== undefined) {
+      return E.right({ type: 'codec', schema: knownImport });
     }
-  } else {
-    return E.left(`Unimplemented codec type ${id}`);
   }
+
+  return E.left(`Unimplemented identifier type ${id.type}`);
 }
 
 function parseObjectExpression(
