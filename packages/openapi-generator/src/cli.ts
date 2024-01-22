@@ -13,6 +13,7 @@ import {
 import * as E from 'fp-ts/Either';
 import * as fs from 'fs';
 import * as p from 'path';
+import type { Expression } from '@swc/core';
 
 import { parseApiSpec } from './apiSpec';
 import { getRefs } from './ref';
@@ -24,6 +25,7 @@ import { Project } from './project';
 import { KNOWN_IMPORTS } from './knownImports';
 import { findSymbolInitializer } from './resolveInit';
 import { parseCodecInitializer } from './codec';
+import { SourceFile } from './sourceFile';
 
 const app = command({
   name: 'api-ts',
@@ -118,7 +120,18 @@ const app = command({
         continue;
       } else if (symbol.init.arguments.length === 0) {
         continue;
+      } else if (
+        symbol.init.callee.type === 'Super' ||
+        symbol.init.callee.type === 'Import'
+      ) {
+        console.error(
+          `Skipping ${symbol.name} because it is a ${symbol.init.callee.type}`,
+        );
+        continue;
+      } else if (!isApiSpec(entryPoint, symbol.init.callee)) {
+        continue;
       }
+      console.error(`Found API spec in ${symbol.name}`);
 
       const result = parseApiSpec(
         project.right,
@@ -127,7 +140,7 @@ const app = command({
       );
       if (E.isLeft(result)) {
         console.error(`Error parsing ${symbol.name}: ${result.left}`);
-        continue;
+        process.exit(1);
       }
 
       apiSpec.push(...result.right);
@@ -189,6 +202,34 @@ const app = command({
     console.log(JSON.stringify(openapi, null, 2));
   },
 });
+
+function isApiSpec(entryPoint: SourceFile, init: Expression): boolean {
+  if (init.type === 'Identifier') {
+    return (
+      entryPoint.symbols.imports.find(
+        (imp) =>
+          imp.type === 'named' &&
+          imp.from === '@api-ts/io-ts-http' &&
+          imp.importedName === 'apiSpec' &&
+          imp.localName === init.value,
+      ) !== undefined
+    );
+  } else if (init.type === 'MemberExpression') {
+    return (
+      entryPoint.symbols.imports.find(
+        (imp) =>
+          imp.type === 'star' &&
+          imp.from === '@api-ts/io-ts-http' &&
+          init.object.type === 'Identifier' &&
+          init.object.value === imp.localName &&
+          init.property.type === 'Identifier' &&
+          init.property.value === 'apiSpec',
+      ) !== undefined
+    );
+  } else {
+    return false;
+  }
+}
 
 // parse arguments
 run(app, process.argv.slice(2));
