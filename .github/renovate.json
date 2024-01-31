@@ -1,12 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "github>BitGo/gha-renovate-bot//presets/onboarding#v1.15.1"
-  ],
-  "baseBranches": [
-    "master"
-  ],
-  "enabledManagers": [
-    "github-actions"
+  "extends": ["github>BitGo/gha-renovate-bot//presets/onboarding#v1.15.1"],
+  "baseBranches": ["master"],
+  "enabledManagers": ["github-actions", "regex", "nix", "pre-commit", "nvm", "nodenv", "npm"],
+  "packageRules": [
+    {
+      "matchDatasources": ["npm"],
+      "excludeDepNames": ["typescript", "io-ts", "whatwg-url","@semantic-release-extras/github-comment-specific"]
+    }
   ]
 }
