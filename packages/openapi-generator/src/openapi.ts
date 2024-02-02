@@ -174,7 +174,13 @@ export function convertRoutesToOpenAPI(
       if (openapiSchema === undefined) {
         return acc;
       } else {
-        return { ...acc, [name]: openapiSchema };
+        return {
+          ...acc,
+          [name]: {
+            title: name,
+            ...openapiSchema,
+          },
+        };
       }
     },
     {} as Record<string, OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject>,
