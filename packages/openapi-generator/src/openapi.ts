@@ -44,7 +44,7 @@ function schemaToOpenAPI(
           },
           {} as Record<string, OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject>,
         ),
-        required: schema.required,
+        ...(schema.required.length > 0 ? { required: schema.required } : {}),
       };
     case 'intersection':
       return {
