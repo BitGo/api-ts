@@ -42,17 +42,19 @@ export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
 
   const innerSchemas = schema.schemas.map(optimize);
 
-  const literals: Record<Primitive['type'], any[]> = {
-    string: [],
-    number: [],
-    integer: [],
-    boolean: [],
-    null: [],
+  const literals: Record<Primitive['type'], Set<any>> = {
+    string: new Set(),
+    number: new Set(),
+    integer: new Set(),
+    boolean: new Set(),
+    null: new Set(),
   };
   const remainder: Schema[] = [];
   innerSchemas.forEach((innerSchema) => {
     if (isPrimitive(innerSchema) && innerSchema.enum !== undefined) {
-      literals[innerSchema.type].push(...innerSchema.enum);
+      innerSchema.enum.forEach((value) => {
+        literals[innerSchema.type].add(value);
+      });
     } else {
       remainder.push(innerSchema);
     }
@@ -62,8 +64,8 @@ export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
     schemas: remainder,
   };
   for (const [key, value] of Object.entries(literals)) {
-    if (value.length > 0) {
-      result.schemas.push({ type: key as any, enum: value });
+    if (value.size > 0) {
+      result.schemas.push({ type: key as any, enum: Array.from(value) });
     }
   }
 

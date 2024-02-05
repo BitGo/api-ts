@@ -95,3 +95,20 @@ test('undefined property unions are simplified', () => {
 
   assert.deepStrictEqual(optimize(input), expected);
 });
+
+test('enums are deduplicated', () => {
+  const input: Schema = {
+    type: 'union',
+    schemas: [
+      { type: 'string', enum: ['foo'] },
+      { type: 'string', enum: ['foo', 'bar'] },
+    ],
+  };
+
+  const expected: Schema = {
+    type: 'string',
+    enum: ['foo', 'bar'],
+  };
+
+  assert.deepStrictEqual(optimize(input), expected);
+});
