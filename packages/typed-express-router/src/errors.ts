@@ -20,3 +20,21 @@ export function defaultOnEncodeError(
   res.status(500).end();
   console.warn(`Error in route handler: ${err}`);
 }
+
+export function defaultOnRequestTransformError(
+  err: unknown,
+  _req: express.Request,
+  res: express.Response,
+) {
+  res.status(500).end();
+  console.warn(`Error in route handler: ${err}`);
+}
+
+export function defaultOnResponseTransformError(
+  err: unknown,
+  _req: express.Request,
+  res: express.Response,
+) {
+  res.status(500).end();
+  console.warn(`Error in route handler: ${err}`);
+}

@@ -1,15 +1,22 @@
-import test from 'node:test';
 import { strict as assert } from 'node:assert';
+import test from 'node:test';
 
-import * as t from 'io-ts';
 import express from 'express';
+import * as t from 'io-ts';
 import supertest from 'supertest';
 
 import { apiSpec, httpRequest, httpRoute, optional } from '@api-ts/io-ts-http';
 import { buildApiClient, supertestRequestFactory } from '@api-ts/superagent-wrapper';
 
 import { createRouter } from '../src';
-import { TypedRequestHandler } from '../src/types';
+import {
+  OnRequestTransformErrorFn,
+  OnResponseTransformErrorFn,
+  RequestTypeTransformer,
+  ResponseTypeTransformer,
+  TransformedRequestHandler,
+  TypedRequestHandler,
+} from '../src/types';
 
 const PutHello = httpRoute({
   path: '/hello',
@@ -577,4 +584,88 @@ test('should throw on explicitly undefined route definition', async () => {
       },
     ]);
   });
+});
+
+test('should provide transformed request and response types', async () => {
+  const router = createRouter(TestApiSpec);
+
+  type TransformedInput = { newIdIn: string };
+  type TransformedResponses = { 200: { newIdOut: string } };
+
+  const requestTransformer: RequestTypeTransformer<
+    TestApiSpec,
+    'hello.world',
+    'get',
+    TransformedInput
+  > = (req): TransformedInput => {
+    return { newIdIn: req.decoded.id };
+  };
+
+  const transformReqErrHandler: OnRequestTransformErrorFn = (
+    err: unknown,
+    _req,
+    res,
+  ) => {
+    res
+      .status(500)
+      .json({ errorName: 'TransformRequestError', error: (err as Error).toString() })
+      .end();
+  };
+
+  const responseTransformer: ResponseTypeTransformer<
+    TestApiSpec,
+    'hello.world',
+    'get',
+    TransformedInput,
+    TransformedResponses
+  > = (
+    _req,
+    _status,
+    payload,
+  ): t.TypeOf<TestApiSpec['hello.world']['get']['response']['200']> => ({
+    id: payload.newIdOut,
+  });
+
+  const transformResErrHandler: OnResponseTransformErrorFn = (
+    err: unknown,
+    _req,
+    res,
+  ) => {
+    res
+      .status(500)
+      .json({ errorName: 'TransformResponseError', error: (err as Error).toString() })
+      .end();
+  };
+
+  const handler: TransformedRequestHandler<
+    TestApiSpec,
+    'hello.world',
+    'get',
+    TransformedInput,
+    TransformedResponses
+  > = (req, res) => {
+    res.sendEncoded(200, { newIdOut: req.transformed.newIdIn });
+  };
+
+  router.getTransformed(
+    'hello.world',
+    [{ requestTransformer, responseTransformer, handler }],
+    {
+      onRequestTransformError: transformReqErrHandler,
+      onResponseTransformError: transformResErrHandler,
+    },
+  );
+
+  const app = express();
+  app.use(express.json());
+  app.use(router);
+
+  const server = supertest(app);
+  const apiClient = buildApiClient(supertestRequestFactory(server), TestApiSpec);
+  const response = await apiClient['hello.world']
+    .get({ id: '123' })
+    .decodeExpecting(200);
+
+  assert.equal(response.original.status, 200);
+  assert.equal(response.body.id, '123');
 });

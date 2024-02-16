@@ -96,6 +96,108 @@ typedRouter.get('hello.world', [HelloWorldHandler], {
 });
 ```
 
+### Transformations and error handlers
+
+In order to decouple handlers from an API Spec, facilities are provided for applying
+transformations to request body after they are decoded, and applying transformations to
+response body before they are encoded.
+
+```ts
+// Create an error handler for errors that result while attempting transformation of a decoded request body
+const transformReqErrHandler: OnRequestTransformErrorFn = (err: unknown, _req, res) => {
+  res
+    .status(500)
+    .json({ errorName: 'TransformRequestError', error: E.toError(err).toString() })
+    .end();
+};
+
+// Create an error handler for errors that result while attempting transformation of an unencoded response body
+const transformResErrHandler: OnResponseTransformErrorFn = (
+  err: unknown,
+  _req,
+  res,
+) => {
+  res
+    .status(500)
+    .json({ errorName: 'TransformResponseError', error: E.toError(err).toString() })
+    .end();
+};
+
+// Override the default error handlers for all routes
+const typedRouter = createRouter(MyApi, {
+  onRequestTransformError: transformReqErrHandler,
+  onResponseTransformError: transformResErrHandler,
+});
+```
+
+We can now define routes with route-specific transformations. In the below example we
+have defined an API Spec such that an `id` attribute of type `string` will be provided
+to the handler, by default. By using a request transformer, we will transform this input
+to `newIdIn` of type `string`, which will be provided to the handler instead.
+
+```ts
+type TransformedInput = { newIdIn: string };
+
+const requestTransformer: RequestTypeTransformer<
+  MyApiSpec, // Api Spec
+  'hello.world', // API Name
+  'get', // Method
+  TransformedInput // Output of the transformation
+> = (req): TransformedInput => {
+  return { newIdIn: req.decoded.id };
+};
+```
+
+Similarly, we will define a response transformer that will accept output from the
+handler in the form of `newIdOut` of type `string` and provide `id` of type `string` to
+the encoder instead.
+
+```ts
+// Input to the transformation function, per status, for a specific route (the output of the handler)
+type TransformedResponses = { 200: { newIdOut: string } };
+
+const responseTransformer: ResponseTypeTransformer<
+  TestApiSpec, // Api Spec
+  'hello.world', // Api Name
+  'get', // Method
+  TransformedInput, // Output of the request transformation
+  TransformedResponses // Input to the transformation function
+> = (
+  _req,
+  _status,
+  payload,
+): t.TypeOf<TestApiSpec['hello.world']['get']['response']['200']> => ({
+  id: payload.newIdOut,
+});
+```
+
+We can now define our handler as such:
+
+```ts
+const handler: TransformedRequestHandler<
+  TestApiSpec,
+  'hello.world',
+  'get',
+  TransformedInput,
+  TransformedResponses
+> = (req, res) => {
+  res.sendEncoded(200, { newIdOut: req.transformed.newIdIn });
+};
+```
+
+And finally specify the transformations for the route at definition time:
+
+```ts
+router.getTransformed(
+  'hello.world',
+  [{ requestTransformer, responseTransformer, handler }],
+  {
+    onRequestTransformError: transformReqErrHandler, // route-level override, optional
+    onResponseTransformError: transformResErrHandler, // route-level override, optional
+  },
+);
+```
+
 ### Unchecked routes
 
 If you need custom behavior on decode errors that is more involved than just sending an

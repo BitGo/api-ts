@@ -6,12 +6,21 @@ import { ApiSpec, HttpRoute, KeyToHttpStatus } from '@api-ts/io-ts-http';
 import express from 'express';
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/pipeable';
-import { defaultOnDecodeError, defaultOnEncodeError } from './errors';
+import {
+  defaultOnDecodeError,
+  defaultOnEncodeError,
+  defaultOnRequestTransformError,
+  defaultOnResponseTransformError,
+} from './errors';
 import { apiTsPathToExpress } from './path';
 import {
   AddRouteHandler,
+  AddTransformedRouteHandler,
   AddUncheckedRouteHandler,
+  ApiNamesWithMethod,
   Methods,
+  TransformedRequest,
+  TypedRequestHandler,
   UncheckedRequestHandler,
   WrappedRequest,
   WrappedResponse,
@@ -26,11 +35,11 @@ export type {
   OnEncodeErrorFn,
   TypedRequestHandler,
   UncheckedRequestHandler,
-  WrappedRouter,
-  WrappedRouteOptions,
-  WrappedRouterOptions,
   WrappedRequest,
   WrappedResponse,
+  WrappedRouteOptions,
+  WrappedRouter,
+  WrappedRouterOptions,
 } from './types';
 
 /**
@@ -45,7 +54,9 @@ export function createRouter<Spec extends ApiSpec>(
   {
     onDecodeError,
     onEncodeError,
-    afterEncodedResponseSent,
+    afterEncodedResponseSent = () => {},
+    onRequestTransformError = defaultOnRequestTransformError,
+    onResponseTransformError = defaultOnResponseTransformError,
     ...options
   }: WrappedRouterOptions = {},
 ): WrappedRouter<Spec> {
@@ -54,6 +65,8 @@ export function createRouter<Spec extends ApiSpec>(
     onDecodeError,
     onEncodeError,
     afterEncodedResponseSent,
+    onRequestTransformError,
+    onResponseTransformError,
   });
 }
 
@@ -72,6 +85,8 @@ export function wrapRouter<Spec extends ApiSpec>(
     onDecodeError = defaultOnDecodeError,
     onEncodeError = defaultOnEncodeError,
     afterEncodedResponseSent = () => {},
+    onRequestTransformError = defaultOnRequestTransformError,
+    onResponseTransformError = defaultOnResponseTransformError,
   }: WrappedRouteOptions,
 ): WrappedRouter<Spec> {
   const routerMiddleware: UncheckedRequestHandler[] = [];
@@ -151,32 +166,92 @@ export function wrapRouter<Spec extends ApiSpec>(
     };
   }
 
+  function makeValidateMiddleware<
+    ApiName extends ApiNamesWithMethod<Spec, Method>,
+    Method extends Methods,
+  >(
+    apiName: ApiName,
+    options?: WrappedRouteOptions,
+  ): UncheckedRequestHandler<Spec, typeof apiName, Method> {
+    return (req, res, next) =>
+      pipe(
+        req.decoded,
+        E.matchW(
+          (errs) => {
+            (options?.onDecodeError ?? onDecodeError)(errs, req, res);
+          },
+          (value) => {
+            req.decoded = value;
+            next();
+          },
+        ),
+      );
+  }
+
   function makeAddRoute<Method extends Methods>(
     method: Method,
   ): AddRouteHandler<Spec, Method> {
-    return (apiName, handlers, options) => {
-      const validateMiddleware: UncheckedRequestHandler<
-        Spec,
-        typeof apiName,
-        Method
-      > = (req, res, next) => {
-        pipe(
-          req.decoded,
-          E.matchW(
-            (errs) => {
-              (options?.onDecodeError ?? onDecodeError)(errs, req, res);
-            },
-            (value) => {
-              req.decoded = value;
-              next();
-            },
-          ),
-        );
-      };
+    return (apiName, handlers, options) =>
+      makeAddUncheckedRoute(method)(
+        apiName,
+        [
+          makeValidateMiddleware(apiName, options),
+          ...(handlers as express.RequestHandler[]),
+        ],
+        options,
+      );
+  }
 
+  function makeAddTransformedRoute<Method extends Methods>(
+    method: Method,
+  ): AddTransformedRouteHandler<Spec, Method> {
+    return (apiName, handlers, options) => {
+      const transformedHandlers = handlers.map(
+        ({
+          requestTransformer,
+          responseTransformer,
+          handler,
+        }): TypedRequestHandler<Spec, typeof apiName, Method> =>
+          (req, res, next): void => {
+            const newReq = req as TransformedRequest<
+              Parameters<typeof handler>[0]['decoded'],
+              Parameters<typeof handler>[0]['transformed']
+            >;
+            // types dont overlap wrt sendEncoded's payload parameter,
+            // but this is very much expected because we are transforming the payload
+            // from WrappedResponse<TypeOfProps<NonNullable<Spec[ApiName][Method]>["response"]>>
+            // to TransformedResponse<Spec, ApiName, Method, TransformedRes>
+            const newRes = res as unknown as Parameters<typeof handler>[1];
+            try {
+              newReq.transformed = requestTransformer(req);
+            } catch (err) {
+              const errorHandler =
+                options?.onRequestTransformError ?? onRequestTransformError;
+              errorHandler(err, newReq, newRes);
+              return;
+            }
+            const underlyingSendEncoded = res.sendEncoded;
+            newRes.sendEncoded = (status, payload) => {
+              let transformedPayload;
+              try {
+                transformedPayload = responseTransformer(newReq, status, payload);
+              } catch (err) {
+                const errorHandler =
+                  options?.onResponseTransformError ?? onResponseTransformError;
+                errorHandler(err, newReq, newRes);
+                return;
+              }
+              underlyingSendEncoded(status, transformedPayload);
+            };
+            handler(newReq, newRes, next);
+          },
+      );
       return makeAddUncheckedRoute(method)(
         apiName,
-        [validateMiddleware, ...(handlers as express.RequestHandler[])],
+        [
+          makeValidateMiddleware(apiName, options),
+          ...(transformedHandlers as express.RequestHandler[]),
+        ],
         options,
       );
     };
@@ -192,6 +267,11 @@ export function wrapRouter<Spec extends ApiSpec>(
       put: makeAddRoute('put'),
       delete: makeAddRoute('delete'),
       patch: makeAddRoute('patch'),
+      getTransformed: makeAddTransformedRoute('get'),
+      postTransformed: makeAddTransformedRoute('post'),
+      putTransformed: makeAddTransformedRoute('put'),
+      deleteTransformed: makeAddTransformedRoute('delete'),
+      patchTransformed: makeAddTransformedRoute('patch'),
       getUnchecked: makeAddUncheckedRoute('get'),
       postUnchecked: makeAddUncheckedRoute('post'),
       putUnchecked: makeAddUncheckedRoute('put'),
