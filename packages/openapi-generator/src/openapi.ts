@@ -173,6 +173,13 @@ export function convertRoutesToOpenAPI(
       const openapiSchema = schemaToOpenAPI(schema);
       if (openapiSchema === undefined) {
         return acc;
+      } else if ('$ref' in openapiSchema) {
+        return {
+          ...acc,
+          [name]: {
+            allOf: [{ title: name }, openapiSchema],
+          },
+        };
       } else {
         return {
           ...acc,
