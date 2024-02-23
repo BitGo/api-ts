@@ -10,6 +10,7 @@ import {
   parseRoute,
   Project,
   type Route,
+  type Schema,
 } from '../src';
 
 async function testCase(
@@ -23,6 +24,7 @@ async function testCase(
 
     const project = new Project();
     const routes: Route[] = [];
+    const schemas: Record<string, Schema> = {};
     const errors: string[] = [];
     for (const symbol of sourceFile.symbols.declarations) {
       if (symbol.init !== undefined) {
@@ -36,7 +38,7 @@ async function testCase(
         }
         const result = parseRoute(project, routeSchemaE.right);
         if (E.isLeft(result)) {
-          errors.push(result.left);
+          schemas[symbol.name] = routeSchemaE.right;
         } else {
           routes.push(result.right);
         }
@@ -46,7 +48,7 @@ async function testCase(
     const actual = convertRoutesToOpenAPI(
       { title: 'Test', version: '1.0.0' },
       routes,
-      {},
+      schemas,
     );
 
     assert.deepStrictEqual(errors, expectedErrors);
@@ -536,5 +538,148 @@ testCase('object with no required properties', EMPTY_REQUIRED, {
   },
   components: {
     schemas: {},
+  },
+});
+
+const SCHEMA_REF = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: t.type({
+    body: Foo,
+  }),
+  response: {
+    /** foo response */
+    200: t.string
+  },
+});
+
+const Foo = t.type({ foo: t.string });
+`;
+
+testCase('request body ref', SCHEMA_REF, {
+  openapi: '3.0.0',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Foo',
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'foo response',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Foo: {
+        title: 'Foo',
+        type: 'object',
+        properties: {
+          foo: {
+            type: 'string',
+          },
+        },
+        required: ['foo'],
+      },
+    },
+  },
+});
+
+const SCHEMA_DOUBLE_REF = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: t.type({
+    body: Bar,
+  }),
+  response: {
+    /** foo response */
+    200: t.string
+  },
+});
+
+const Foo = t.type({ foo: t.string });
+
+const Bar = Foo;
+`;
+
+testCase('request body double ref', SCHEMA_DOUBLE_REF, {
+  openapi: '3.0.0',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/Bar',
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'foo response',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Foo: {
+        title: 'Foo',
+        type: 'object',
+        properties: {
+          foo: {
+            type: 'string',
+          },
+        },
+        required: ['foo'],
+      },
+      Bar: {
+        allOf: [{ title: 'Bar' }, { $ref: '#/components/schemas/Foo' }],
+      },
+    },
   },
 });
