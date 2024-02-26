@@ -6,6 +6,11 @@ export function leadingComment(
   start: number,
   end: number,
 ): Block[] {
-  const commentString = src.slice(start - srcSpanStart, end - srcSpanStart);
+  let commentString = src.slice(start - srcSpanStart, end - srcSpanStart);
+
+  if (commentString.trim()[0] !== '/') {
+    commentString = '/' + commentString;
+  }
+
   return parseComment(commentString);
 }

@@ -540,6 +540,85 @@ testCase('declaration comment is parsed', DECLARATION_COMMENT, {
   },
 });
 
+const DECLARATION_COMMENT_WITHOUT_LINE_BREAK = `
+import * as t from 'io-ts';
+/**
+ * Test codec
+ */
+export const FOO = t.number;
+`;
+
+testCase(
+  'declaration comment without line break is parsed',
+  DECLARATION_COMMENT_WITHOUT_LINE_BREAK,
+  {
+    FOO: {
+      type: 'number',
+      comment: {
+        description: 'Test codec',
+        tags: [],
+        source: [
+          {
+            number: 0,
+            source: '/**',
+            tokens: {
+              start: '',
+              delimiter: '/**',
+              postDelimiter: '',
+              tag: '',
+              postTag: '',
+              name: '',
+              postName: '',
+              type: '',
+              postType: '',
+              description: '',
+              end: '',
+              lineEnd: '',
+            },
+          },
+          {
+            number: 1,
+            source: ' * Test codec',
+            tokens: {
+              start: ' ',
+              delimiter: '*',
+              postDelimiter: ' ',
+              tag: '',
+              postTag: '',
+              name: '',
+              postName: '',
+              type: '',
+              postType: '',
+              description: 'Test codec',
+              end: '',
+              lineEnd: '',
+            },
+          },
+          {
+            number: 2,
+            source: ' */',
+            tokens: {
+              start: ' ',
+              delimiter: '',
+              postDelimiter: '',
+              tag: '',
+              postTag: '',
+              name: '',
+              postName: '',
+              type: '',
+              postType: '',
+              description: '',
+              end: '*/',
+              lineEnd: '',
+            },
+          },
+        ],
+        problems: [],
+      },
+    },
+  },
+);
+
 const FIRST_PROPERTY_COMMENT = `
 import * as t from 'io-ts';
 export const FOO = t.type({
