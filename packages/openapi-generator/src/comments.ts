@@ -6,11 +6,39 @@ export function leadingComment(
   start: number,
   end: number,
 ): Block[] {
-  let commentString = src.slice(start - srcSpanStart, end - srcSpanStart);
+  let commentString = src.slice(start - srcSpanStart, end - srcSpanStart).trim();
 
-  if (commentString.trim()[0] !== '/') {
-    commentString = '/' + commentString;
+  if (commentString.includes(' * ') && !/\/\*\*([\s\S]*?)\*\//.test(commentString)) {
+    // The comment block seems to be JSDoc but was sliced incorrectly
+
+    const beginningSubstring = '/**\n';
+    const endingSubstring = '\n */';
+
+    if (commentString.includes(beginningSubstring)) {
+      commentString = beginningSubstring + commentString.split(beginningSubstring)[1];
+    } else {
+      switch (commentString.split('\n')[0]) {
+        case '**':
+          commentString = '/' + commentString;
+          break;
+        case '*':
+          commentString = '/*' + commentString;
+          break;
+        case '':
+          commentString = '/**' + commentString;
+          break;
+        default:
+          commentString = beginningSubstring + commentString;
+          break;
+      }
+    }
+
+    if (commentString.includes(endingSubstring)) {
+      commentString = commentString.split(endingSubstring)[0] as string;
+    }
+    commentString = commentString + endingSubstring;
   }
 
-  return parseComment(commentString);
+  const parsedComment = parseComment(commentString);
+  return parsedComment;
 }
