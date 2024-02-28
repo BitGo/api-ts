@@ -683,3 +683,139 @@ testCase('request body double ref', SCHEMA_DOUBLE_REF, {
     },
   },
 });
+
+const TITLE_TAG = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const oneOfRoute = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: t.union([
+    h.httpRequest({
+      /** @title this is a title for a oneOf option */
+      query: {
+        /** @title this is a title for a oneOf option's property */
+        foo: t.string
+      }
+    }),
+    h.httpRequest({
+      query: {
+        bar: t.string
+      }
+    }),
+  ]),
+  response: {
+    /** foo response */
+    200: t.string
+  },
+});
+
+export const route = h.httpRoute({
+  path: '/bar',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /**
+       * bar param
+       * @title this is a bar parameter
+       * */
+      bar: t.string,
+    },
+  }),
+  response: {
+    /** bar response */
+    200: t.string
+  },
+});
+`;
+
+testCase('schema parameter with title tag', TITLE_TAG, {
+  openapi: '3.0.0',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [
+          {
+            in: 'query',
+            name: 'union',
+            required: true,
+            style: 'form',
+            explode: true,
+            schema: {
+              oneOf: [
+                {
+                  type: 'object',
+                  title: 'this is a title for a oneOf option',
+                  properties: {
+                    foo: {
+                      type: 'string',
+                      title: "this is a title for a oneOf option's property",
+                    },
+                  },
+                  required: ['foo'],
+                },
+                {
+                  type: 'object',
+                  properties: {
+                    bar: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['bar'],
+                },
+              ],
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'foo response',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/bar': {
+      get: {
+        parameters: [
+          {
+            in: 'query',
+            name: 'bar',
+            description: 'bar param',
+            required: true,
+            schema: {
+              title: 'this is a bar parameter',
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'bar response',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
