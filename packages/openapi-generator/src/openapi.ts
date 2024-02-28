@@ -11,87 +11,104 @@ function schemaToOpenAPI(
 ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined {
   schema = optimize(schema);
 
-  switch (schema.type) {
-    case 'boolean':
-    case 'string':
-    case 'number':
-      return { type: schema.type, ...(schema.enum ? { enum: schema.enum } : {}) };
-    case 'integer':
-      return { type: 'number', ...(schema.enum ? { enum: schema.enum } : {}) };
-    case 'null':
-      // TODO: OpenAPI v3 does not have an explicit null type, is there a better way to represent this?
-      // Or should we just conflate explicit null and undefined properties?
-      return { nullable: true, enum: [] };
-    case 'ref':
-      return { $ref: `#/components/schemas/${schema.name}` };
-    case 'array':
-      const innerSchema = schemaToOpenAPI(schema.items);
-      if (innerSchema === undefined) {
-        return undefined;
-      }
-      return { type: 'array', items: innerSchema };
-    case 'object':
-      return {
-        type: 'object',
-        properties: Object.entries(schema.properties).reduce(
-          (acc, [name, prop]) => {
-            const innerSchema = schemaToOpenAPI(prop);
-            if (innerSchema === undefined) {
-              return acc;
-            }
+  const createOpenAPIObject = (
+    schema: Schema,
+  ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined => {
+    switch (schema.type) {
+      case 'boolean':
+      case 'string':
+      case 'number':
+        return { type: schema.type, ...(schema.enum ? { enum: schema.enum } : {}) };
+      case 'integer':
+        return { type: 'number', ...(schema.enum ? { enum: schema.enum } : {}) };
+      case 'null':
+        // TODO: OpenAPI v3 does not have an explicit null type, is there a better way to represent this?
+        // Or should we just conflate explicit null and undefined properties?
+        return { nullable: true, enum: [] };
+      case 'ref':
+        return { $ref: `#/components/schemas/${schema.name}` };
+      case 'array':
+        const innerSchema = schemaToOpenAPI(schema.items);
+        if (innerSchema === undefined) {
+          return undefined;
+        }
+        return { type: 'array', items: innerSchema };
+      case 'object':
+        return {
+          type: 'object',
+          properties: Object.entries(schema.properties).reduce(
+            (acc, [name, prop]) => {
+              const innerSchema = schemaToOpenAPI(prop);
+              if (innerSchema === undefined) {
+                return acc;
+              }
 
-            return { ...acc, [name]: innerSchema };
-          },
-          {} as Record<string, OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject>,
-        ),
-        ...(schema.required.length > 0 ? { required: schema.required } : {}),
-      };
-    case 'intersection':
-      return {
-        allOf: schema.schemas.flatMap((s) => {
-          const innerSchema = schemaToOpenAPI(s);
-          if (innerSchema === undefined) {
-            return [];
+              return { ...acc, [name]: innerSchema };
+            },
+            {} as Record<string, OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject>,
+          ),
+          ...(schema.required.length > 0 ? { required: schema.required } : {}),
+        };
+      case 'intersection':
+        return {
+          allOf: schema.schemas.flatMap((s) => {
+            const innerSchema = schemaToOpenAPI(s);
+            if (innerSchema === undefined) {
+              return [];
+            }
+            return [innerSchema];
+          }),
+        };
+      case 'union':
+        let nullable = false;
+        let oneOf: (OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject)[] = [];
+        for (const s of schema.schemas) {
+          if (s.type === 'null') {
+            nullable = true;
+            continue;
           }
-          return [innerSchema];
-        }),
-      };
-    case 'union':
-      let nullable = false;
-      let oneOf: (OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject)[] = [];
-      for (const s of schema.schemas) {
-        if (s.type === 'null') {
-          nullable = true;
-          continue;
+          const innerSchema = schemaToOpenAPI(s);
+          if (innerSchema !== undefined) {
+            oneOf.push(innerSchema);
+          }
         }
-        const innerSchema = schemaToOpenAPI(s);
-        if (innerSchema !== undefined) {
-          oneOf.push(innerSchema);
+        if (oneOf.length === 0) {
+          return undefined;
+        } else if (oneOf.length === 1) {
+          return { ...(nullable ? { nullable } : {}), ...oneOf[0] };
+        } else {
+          return { ...(nullable ? { nullable } : {}), oneOf };
         }
-      }
-      if (oneOf.length === 0) {
+      case 'record':
+        const additionalProperties = schemaToOpenAPI(schema.codomain);
+        if (additionalProperties === undefined) {
+          return undefined;
+        }
+        return {
+          type: 'object',
+          additionalProperties,
+        };
+      case 'undefined':
         return undefined;
-      } else if (oneOf.length === 1) {
-        return { ...(nullable ? { nullable } : {}), ...oneOf[0] };
-      } else {
-        return { ...(nullable ? { nullable } : {}), oneOf };
-      }
-    case 'record':
-      const additionalProperties = schemaToOpenAPI(schema.codomain);
-      if (additionalProperties === undefined) {
-        return undefined;
-      }
-      return {
-        type: 'object',
-        additionalProperties,
-      };
-    case 'undefined':
-      return undefined;
-    case 'any':
-      return {};
-    default:
-      return {};
+      case 'any':
+        return {};
+      default:
+        return {};
+    }
+  };
+
+  const titleObject = schema.comment?.tags.find((t) => t.tag === 'title');
+
+  let openAPIObject = createOpenAPIObject(schema);
+
+  if (titleObject !== undefined) {
+    openAPIObject = {
+      ...openAPIObject,
+      title: `${titleObject.name} ${titleObject.description}`.trim(),
+    };
   }
+
+  return openAPIObject;
 }
 
 function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObject] {
