@@ -112,3 +112,35 @@ test('enums are deduplicated', () => {
 
   assert.deepStrictEqual(optimize(input), expected);
 });
+
+test('comments are exposed in objects', () => {
+  const input: Schema = {
+    type: 'object',
+    properties: {
+      bar: { type: 'string' },
+    },
+    required: [],
+    comment: {
+      description: 'test description',
+      tags: [],
+      source: [],
+      problems: [],
+    },
+  };
+
+  const expected: Schema = {
+    type: 'object',
+    properties: {
+      bar: { type: 'string' },
+    },
+    required: [],
+    comment: {
+      description: 'test description',
+      tags: [],
+      source: [],
+      problems: [],
+    },
+  };
+
+  assert.deepStrictEqual(optimize(input), expected);
+});

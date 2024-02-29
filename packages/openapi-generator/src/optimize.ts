@@ -111,7 +111,15 @@ export function optimize(schema: Schema): Schema {
         required.push(key);
       }
     }
-    return { type: 'object', properties, required };
+
+    const schemaObject: Schema = { type: 'object', properties, required };
+
+    // only add comment field if there is a comment
+    if (schema.comment) {
+      return { ...schemaObject, comment: schema.comment };
+    }
+
+    return schemaObject;
   } else if (schema.type === 'intersection') {
     return foldIntersection(schema, optimize);
   } else if (schema.type === 'union') {
