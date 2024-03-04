@@ -27,7 +27,7 @@
   "pre-commit": "lint-staged",
   "devDependencies": {
     "@semantic-release-extras/github-comment-specific": "1.0.7",
-    "@semantic-release/npm": "11.0.2",
+    "@semantic-release/npm": "11.0.3",
     "@types/node": "20.11.0",
     "lint-staged": "15.2.2",
     "multi-semantic-release": "3.0.2",
