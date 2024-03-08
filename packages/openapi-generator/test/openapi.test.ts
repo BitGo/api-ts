@@ -109,7 +109,7 @@ export const internalRoute = h.httpRoute({
 `;
 
 testCase('simple route', SIMPLE, {
-  openapi: '3.0.0',
+  openapi: '3.0.3',
   info: {
     title: 'Test',
     version: '1.0.0',
@@ -207,7 +207,7 @@ export const route = h.httpRoute({
 `;
 
 testCase('request body route', REQUEST_BODY, {
-  openapi: '3.0.0',
+  openapi: '3.0.3',
   info: {
     title: 'Test',
     version: '1.0.0',
@@ -278,7 +278,7 @@ export const route = h.httpRoute({
 `;
 
 testCase('request union route', UNION, {
-  openapi: '3.0.0',
+  openapi: '3.0.3',
   info: {
     title: 'Test',
     version: '1.0.0',
@@ -357,7 +357,7 @@ export const route = h.httpRoute({
 `;
 
 testCase('nullable property route', NULLABLE_PROPERTY, {
-  openapi: '3.0.0',
+  openapi: '3.0.3',
   info: {
     title: 'Test',
     version: '1.0.0',
@@ -433,7 +433,7 @@ export const route = h.httpRoute({
 `;
 
 testCase('source file with a header comment', HEADER_COMMENT, {
-  openapi: '3.0.0',
+  openapi: '3.0.3',
   info: {
     title: 'Test',
     version: '1.0.0',
@@ -492,7 +492,7 @@ export const route = h.httpRoute({
 
 // Test that `required` is not emitted as an empty array
 testCase('object with no required properties', EMPTY_REQUIRED, {
-  openapi: '3.0.0',
+  openapi: '3.0.3',
   info: {
     title: 'Test',
     version: '1.0.0',
@@ -561,7 +561,7 @@ const Foo = t.type({ foo: t.string });
 `;
 
 testCase('request body ref', SCHEMA_REF, {
-  openapi: '3.0.0',
+  openapi: '3.0.3',
   info: {
     title: 'Test',
     version: '1.0.0',
@@ -632,7 +632,7 @@ const Bar = Foo;
 `;
 
 testCase('request body double ref', SCHEMA_DOUBLE_REF, {
-  openapi: '3.0.0',
+  openapi: '3.0.3',
   info: {
     title: 'Test',
     version: '1.0.0',
@@ -731,7 +731,7 @@ export const route = h.httpRoute({
 `;
 
 testCase('schema parameter with title tag', TITLE_TAG, {
-  openapi: '3.0.0',
+  openapi: '3.0.3',
   info: {
     title: 'Test',
     version: '1.0.0',
