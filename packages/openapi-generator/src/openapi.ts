@@ -211,7 +211,7 @@ export function convertRoutesToOpenAPI(
   );
 
   return {
-    openapi: '3.0.0',
+    openapi: '3.0.3',
     info,
     paths,
     components: {
