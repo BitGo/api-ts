@@ -20,7 +20,7 @@
     "test": "c8 --all --src src node --require @swc-node/register --test test/*.test.ts"
   },
   "dependencies": {
-    "@swc/core": "1.4.5",
+    "@swc/core": "1.4.6",
     "cmd-ts": "0.13.0",
     "comment-parser": "1.4.1",
     "fp-ts": "2.16.2",
@@ -37,8 +37,8 @@
     "typescript": "4.7.4"
   },
   "optionalDependencies": {
-    "@swc/core-linux-x64-gnu": "1.4.5",
-    "@swc/core-darwin-arm64": "1.4.5"
+    "@swc/core-linux-x64-gnu": "1.4.6",
+    "@swc/core-darwin-arm64": "1.4.6"
   },
   "publishConfig": {
     "access": "public"
