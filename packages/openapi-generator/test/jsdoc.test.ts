@@ -23,7 +23,7 @@ test('comment with description only', () => {
     summary: 'A simple route',
   };
 
-  assert.deepStrictEqual(parseJSDoc(comment), expected);
+  assert.deepEqual(parseJSDoc(comment), expected);
 });
 
 test('comment with description and summary', () => {
@@ -40,7 +40,7 @@ test('comment with description and summary', () => {
     description: 'This is a description',
   };
 
-  assert.deepStrictEqual(parseJSDoc(comment), expected);
+  assert.deepEqual(parseJSDoc(comment), expected);
 });
 
 test('comment with description and summary with empty tags', () => {
@@ -64,7 +64,7 @@ test('comment with description and summary with empty tags', () => {
     },
   };
 
-  assert.deepStrictEqual(parseJSDoc(comment), expected);
+  assert.deepEqual(parseJSDoc(comment), expected);
 });
 
 test('comment with description and summary with tags', () => {
@@ -86,7 +86,7 @@ test('comment with description and summary with tags', () => {
     },
   };
 
-  assert.deepStrictEqual(parseJSDoc(comment), expected);
+  assert.deepEqual(parseJSDoc(comment), expected);
 });
 
 test('comment with description and multi-line markdown summary', () => {
@@ -107,7 +107,7 @@ test('comment with description and multi-line markdown summary', () => {
     description: 'This is a description\n\n```\nThis is a code block\n```',
   };
 
-  assert.deepStrictEqual(parseJSDoc(comment), expected);
+  assert.deepEqual(parseJSDoc(comment), expected);
 });
 
 test('comment with a summary and tags', () => {
@@ -126,7 +126,7 @@ test('comment with a summary and tags', () => {
     },
   };
 
-  assert.deepStrictEqual(parseJSDoc(comment), expected);
+  assert.deepEqual(parseJSDoc(comment), expected);
 });
 
 test('comment with a summary, description, and a tag in the middle of the description', () => {
@@ -150,5 +150,5 @@ test('comment with a summary, description, and a tag in the middle of the descri
     },
   };
 
-  assert.deepStrictEqual(parseJSDoc(comment), expected);
+  assert.deepEqual(parseJSDoc(comment), expected);
 });

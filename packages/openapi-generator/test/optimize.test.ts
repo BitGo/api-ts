@@ -33,7 +33,7 @@ test('intersections are simplified', () => {
     required: ['foo'],
   };
 
-  assert.deepStrictEqual(optimize(input), expected);
+  assert.deepEqual(optimize(input), expected);
 });
 
 test('unions are combined', () => {
@@ -47,7 +47,7 @@ test('unions are combined', () => {
 
   const expected: Schema = { type: 'string', enum: ['foo', 'bar'] };
 
-  assert.deepStrictEqual(optimize(input), expected);
+  assert.deepEqual(optimize(input), expected);
 });
 
 test('undefined properties are simplified', () => {
@@ -68,7 +68,7 @@ test('undefined properties are simplified', () => {
     required: [],
   };
 
-  assert.deepStrictEqual(optimize(input), expected);
+  assert.deepEqual(optimize(input), expected);
 });
 
 test('undefined property unions are simplified', () => {
@@ -93,7 +93,7 @@ test('undefined property unions are simplified', () => {
     required: ['bar'],
   };
 
-  assert.deepStrictEqual(optimize(input), expected);
+  assert.deepEqual(optimize(input), expected);
 });
 
 test('enums are deduplicated', () => {
@@ -110,7 +110,7 @@ test('enums are deduplicated', () => {
     enum: ['foo', 'bar'],
   };
 
-  assert.deepStrictEqual(optimize(input), expected);
+  assert.deepEqual(optimize(input), expected);
 });
 
 test('comments are exposed in objects', () => {
@@ -142,5 +142,5 @@ test('comments are exposed in objects', () => {
     },
   };
 
-  assert.deepStrictEqual(optimize(input), expected);
+  assert.deepEqual(optimize(input), expected);
 });
