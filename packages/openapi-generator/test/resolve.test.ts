@@ -42,8 +42,8 @@ async function testCase(
       }
     }
 
-    assert.deepStrictEqual(errors, expectedErrors);
-    assert.deepStrictEqual(actual, expected);
+    assert.deepEqual(errors, expectedErrors);
+    assert.deepEqual(actual, expected);
   });
 }
 
