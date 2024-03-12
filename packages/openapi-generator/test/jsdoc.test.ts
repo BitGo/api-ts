@@ -1,5 +1,5 @@
 import { parse as parseComment } from 'comment-parser';
-import assert from 'node:assert';
+import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { parseCommentBlock, type JSDoc } from '../src';

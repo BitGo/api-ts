@@ -1,5 +1,5 @@
 import * as E from 'fp-ts/lib/Either';
-import assert from 'node:assert';
+import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { NestedDirectoryJSON } from 'memfs';
 
