@@ -48,13 +48,16 @@ export const KNOWN_IMPORTS: KnownImports = {
   'io-ts': {
     string: () => E.right({ type: 'string' }),
     number: () => E.right({ type: 'number' }),
+    bigint: () => E.right({ type: 'number' }),
     boolean: () => E.right({ type: 'boolean' }),
     null: () => E.right({ type: 'null' }),
+    nullType: () => E.right({ type: 'null' }),
     undefined: () => E.right({ type: 'undefined' }),
     unknown: () => E.right({ type: 'any' }),
     any: () => E.right({ type: 'any' }),
     array: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
     readonlyArray: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
+    object: () => E.right({ type: 'object', properties: {}, required: [] }),
     type: (_, schema) => {
       if (schema.type !== 'object') {
         return E.left('typeC parameter must be object');
@@ -132,6 +135,7 @@ export const KNOWN_IMPORTS: KnownImports = {
     },
     brand: (_, arg) => E.right(arg),
     UnknownRecord: () => E.right({ type: 'record', codomain: { type: 'any' } }),
+    void: () => E.right({ type: 'undefined' }),
   },
   'io-ts-types': {
     BigIntFromString: () => E.right({ type: 'string' }),
@@ -149,8 +153,12 @@ export const KNOWN_IMPORTS: KnownImports = {
       E.right({ type: 'array', items: innerSchema }),
     UUID: () => E.right({ type: 'string' }),
     Json: () => E.right({ type: 'any' }),
+    JsonRecord: () => E.right({ type: 'record', codomain: { type: 'any' } }),
     withFallback: (_, schema, fallback) =>
       E.right({ type: 'union', schemas: [schema, fallback] }),
+    fromNullable: (_, schema) =>
+      E.right({ type: 'union', schemas: [schema, { type: 'null' }] }),
+    date: () => E.right({ type: 'string', format: 'date' }),
   },
   '@api-ts/io-ts-http': {
     optional: (_, innerSchema) =>
