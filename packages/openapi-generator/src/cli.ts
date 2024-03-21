@@ -47,6 +47,12 @@ const app = command({
       long: 'version',
       short: 'v',
     }),
+    description: option({
+      type: optional(string),
+      description: 'API description',
+      long: 'description',
+      short: 'd',
+    }),
     includeInternal: flag({
       type: boolean,
       description: 'include routes marked private',
@@ -65,6 +71,7 @@ const app = command({
     input,
     name: nameParam,
     version: versionParam,
+    description: descriptionParam,
     codecFile: codecFileParam,
   }) => {
     const filePath = p.resolve(input);
@@ -77,6 +84,8 @@ const app = command({
 
     const name = nameParam ?? packageJson['name'] ?? 'openapi-generator';
     const version = versionParam ?? packageJson['version'] ?? '0.0.1';
+    const description =
+      descriptionParam ?? packageJson['description'] ?? `API speck for ${name}`;
 
     let codecFile: string | undefined = codecFileParam;
     if (
@@ -193,7 +202,8 @@ const app = command({
     const openapi = convertRoutesToOpenAPI(
       {
         title: name,
-        version: version,
+        version,
+        description,
       },
       apiSpec,
       components,
