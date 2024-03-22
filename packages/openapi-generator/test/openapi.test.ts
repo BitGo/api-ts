@@ -819,3 +819,60 @@ testCase('schema parameter with title tag', TITLE_TAG, {
     schemas: {},
   },
 });
+
+const OPTIONAL_PARAM = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      foo: h.optional(t.string),
+    },
+  }),
+  response: {
+    /** foo response */
+    200: t.string
+  },
+});
+`;
+
+testCase('optional parameter', OPTIONAL_PARAM, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [
+          {
+            in: 'query',
+            name: 'foo',
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'foo response',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});

@@ -147,7 +147,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
             ? { description: p.schema.comment.description }
             : {}),
           in: p.type,
-          required: p.required,
+          ...(p.required ? { required: true } : {}),
           ...(p.explode ? { style: 'form', explode: true } : {}),
           schema: schema as any, // TODO: Something to disallow arrays
         };
