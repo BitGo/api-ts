@@ -85,7 +85,7 @@ const app = command({
     const name = nameParam ?? packageJson['name'] ?? 'openapi-generator';
     const version = versionParam ?? packageJson['version'] ?? '0.0.1';
     const description =
-      descriptionParam ?? packageJson['description'] ?? `API speck for ${name}`;
+      descriptionParam ?? packageJson['description'] ?? `API spec for ${name}`;
 
     let codecFile: string | undefined = codecFileParam;
     if (
