@@ -21,19 +21,14 @@
     "build": "npm run --workspaces build",
     "test": "npm run --workspaces --if-present test",
     "distclean": "rm -rf node_modules packages/*/node_modules",
-    "lint-staged": "lint-staged",
     "postinstall": "patch-package"
   },
-  "pre-commit": "lint-staged",
   "devDependencies": {
     "@semantic-release-extras/github-comment-specific": "1.0.7",
     "@semantic-release/npm": "11.0.3",
     "@types/node": "20.12.2",
-    "lint-staged": "15.2.2",
     "multi-semantic-release": "3.0.2",
     "patch-package": "8.0.0",
-    "pre-commit": "1.2.2",
-    "prettier": "3.2.5",
     "typescript": "4.6.4"
   },
   "engines": {
