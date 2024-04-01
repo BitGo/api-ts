@@ -25,7 +25,7 @@
   "devDependencies": {
     "@swc-node/register": "1.9.0",
     "@types/express": "4.17.21",
-    "@types/node": "20.11.0",
+    "@types/node": "20.12.2",
     "@types/superagent": "8.1.6",
     "@types/supertest": "6.0.2",
     "@types/whatwg-url": "11.0.0",
