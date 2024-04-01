@@ -20,21 +20,3 @@ jobs:
         uses: actions/checkout@v4
 
       - run: nix flake check
-
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure Node.js
-        uses: actions/setup-node@v4
-        with:
-          cache: npm
-          node-version: lts/*
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check code formatting
-        run: npm run format --workspaces
