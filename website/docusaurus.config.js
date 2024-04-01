@@ -4,10 +4,8 @@
 const lightCodeTheme = require('prism-react-renderer/themes/github');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
-const theme = require("shiki/themes/nord.json")
-const {
-  remarkCodeHike,
-} = require("@code-hike/mdx")
+const theme = require('shiki/themes/nord.json');
+const { remarkCodeHike } = require('@code-hike/mdx');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -38,31 +36,27 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          beforeDefaultRemarkPlugins: [
-            [remarkCodeHike, { theme }],
-          ],
+          beforeDefaultRemarkPlugins: [[remarkCodeHike, { theme }]],
           sidebarPath: require.resolve('./sidebars.js'),
           // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/BitGo/api-ts/tree/master/website/',
+          editUrl: 'https://github.com/BitGo/api-ts/tree/master/website/',
         },
         blog: {
           showReadingTime: true,
           // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/BitGo/api-ts/tree/master/website',
+          editUrl: 'https://github.com/BitGo/api-ts/tree/master/website',
         },
         theme: {
           customCss: [
-            require.resolve("@code-hike/mdx/styles.css"),
+            require.resolve('@code-hike/mdx/styles.css'),
             require.resolve('./src/css/custom.css'),
-          ]
+          ],
         },
       }),
     ],
   ],
 
-  themes: ["mdx-v2"],
+  themes: ['mdx-v2'],
 
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
