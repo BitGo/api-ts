@@ -16,7 +16,7 @@ import {
 async function testCase(
   description: string,
   src: string,
-  expected: OpenAPIV3_1.Document<{ 'x-internal'?: boolean }>,
+  expected: OpenAPIV3_1.Document<{ 'x-internal'?: boolean; 'x-unstable'?: boolean }>,
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
