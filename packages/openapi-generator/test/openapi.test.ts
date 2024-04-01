@@ -16,7 +16,7 @@ import {
 async function testCase(
   description: string,
   src: string,
-  expected: OpenAPIV3_1.Document<{ 'x-internal'?: boolean }>,
+  expected: OpenAPIV3_1.Document<{ 'x-internal'?: boolean; 'x-unstable'?: boolean }>,
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
@@ -106,6 +106,26 @@ export const internalRoute = h.httpRoute({
     200: t.string
   },
 });
+
+/**
+ * An unstable route
+ *
+ * @unstable
+ * @operationId api.v1.unstable
+ * @tag Unstable Routes
+ */
+export const unstableRoute = h.httpRoute({
+  path: '/unstable/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      foo: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
 `;
 
 testCase('simple route', SIMPLE, {
@@ -157,6 +177,36 @@ testCase('simple route', SIMPLE, {
         operationId: 'api.v1.private',
         tags: ['Internal Routes'],
         'x-internal': true,
+        parameters: [
+          {
+            in: 'query',
+            name: 'foo',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/unstable/foo': {
+      get: {
+        summary: 'An unstable route',
+        operationId: 'api.v1.unstable',
+        tags: ['Unstable Routes'],
+        'x-unstable': true,
         parameters: [
           {
             in: 'query',

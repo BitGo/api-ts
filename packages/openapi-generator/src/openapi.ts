@@ -116,6 +116,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
   const operationId = jsdoc.tags?.operationId;
   const tag = jsdoc.tags?.tag ?? '';
   const isInternal = jsdoc.tags?.private !== undefined;
+  const isUnstable = jsdoc.tags?.unstable !== undefined;
 
   const requestBody =
     route.body === undefined
@@ -137,6 +138,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
       ...(operationId !== undefined ? { operationId } : {}),
       ...(tag !== '' ? { tags: [tag] } : {}),
       ...(isInternal ? { 'x-internal': true } : {}),
+      ...(isUnstable ? { 'x-unstable': true } : {}),
       parameters: route.parameters.map((p) => {
         // Array types not allowed here
         const schema = schemaToOpenAPI(p.schema);
