@@ -60,6 +60,13 @@ const app = command({
       short: 'i',
       defaultValue: () => false,
     }),
+    includeUnstable: flag({
+      type: boolean,
+      description: 'include routes marked unstable',
+      long: 'unstable',
+      short: 'u',
+      defaultValue: () => false,
+    }),
     codecFile: option({
       type: optional(string),
       description: 'Custom codec definition file',
