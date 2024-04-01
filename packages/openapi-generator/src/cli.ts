@@ -1,15 +1,6 @@
 #!/usr/bin/env node
 
-import {
-  command,
-  run,
-  option,
-  string,
-  optional,
-  flag,
-  boolean,
-  positional,
-} from 'cmd-ts';
+import { command, run, option, string, optional, positional } from 'cmd-ts';
 import * as E from 'fp-ts/Either';
 import * as fs from 'fs';
 import * as p from 'path';
@@ -52,20 +43,6 @@ const app = command({
       description: 'API description',
       long: 'description',
       short: 'd',
-    }),
-    includeInternal: flag({
-      type: boolean,
-      description: 'include routes marked private',
-      long: 'internal',
-      short: 'i',
-      defaultValue: () => false,
-    }),
-    includeUnstable: flag({
-      type: boolean,
-      description: 'include routes marked unstable',
-      long: 'unstable',
-      short: 'u',
-      defaultValue: () => false,
     }),
     codecFile: option({
       type: optional(string),
