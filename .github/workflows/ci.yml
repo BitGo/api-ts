@@ -15,13 +15,11 @@ jobs:
     strategy:
       matrix:
         node-version:
-          # Skip lts/-2 while it refers to Node.js 14, since this version
-          # does not come with Node.js's built-in test runner.
-          # - lts/-2
-          # Skip lts/-1 while it refers to Node.js 16, since this version
+          # Skip lts/-2 while it refers to Node.js 16, since this version
           # ships with a segfault when collecting code coverage with
           # Node.js's built-in test runner.
-          # - lts/-1
+          # - lts/-2
+          - lts/-1
           - lts/*
 
     name: Node.js ${{ matrix.node-version }}
