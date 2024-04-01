@@ -25,8 +25,8 @@ type-checked and runtime-validated HTTP calls in a standardized manner.
 
 ## io-ts Compatibility
 
-**api-ts** is built and tested against the stable channel of io-ts (v2.1).
-**api-ts** is not currently compatible with the experimental channel of io-ts (v2.2).
+**api-ts** is built and tested against the stable channel of io-ts (v2.1). **api-ts** is
+not currently compatible with the experimental channel of io-ts (v2.2).
 
 ## Developing
 

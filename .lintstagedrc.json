@@ -1,6 +1,0 @@
-{
-  "*.json": ["prettier --write"],
-  "*.md": ["prettier --write"],
-  "*.ts": ["prettier --write"],
-  "*.yml": ["prettier --write"]
-}

@@ -18,8 +18,8 @@ jobs:
   run-scan:
     name: Trigger Renovate Scan
     if:
-      ${{ contains(github.event.pull_request.body, '[x] <!-- rebase-check -->')
-      && github.event.pull_request.user.login == 'bitgo-renovate-bot[bot]' }}
+      ${{ contains(github.event.pull_request.body, '[x] <!-- rebase-check -->') &&
+      github.event.pull_request.user.login == 'bitgo-renovate-bot[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - id: trigger-renovate-scan
