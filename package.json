@@ -28,7 +28,7 @@
   "devDependencies": {
     "@semantic-release-extras/github-comment-specific": "1.0.7",
     "@semantic-release/npm": "11.0.3",
-    "@types/node": "20.11.0",
+    "@types/node": "20.12.2",
     "lint-staged": "15.2.2",
     "multi-semantic-release": "3.0.2",
     "patch-package": "8.0.0",
