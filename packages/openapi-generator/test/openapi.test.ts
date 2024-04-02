@@ -47,6 +47,7 @@ async function testCase(
 
     const actual = convertRoutesToOpenAPI(
       { title: 'Test', version: '1.0.0' },
+      [],
       routes,
       schemas,
     );
