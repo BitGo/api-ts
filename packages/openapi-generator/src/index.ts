@@ -1,4 +1,4 @@
-export { parseApiSpec } from './apiSpec';
+export { parseApiSpec, parseApiSpecComment } from './apiSpec';
 export { parseCodecInitializer, parsePlainInitializer } from './codec';
 export { parseCommentBlock, type JSDoc } from './jsdoc';
 export { convertRoutesToOpenAPI } from './openapi';

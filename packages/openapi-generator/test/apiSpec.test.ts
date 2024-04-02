@@ -4,7 +4,7 @@ import test from 'node:test';
 import type { NestedDirectoryJSON } from 'memfs';
 
 import { TestProject } from './testProject';
-import { parseApiSpec, type Route } from '../src';
+import { parseApiSpec, parseApiSpecComment, type Route } from '../src';
 
 async function testCase(
   description: string,
@@ -218,4 +218,50 @@ testCase('computed property api spec', COMPUTED_PROPERTY, '/index.ts', {
       response: { 200: { type: 'string' } },
     },
   ],
+});
+
+const BASE_URL = {
+  '/index.ts': `
+    import * as t from 'io-ts';
+    import * as h from '@api-ts/io-ts-http';
+
+    /** An API spec
+     *
+     * @url /api/v1
+     **/
+    export const test = h.apiSpec({
+      'api.test': {
+        get: h.httpRoute({
+          path: '/test',
+          method: 'GET',
+          request: h.httpRequest({}),
+          response: {
+            200: t.string,
+          },
+        })
+      }
+    });`,
+};
+
+test('api spec comment parser', async () => {
+  const project = new TestProject(BASE_URL);
+
+  await project.parseEntryPoint('/index.ts');
+  const sourceFile = project.get('/index.ts');
+  if (sourceFile === undefined) {
+    throw new Error('could not find source file /index.ts');
+  }
+
+  let commentParsed = false;
+  sourceFile.symbols.declarations.forEach((symbol) => {
+    if (symbol.name === 'test') {
+      assert.deepEqual(parseApiSpecComment(symbol.comment), {
+        description: 'An API spec',
+        url: '/api/v1',
+      });
+      commentParsed = true;
+    }
+  });
+
+  assert(commentParsed);
 });

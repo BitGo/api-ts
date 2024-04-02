@@ -5,8 +5,9 @@ import * as E from 'fp-ts/Either';
 import * as fs from 'fs';
 import * as p from 'path';
 import type { Expression } from '@swc/core';
+import type { OpenAPIV3 } from 'openapi-types';
 
-import { parseApiSpec } from './apiSpec';
+import { parseApiSpec, parseApiSpecComment } from './apiSpec';
 import { getRefs } from './ref';
 import { convertRoutesToOpenAPI } from './openapi';
 import type { Route } from './route';
@@ -106,6 +107,7 @@ const app = command({
     }
 
     let apiSpec: Route[] = [];
+    let servers: OpenAPIV3.ServerObject[] = [];
     for (const symbol of Object.values(entryPoint.symbols.declarations)) {
       if (symbol.init === undefined) {
         continue;
@@ -136,6 +138,10 @@ const app = command({
         process.exit(1);
       }
 
+      const server = parseApiSpecComment(symbol.comment);
+      if (server !== undefined) {
+        servers.push(server);
+      }
       apiSpec.push(...result.right);
     }
     if (apiSpec.length === 0) {
@@ -189,6 +195,7 @@ const app = command({
         version,
         description,
       },
+      servers,
       apiSpec,
       components,
     );

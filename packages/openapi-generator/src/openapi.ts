@@ -174,6 +174,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
 
 export function convertRoutesToOpenAPI(
   info: OpenAPIV3.InfoObject,
+  servers: OpenAPIV3.ServerObject[],
   routes: Route[],
   schemas: Record<string, Schema>,
 ): OpenAPIV3.Document {
@@ -215,6 +216,7 @@ export function convertRoutesToOpenAPI(
   return {
     openapi: '3.0.3',
     info,
+    ...(servers.length > 0 ? { servers } : {}),
     paths,
     components: {
       schemas: openapiSchemas,

@@ -1,11 +1,13 @@
 import * as swc from '@swc/core';
 import * as E from 'fp-ts/Either';
+import type { Block } from 'comment-parser';
 
 import { parsePlainInitializer } from './codec';
 import type { Project } from './project';
 import { resolveLiteralOrIdentifier } from './resolveInit';
 import { parseRoute, type Route } from './route';
 import { SourceFile } from './sourceFile';
+import { OpenAPIV3 } from 'openapi-types';
 
 export function parseApiSpec(
   project: Project,
@@ -82,4 +84,15 @@ export function parseApiSpec(
   }
 
   return E.right(result);
+}
+
+export function parseApiSpecComment(
+  comment: Block | undefined,
+): OpenAPIV3.ServerObject | undefined {
+  if (comment === undefined) {
+    return undefined;
+  }
+  const description = comment.description;
+  const url = comment.tags.find((tag) => tag.tag === 'url')?.name;
+  return url !== undefined ? { url, description } : undefined;
 }
