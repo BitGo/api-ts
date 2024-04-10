@@ -113,6 +113,12 @@ describe('optionalized', () => {
     assertEncodes(optionalCodec, { a: undefined, b: 'foo' }, expected);
   });
 
+  it('returns undefined when encoding undefined', () => {
+    const optionalCodec = c.optionalized({});
+    const expected = undefined;
+    assertEncodes(optionalCodec, undefined, expected);
+  });
+
   it('decodes explicit null properties', () => {
     const nullCodec = c.optionalized({
       a: t.null,
