@@ -43,6 +43,10 @@ const partialWithoutUndefined = <P extends t.Props>(
     },
     (a) => {
       const result = partialCodec.encode(a);
+      if (result === undefined) {
+        // `t.partial` will return this when passed `undefined` even though it is not in the type
+        return result;
+      }
       for (const key of Object.keys(result)) {
         if (result[key] === void 0) {
           delete result[key];
