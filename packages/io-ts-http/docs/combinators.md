@@ -2,7 +2,7 @@
 
 `io-ts-http` currently exports a handful of combinators for `io-ts` codecs.
 
-## `optionalize`
+## `optionalized`
 
 Provides an easy way to define object types with some required and some optional
 properties. It accepts the same props that `type` and `partial` do in `io-ts`, and
@@ -10,7 +10,7 @@ behaves like a combination of the two. It works by figuring out which properties
 capable of being `undefined`, and marking them as optional. For example:
 
 ```typescript
-const Item = optionalize({
+const Item = optionalized({
   necessaryProperty: t.string,
   maybeDefined: t.union([t.string, t.undefined]),
 });
@@ -28,6 +28,21 @@ type Item = {
 This same type could be defined with a combination of `intersection`, `type`, and
 `partial`, however it is much easier to read, especially when combined with the next
 combinator.
+
+## `exactOptionalized`
+
+Behaves similarly to `optionalized`, but is more strict about how "explicitly undefined"
+values are handled. Any key that is defined with a value of `undefined` will be stripped
+on encoding and decoding, and `is` will return `false` for keys that are explicitly
+undefined:
+
+```typescript
+const Item = exactOptionalized({
+  foo: optional(t.string),
+});
+
+const foo = Item.is({ foo: undefined }); // returns `false`
+```
 
 ## `optional`
 

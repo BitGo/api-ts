@@ -80,6 +80,31 @@ export const optionalized = <P extends t.Props>(
     t.type(requiredProps, name ? `required_${name}` : undefined) as t.TypeC<
       RequiredProps<P>
     >,
+    t.partial(optionalProps, name ? `optional_${name}` : undefined) as t.PartialC<
+      OptionalProps<P>
+    >,
+  ]);
+};
+
+export const exactOptionalized = <P extends t.Props>(
+  props: P,
+  name?: string,
+): OptionalizedC<P> => {
+  const requiredProps: t.Props = {};
+  const optionalProps: t.Props = {};
+  for (const key of Object.keys(props)) {
+    const codec = props[key]!;
+    const isOptional = codec.is(void 0);
+    if (isOptional) {
+      optionalProps[key] = codec;
+    } else {
+      requiredProps[key] = codec;
+    }
+  }
+  return t.intersection([
+    t.type(requiredProps, name ? `required_${name}` : undefined) as t.TypeC<
+      RequiredProps<P>
+    >,
     partialWithoutUndefined(
       optionalProps,
       name ? `optional_${name}` : undefined,

@@ -95,21 +95,21 @@ describe('optionalized', () => {
   it('does not add explicit undefined properties when encoding', () =>
     assertEncodes(codec, { a: 'a', b: 1 }));
 
-  it('strips explicit undefined properties when decoding', () => {
+  it('does not strip explicit undefined properties when decoding', () => {
     const optionalCodec = c.optionalized({
       a: c.optional(t.number),
       b: t.string,
     });
-    const expected = { b: 'foo' };
+    const expected = { a: undefined, b: 'foo' };
     assertDecodes(optionalCodec, { a: undefined, b: 'foo' }, expected);
   });
 
-  it('strips explicit undefined properties when encoding', () => {
+  it('does not strip explicit undefined properties when encoding', () => {
     const optionalCodec = c.optionalized({
       a: c.optional(t.number),
       b: t.string,
     });
-    const expected = { b: 'foo' };
+    const expected = { a: undefined, b: 'foo' };
     assertEncodes(optionalCodec, { a: undefined, b: 'foo' }, expected);
   });
 
@@ -138,5 +138,115 @@ describe('optionalized', () => {
       a: c.optional(t.null),
     });
     assertDecodes(nullCodec, {});
+  });
+
+  it('returns `true` for `is` when an optional key is explicitly undefined', () => {
+    const optionalCodec = c.optionalized({
+      a: c.optional(t.number),
+      b: t.string,
+    });
+    const input = { a: undefined, b: 'foo' };
+    const valid = optionalCodec.is(input);
+    assert.strictEqual(valid, true);
+  });
+});
+
+describe('exactOptionalized', () => {
+  const codec = c.exactOptionalized({
+    a: t.string,
+    b: t.number,
+    c: c.optional(t.string),
+    d: t.unknown,
+  });
+
+  it('decodes an object with only required properties', () =>
+    assertDecodes(codec, { a: 'a', b: 1 }));
+
+  it('enforces presence of required properties', () =>
+    assertRejects(codec, { a: 'a', c: 'c' }));
+
+  it('decodes optional properties', () =>
+    assertDecodes(codec, { a: 'a', b: 1, c: 'c', d: 'd' }));
+
+  it('enforces types of optional properties', () =>
+    assertRejects(codec, { a: 'a', b: 1, c: 1, d: 'd' }));
+
+  it('decodes additional properties when not wrapped by t.exact', () =>
+    assertDecodes(codec, { a: 'a', b: 1, c: 'c', d: 'd', e: true }));
+
+  it('combines with t.exact to filter additional properties', () =>
+    assertDecodes(
+      t.exact(codec),
+      {
+        a: 'a',
+        b: 1,
+        c: 'c',
+        d: 'd',
+        e: true,
+      },
+      {
+        a: 'a',
+        b: 1,
+        c: 'c',
+        d: 'd',
+      },
+    ));
+
+  it('does not add explicit undefined properties when encoding', () =>
+    assertEncodes(codec, { a: 'a', b: 1 }));
+
+  it('strips explicit undefined properties when decoding', () => {
+    const optionalCodec = c.exactOptionalized({
+      a: c.optional(t.number),
+      b: t.string,
+    });
+    const expected = { b: 'foo' };
+    assertDecodes(optionalCodec, { a: undefined, b: 'foo' }, expected);
+  });
+
+  it('strips explicit undefined properties when encoding', () => {
+    const optionalCodec = c.exactOptionalized({
+      a: c.optional(t.number),
+      b: t.string,
+    });
+    const expected = { b: 'foo' };
+    assertEncodes(optionalCodec, { a: undefined, b: 'foo' }, expected);
+  });
+
+  it('returns undefined when encoding undefined', () => {
+    const optionalCodec = c.exactOptionalized({});
+    const expected = undefined;
+    assertEncodes(optionalCodec, undefined, expected);
+  });
+
+  it('decodes explicit null properties', () => {
+    const nullCodec = c.exactOptionalized({
+      a: t.null,
+    });
+    assertDecodes(nullCodec, { a: null });
+  });
+
+  it('treats explicit null properties as required', () => {
+    const nullCodec = c.exactOptionalized({
+      a: t.null,
+    });
+    assertRejects(nullCodec, {});
+  });
+
+  it('treats null-or-undefined properties as optional', () => {
+    const nullCodec = c.exactOptionalized({
+      a: c.optional(t.null),
+    });
+    assertDecodes(nullCodec, {});
+  });
+
+  it('returns `false` for `is` when an optional key is explicitly undefined', () => {
+    const optionalCodec = c.exactOptionalized({
+      a: c.optional(t.number),
+      b: t.string,
+    });
+    const input = { a: undefined, b: 'foo' };
+    const valid = optionalCodec.is(input);
+    assert.strictEqual(valid, false);
   });
 });
