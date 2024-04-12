@@ -26,8 +26,7 @@ const partialWithoutUndefined = <P extends t.Props>(
   const partialCodec = t.partial(props, name);
   return new t.PartialType(
     partialCodec.name,
-    (i): i is DefinedValues<t.TypeOfPartialProps<P>> =>
-      partialCodec.is(i) && !Object.values(i).includes(void 0),
+    (i): i is DefinedValues<t.TypeOfPartialProps<P>> => partialCodec.is(i),
     (i, ctx) => {
       return pipe(
         partialCodec.validate(i, ctx),
