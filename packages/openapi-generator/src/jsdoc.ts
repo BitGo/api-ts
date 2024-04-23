@@ -27,9 +27,7 @@ export function parseCommentBlock(comment: Block): JSDoc {
     }
   }
 
-  if (description !== undefined) {
-    description = description.trim();
-  }
+  description = description.trim();
 
   return {
     ...(summary.length > 0 ? { summary } : {}),
