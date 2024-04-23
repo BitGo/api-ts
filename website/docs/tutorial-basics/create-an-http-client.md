@@ -26,7 +26,7 @@ As before, first edit your `package.json` file to add our new dependencies
     "@api-ts/response": "0.1.2-beta.2",
     "@api-ts/superagent-wrapper": "0.2.0-beta.13",
     "io-ts": "2.1.3",
-    "superagent": "8.0.0"
+    "superagent": "9.0.1"
   },
   "devDependencies": {
     "@types/express": "4.17.13",
