@@ -63,7 +63,7 @@ export interface SuperagentRequest<Res extends Response> extends Promise<Res> {
   send(body: string): this;
 }
 
-const substitutePathParams = (path: string, params: Record<string, string>) => {
+export const substitutePathParams = (path: string, params: Record<string, string>) => {
   for (const key in params) {
     if (params.hasOwnProperty(key)) {
       path = path.replace(`{${key}}`, params[key]);
