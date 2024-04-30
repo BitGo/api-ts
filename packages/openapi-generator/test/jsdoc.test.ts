@@ -152,3 +152,127 @@ test('comment with a summary, description, and a tag in the middle of the descri
 
   assert.deepEqual(parseJSDoc(comment), expected);
 });
+
+test('parameter with a comment and an example string', () => {
+  const comment = `
+    /**
+     * A variable with example
+     * 
+     * @example foo
+     */
+  `;
+
+  const expected: JSDoc = {
+    summary: 'A variable with example',
+    tags: {
+      example: 'foo',
+    },
+  };
+
+  assert.deepEqual(parseJSDoc(comment), expected);
+});
+
+test('parameter with a comment and an example object', () => {
+  const comment = `
+    /**
+     * A variable with example
+     * 
+     * @example { "test": "foo" }
+     */
+  `;
+
+  const expected: JSDoc = {
+    summary: 'A variable with example',
+    // @ts-expect-error parser doesn't properly infer type
+    tags: {
+      example: { test: 'foo' },
+    },
+  };
+
+  assert.deepEqual(parseJSDoc(comment), expected);
+});
+
+test('parameter with a comment and an example object (multi-line)', () => {
+  const comment = `
+    /**
+     * A variable with example
+     * 
+     * @example {
+     *   "test": "foo"
+     * }
+     */
+  `;
+
+  const expected: JSDoc = {
+    summary: 'A variable with example',
+    // @ts-expect-error parser doesn't properly infer type
+    tags: {
+      example: { test: 'foo' },
+    },
+  };
+
+  assert.deepEqual(parseJSDoc(comment), expected);
+});
+
+test('parameter with a comment and an example array', () => {
+  const comment = `
+    /**
+     * A variable with example
+     * 
+     * @example ["foo", "bar", "baz"]
+     */
+  `;
+
+  const expected: JSDoc = {
+    summary: 'A variable with example',
+    // @ts-expect-error parser doesn't properly infer type
+    tags: {
+      example: ['foo', 'bar', 'baz'],
+    },
+  };
+
+  assert.deepEqual(parseJSDoc(comment), expected);
+});
+
+test('parameter with a comment and an invalid example object', () => {
+  const comment = `
+    /**
+     * A variable with example
+     * 
+     * @example { "test": "foo"
+     */
+  `;
+
+  assert.throws(() => parseJSDoc(comment), {
+    message: '@example contains invalid JSON',
+  });
+});
+
+test('parameter with a comment and an invalid example object (multi-line)', () => {
+  const comment = `
+    /**
+     * A variable with example
+     * 
+     * @example {
+     *   "test": "foo"
+     */
+  `;
+
+  assert.throws(() => parseJSDoc(comment), {
+    message: '@example contains invalid JSON',
+  });
+});
+
+test('parameter with a comment and an invalid example array', () => {
+  const comment = `
+    /**
+     * A variable with example
+     * 
+     * @example ["foo", "bar", "baz"
+     */
+  `;
+
+  assert.throws(() => parseJSDoc(comment), {
+    message: '@example contains invalid JSON',
+  });
+});

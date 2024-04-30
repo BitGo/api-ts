@@ -117,6 +117,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
   const tag = jsdoc.tags?.tag ?? '';
   const isInternal = jsdoc.tags?.private !== undefined;
   const isUnstable = jsdoc.tags?.unstable !== undefined;
+  const example = jsdoc.tags?.example;
 
   const requestBody =
     route.body === undefined
@@ -163,7 +164,10 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
           [Number(code)]: {
             description,
             content: {
-              'application/json': { schema: schemaToOpenAPI(response) },
+              'application/json': {
+                schema: schemaToOpenAPI(response),
+                ...(example !== undefined ? { example } : undefined),
+              },
             },
           },
         };
