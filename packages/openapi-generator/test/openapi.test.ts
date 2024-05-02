@@ -927,3 +927,194 @@ testCase('optional parameter', OPTIONAL_PARAM, {
     schemas: {},
   },
 });
+
+const ROUTE_WITH_RESPONSE_EXAMPLE_STRING = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ * @example bar
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+testCase('route with example string', ROUTE_WITH_RESPONSE_EXAMPLE_STRING, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        parameters: [],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+                example: 'bar',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
+
+const ROUTE_WITH_RESPONSE_EXAMPLE_OBJECT = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ * @example { "test": "bar" }
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with example object', ROUTE_WITH_RESPONSE_EXAMPLE_OBJECT, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        parameters: [],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['test'],
+                },
+                example: {
+                  test: 'bar',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
+
+const ROUTE_WITH_RESPONSE_EXAMPLE_OBJECT_MULTILINE = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ * @example {
+ *   "test": "bar"
+ * }
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase(
+  'route with example object multi-line',
+  ROUTE_WITH_RESPONSE_EXAMPLE_OBJECT_MULTILINE,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          summary: 'A simple route',
+          operationId: 'api.v1.test',
+          tags: ['Test Routes'],
+          parameters: [],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      test: {
+                        type: 'string',
+                      },
+                    },
+                    required: ['test'],
+                  },
+                  example: {
+                    test: 'bar',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
+  },
+);
