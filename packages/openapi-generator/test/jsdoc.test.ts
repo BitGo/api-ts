@@ -276,3 +276,49 @@ test('parameter with a comment and an invalid example array', () => {
     message: '@example contains invalid JSON',
   });
 });
+
+test('parameter with a comment, an example object and a tag', () => {
+  const comment = `
+    /**
+     * A variable with example
+     * 
+     * @example { "test": "foo" }
+     * @tag api.example.test
+     */
+  `;
+
+  const expected: JSDoc = {
+    summary: 'A variable with example',
+    // @ts-expect-error parser doesn't properly infer type
+    tags: {
+      example: { test: 'foo' },
+      tag: 'api.example.test',
+    },
+  };
+
+  assert.deepEqual(parseJSDoc(comment), expected);
+});
+
+test('parameter with a comment, an example object (multi-line) and a tag', () => {
+  const comment = `
+    /**
+     * A variable with example
+     * 
+     * @example {
+     *   "test": "foo"
+     * }
+     * @tag api.example.test
+     */
+  `;
+
+  const expected: JSDoc = {
+    summary: 'A variable with example',
+    // @ts-expect-error parser doesn't properly infer type
+    tags: {
+      example: { test: 'foo' },
+      tag: 'api.example.test',
+    },
+  };
+
+  assert.deepEqual(parseJSDoc(comment), expected);
+});
