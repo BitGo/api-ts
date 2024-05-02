@@ -1,15 +1,17 @@
 import type { Block } from 'comment-parser';
 
+type Tags = Record<Exclude<string, 'example'>, string> & { example?: any };
+
 export type JSDoc = {
   summary?: string;
   description?: string;
-  tags?: Record<string, string> & { example?: unknown };
+  tags?: Tags;
 };
 
 export function parseCommentBlock(comment: Block): JSDoc {
   let summary: string = '';
   let description: string = '';
-  let tags: Record<string, string> & { example?: any } = {};
+  let tags: Tags = {};
   let writingExample = false;
 
   for (const line of comment.source) {
