@@ -735,6 +735,80 @@ testCase('request body double ref', SCHEMA_DOUBLE_REF, {
   },
 });
 
+const SCHEMA_NULLABLE_REF = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: t.type({
+    body: t.union([Foo, t.null]),
+  }),
+  response: {
+    /** foo response */
+    200: t.string
+  },
+});
+
+const Foo = t.type({ foo: t.string });
+`;
+
+testCase('request body nullable ref', SCHEMA_NULLABLE_REF, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                nullable: true,
+                allOf: [
+                  {
+                    $ref: '#/components/schemas/Foo',
+                  },
+                ],
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'foo response',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Foo: {
+        title: 'Foo',
+        type: 'object',
+        properties: {
+          foo: {
+            type: 'string',
+          },
+        },
+        required: ['foo'],
+      },
+    },
+  },
+});
+
 const TITLE_TAG = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';

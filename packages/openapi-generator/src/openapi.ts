@@ -75,7 +75,14 @@ function schemaToOpenAPI(
         if (oneOf.length === 0) {
           return undefined;
         } else if (oneOf.length === 1) {
-          return { ...(nullable ? { nullable } : {}), ...oneOf[0] };
+          if (
+            Object.keys(
+              oneOf[0] as OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
+            )[0] === '$ref'
+          )
+            // OpenAPI spec doesn't allow $ref properties to have siblings, so they're wrapped in an 'allOf' array
+            return { ...(nullable ? { nullable } : {}), allOf: oneOf };
+          else return { ...(nullable ? { nullable } : {}), ...oneOf[0] };
         } else {
           return { ...(nullable ? { nullable } : {}), oneOf };
         }
