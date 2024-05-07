@@ -1,6 +1,6 @@
 # api-ts
 
-[![Build Status]](https://github.com/BitGo/api-ts/actions/workflows/release.yml)
+[![Build Status]](https://github.com/BitGo/api-ts/actions/workflows/release.yaml)
 
 [build status]:
   https://github.com/BitGo/api-ts/actions/workflows/release.yml/badge.svg?event=push
