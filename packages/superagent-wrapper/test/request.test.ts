@@ -26,7 +26,7 @@ const PostTestRoute = h.httpRoute({
       foo: t.string,
     },
     params: {
-      id: NumberFromString,
+      id: NumberFromString as any,
     },
     body: {
       bar: t.number,
@@ -100,7 +100,7 @@ const createTestServer = (port: number) => {
       const response = PostTestRoute.response[200].encode({
         ...params,
         baz: true,
-      });
+      } as any);
       res.send(response);
     }
   });
@@ -283,11 +283,11 @@ describe('superagent', async () => {
         },
         params: {
           id: NumberFromString,
-        },
+        } as any,
         body: {
           bar: t.number,
         },
-      }),
+      }) as any,
       response: {
         200: t.type({
           id: t.number,
