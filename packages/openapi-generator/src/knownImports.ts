@@ -206,13 +206,14 @@ export const KNOWN_IMPORTS: KnownImports = {
       if (schema.type !== 'object') {
         return E.left('httpRoute parameter must be object');
       }
-      const props = Object.entries(schema.properties).reduce((acc, [key, prop]) => {
-        const derefedE = deref(prop);
+      const props: Record<string, Schema> = {};
+      for (const [key, value] of Object.entries(schema.properties)) {
+        const derefedE = deref(value);
         if (E.isLeft(derefedE)) {
-          return acc;
+          return derefedE;
         }
-        return { ...acc, [key]: derefedE.right };
-      }, {});
+        props[key] = derefedE.right;
+      }
       return E.right({
         type: 'object',
         properties: props,
