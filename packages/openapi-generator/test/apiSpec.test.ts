@@ -265,3 +265,28 @@ test('api spec comment parser', async () => {
 
   assert(commentParsed);
 });
+
+const MISSING_REFERENCE = {
+  '/index.ts': `
+    import * as t from 'io-ts';
+    import * as h from '@api-ts/io-ts-http';
+
+    import { Foo } from 'foo';
+
+    export const test = h.apiSpec({
+      'api.test': {
+        get: h.httpRoute({
+          path: '/test',
+          method: 'GET',
+          request: Foo,
+          response: {
+            200: t.string,
+          },
+        })
+      }
+    });`,
+};
+
+testCase('missing reference', MISSING_REFERENCE, '/index.ts', {}, [
+  "Cannot find 'Foo' from 'foo'",
+]);
