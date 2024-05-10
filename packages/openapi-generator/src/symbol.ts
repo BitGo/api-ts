@@ -236,6 +236,24 @@ export function parseTopLevelSymbols(
           localName: item.expression.value,
         });
       }
+    } else if (item.type === 'ExpressionStatement') {
+      if (item.expression.type === 'CallExpression') {
+        if (
+          item.expression.callee.type === 'Identifier' &&
+          item.expression.callee.value === '__exportStar'
+        ) {
+          const targetExpr = item?.expression?.arguments[0]?.expression;
+
+          if (targetExpr && 'arguments' in targetExpr) {
+            const targetArgument = targetExpr.arguments;
+            if (targetArgument && 'value' in targetArgument[0]!.expression) {
+              if (targetArgument[0]!.expression.type === 'StringLiteral') {
+                symbols.exportStarFiles.push(targetArgument[0]!.expression.value);
+              }
+            }
+          }
+        }
+      }
     }
   });
 

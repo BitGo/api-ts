@@ -13,10 +13,18 @@ export class Project {
   private readonly knownImports: Record<string, Record<string, KnownCodec>>;
 
   private files: Record<string, SourceFile>;
+  private types: Record<string, string>;
+  private type_packages: Array<string>;
 
-  constructor(files: Record<string, SourceFile> = {}, knownImports = KNOWN_IMPORTS) {
+  constructor(
+    files: Record<string, SourceFile> = {},
+    knownImports = KNOWN_IMPORTS,
+    type_packages: Array<string> = [],
+  ) {
     this.files = files;
     this.knownImports = knownImports;
+    this.types = {};
+    this.type_packages = type_packages;
   }
 
   add(path: string, sourceFile: SourceFile): void {
@@ -31,6 +39,10 @@ export class Project {
     return this.files.hasOwnProperty(path);
   }
 
+  getSourceFile(): Record<string, SourceFile> {
+    return this.files;
+  }
+
   async parseEntryPoint(entryPoint: string): Promise<E.Either<string, Project>> {
     const queue: string[] = [entryPoint];
     let path: string | undefined;
@@ -42,13 +54,13 @@ export class Project {
       const src = await this.readFile(path);
       const sourceFile = await parseSource(path, src);
 
+      for (const exp of sourceFile.symbols.exports) {
+        this.types[exp.exportedName] = path;
+      }
+
       this.add(path, sourceFile);
 
       for (const sym of Object.values(sourceFile.symbols.imports)) {
-        if (!sym.from.startsWith('.')) {
-          continue;
-        }
-
         const filePath = p.dirname(path);
         const absImportPathE = this.resolve(filePath, sym.from);
         if (E.isLeft(absImportPathE)) {
@@ -81,7 +93,32 @@ export class Project {
         basedir,
         extensions: ['.ts', '.js'],
       });
-      return E.right(result);
+
+      if (this.type_packages.includes(path)) {
+        const mapName = result.replace('.js', '.js.map');
+
+        if (fs.existsSync(mapName)) {
+          const mapJson = JSON.parse(fs.readFileSync(mapName, 'utf8'));
+          const dirName = p.dirname(result);
+          const source = mapJson.sources[0];
+
+          const response = resolve.sync(source, { basedir: dirName });
+
+          console.error({ mapJson, dirName, source, response, path });
+
+          return E.right(response);
+        }
+
+        return E.left('Map file not found for ' + path);
+      } else {
+        const dTsName = result.replace('.js', '.d.ts');
+
+        if (fs.existsSync(dTsName)) {
+          return E.right(dTsName);
+        }
+
+        return E.right(result);
+      }
     } catch (e: any) {
       if (typeof e === 'object' && e.hasOwnProperty('message')) {
         return E.left(e.message);
@@ -94,5 +131,13 @@ export class Project {
   resolveKnownImport(path: string, name: string): KnownCodec | undefined {
     const baseKey = path.startsWith('.') ? '.' : path;
     return this.knownImports[baseKey]?.[name];
+  }
+
+  getKnownImports() {
+    return this.knownImports;
+  }
+
+  getTypes() {
+    return this.types;
   }
 }

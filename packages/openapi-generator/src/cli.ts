@@ -94,11 +94,15 @@ const app = command({
       knownImports = { ...knownImports, ...customCodecs };
     }
 
-    const project = await new Project({}, knownImports).parseEntryPoint(filePath);
+    const project = await new Project({}, knownImports, [
+      '@bitgo/public-types',
+    ]).parseEntryPoint(filePath);
     if (E.isLeft(project)) {
       console.error(project.left);
       process.exit(1);
     }
+
+    // console.log(JSON.parse(JSON.stringify(project.right.getTypes(), undefined, 4)))
 
     const entryPoint = project.right.get(filePath);
     if (entryPoint === undefined) {
@@ -149,6 +153,8 @@ const app = command({
       process.exit(1);
     }
 
+    // console.error(JSON.stringify(apiSpec))
+
     const components: Record<string, Schema> = {};
     const queue: Schema[] = apiSpec.flatMap((route) => {
       return [
@@ -159,7 +165,7 @@ const app = command({
     });
     let schema: Schema | undefined;
     while (((schema = queue.pop()), schema !== undefined)) {
-      const refs = getRefs(schema);
+      const refs = getRefs(schema, project.right.getTypes());
       for (const ref of refs) {
         if (components[ref.name] !== undefined) {
           continue;
@@ -169,6 +175,7 @@ const app = command({
           console.error(`Could not find '${ref.name}' from '${ref.location}'`);
           process.exit(1);
         }
+
         const initE = findSymbolInitializer(project.right, sourceFile, ref.name);
         if (E.isLeft(initE)) {
           console.error(
@@ -177,6 +184,8 @@ const app = command({
           process.exit(1);
         }
         const [newSourceFile, init] = initE.right;
+        console.error({ newSourceFile, init });
+
         const codecE = parseCodecInitializer(project.right, newSourceFile, init);
         if (E.isLeft(codecE)) {
           console.error(

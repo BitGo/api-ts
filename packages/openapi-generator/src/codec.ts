@@ -96,11 +96,12 @@ function codecIdentifier(
       }
       const name = id.property.value;
 
-      if (!objectImportSym.from.startsWith('.')) {
-        return E.left(
-          `Unimplemented named member reference '${objectImportSym.localName}.${name}' from '${objectImportSym.from}'`,
-        );
-      }
+      // TODO: Add support for types/enum imports from node_modules
+      // if (!objectImportSym.from.startsWith('.')) {
+      //   return E.left(
+      //     `Unimplemented named member reference '${objectImportSym.localName}.${name}' from '${objectImportSym.from}'`,
+      //   );
+      // }
 
       const newInitE = findSymbolInitializer(project, source, [
         objectImportSym.localName,
