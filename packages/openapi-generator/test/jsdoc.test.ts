@@ -157,7 +157,7 @@ test('parameter with a comment and an example string', () => {
   const comment = `
     /**
      * A variable with example
-     * 
+     *
      * @example foo
      */
   `;
@@ -176,7 +176,7 @@ test('parameter with a comment and an example object', () => {
   const comment = `
     /**
      * A variable with example
-     * 
+     *
      * @example { "test": "foo" }
      */
   `;
@@ -196,7 +196,7 @@ test('parameter with a comment and an example object (multi-line)', () => {
   const comment = `
     /**
      * A variable with example
-     * 
+     *
      * @example {
      *   "test": "foo"
      * }
@@ -218,7 +218,7 @@ test('parameter with a comment and an example array', () => {
   const comment = `
     /**
      * A variable with example
-     * 
+     *
      * @example ["foo", "bar", "baz"]
      */
   `;
@@ -238,7 +238,7 @@ test('parameter with a comment and an invalid example object', () => {
   const comment = `
     /**
      * A variable with example
-     * 
+     *
      * @example { "test": "foo"
      */
   `;
@@ -252,7 +252,7 @@ test('parameter with a comment and an invalid example object (multi-line)', () =
   const comment = `
     /**
      * A variable with example
-     * 
+     *
      * @example {
      *   "test": "foo"
      */
@@ -267,7 +267,7 @@ test('parameter with a comment and an invalid example array', () => {
   const comment = `
     /**
      * A variable with example
-     * 
+     *
      * @example ["foo", "bar", "baz"
      */
   `;
@@ -281,7 +281,7 @@ test('parameter with a comment, an example object and a tag', () => {
   const comment = `
     /**
      * A variable with example
-     * 
+     *
      * @example { "test": "foo" }
      * @tag api.example.test
      */
@@ -303,7 +303,7 @@ test('parameter with a comment, an example object (multi-line) and a tag', () =>
   const comment = `
     /**
      * A variable with example
-     * 
+     *
      * @example {
      *   "test": "foo"
      * }
@@ -317,6 +317,22 @@ test('parameter with a comment, an example object (multi-line) and a tag', () =>
     tags: {
       example: { test: 'foo' },
       tag: 'api.example.test',
+    },
+  };
+
+  assert.deepEqual(parseJSDoc(comment), expected);
+});
+
+test('a standalone tag with no summary or description', () => {
+  const comment = `
+    /**
+     * @tag
+     */
+  `;
+
+  const expected: JSDoc = {
+    tags: {
+      tag: '',
     },
   };
 

@@ -25,30 +25,27 @@ export function parseCommentBlock(comment: Block): JSDoc {
           throw new Error('@example contains invalid JSON');
         else continue;
       }
-    } else {
-      if (summary.length === 0) {
-        if (line.tokens.description === '') {
-          continue;
+    } else if (line.tokens.tag !== undefined && line.tokens.tag.length > 0) {
+      if (line.tokens.tag === '@example') {
+        tags['example'] = line.source.split('@example')[1]?.trim();
+        if (tags['example'].startsWith('{') || tags['example'].startsWith('[')) {
+          try {
+            tags['example'] = JSON.parse(tags['example']);
+          } catch (e) {
+            writingExample = true;
+          }
         }
-        summary = line.tokens.description;
       } else {
-        if (line.tokens.tag !== undefined && line.tokens.tag.length > 0) {
-          if (line.tokens.tag === '@example') {
-            tags['example'] = line.source.split('@example')[1]?.trim();
-            if (tags['example'].startsWith('{') || tags['example'].startsWith('[')) {
-              try {
-                tags['example'] = JSON.parse(tags['example']);
-              } catch (e) {
-                writingExample = true;
-              }
-            }
-          } else
-            tags[line.tokens.tag.slice(1)] =
-              `${line.tokens.name} ${line.tokens.description}`.trim();
-        } else {
-          description = `${description ?? ''}\n${line.tokens.description}`;
-        }
+        tags[line.tokens.tag.slice(1)] =
+          `${line.tokens.name} ${line.tokens.description}`.trim();
       }
+    } else if (summary.length === 0) {
+      if (line.tokens.description === '') {
+        continue;
+      }
+      summary = line.tokens.description;
+    } else {
+      description = `${description ?? ''}\n${line.tokens.description}`;
     }
   }
 
