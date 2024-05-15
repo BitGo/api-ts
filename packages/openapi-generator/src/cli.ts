@@ -149,8 +149,6 @@ const app = command({
       process.exit(1);
     }
 
-    // console.error(JSON.stringify(apiSpec))
-
     const components: Record<string, Schema> = {};
     const queue: Schema[] = apiSpec.flatMap((route) => {
       return [

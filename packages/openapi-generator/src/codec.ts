@@ -96,13 +96,6 @@ function codecIdentifier(
       }
       const name = id.property.value;
 
-      // TODO: Add support for types/enum imports from node_modules
-      // if (!objectImportSym.from.startsWith('.')) {
-      //   return E.left(
-      //     `Unimplemented named member reference '${objectImportSym.localName}.${name}' from '${objectImportSym.from}'`,
-      //   );
-      // }
-
       const newInitE = findSymbolInitializer(project, source, [
         objectImportSym.localName,
         name,
@@ -362,9 +355,12 @@ export function parseCodecInitializer(
         return E.right(schema);
       } else {
         let refSource = project.get(schema.location);
+
         if (refSource === undefined) {
+          // schema.location might be a package name -> need to resolve the path from the project types
           const path = project.getTypes()[schema.name];
-          if (path === undefined) return E.left('Should not happen');
+          if (path === undefined)
+            return E.left(`Cannot find '${schema.name}' in the project`);
           refSource = project.get(path);
           if (refSource === undefined) {
             return E.left(`Cannot find '${schema.name}' from '${schema.location}'`);

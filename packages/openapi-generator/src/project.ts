@@ -14,27 +14,11 @@ export class Project {
 
   private files: Record<string, SourceFile>;
   private types: Record<string, string>;
-  private type_packages: Array<string>;
 
   constructor(files: Record<string, SourceFile> = {}, knownImports = KNOWN_IMPORTS) {
     this.files = files;
     this.knownImports = knownImports;
     this.types = {};
-    this.type_packages = [
-      '@bitgo-private/address-book-types',
-      '@bitgo-private/entity-validation-types',
-      '@bitgo-private/original-indexer-types',
-      '@bitgo-private/policy-service-types',
-      '@bitgo-private/query-param-types',
-      '@bitgo-private/request-types',
-      '@bitgo-private/schema-decoding',
-      '@bitgo-private/travel-rule-types',
-      '@bitgo-private/wallet-platform-types',
-      '@bitgo/public-types',
-      '@bitgo-private/compliance-tx-monitoring-types',
-      '@bitgo-private/event-service-types',
-      '@bitgo-private/ims-type',
-    ];
   }
 
   add(path: string, sourceFile: SourceFile): void {
@@ -98,37 +82,59 @@ export class Project {
     return await readFile(filename, 'utf8');
   }
 
-  // add @types to beginning of path if path is a type package
-  maybeModifyPath(path: string) {
-    const typePackages = ['express', 'superagent', 'cookiejar'];
-    if (typePackages.includes(path)) return '@types/' + path;
-    return path;
-  }
-
-  resolve(basedir: string, path: string): E.Either<string, string> {
+  private resolvePath(path: string, basedir: string): E.Either<string, string> {
     try {
-      path = this.maybeModifyPath(path);
-
-      // express doesn't parse for some reason
-      if (path.includes('express')) return E.right('express');
-
       const result = resolve.sync(path, {
         basedir,
         extensions: ['.ts', '.js', '.d.ts'],
       });
 
-      if (this.type_packages.includes(path)) {
-        const mapName = result.replace('.js', '.js.map');
+      return E.right(result);
+    } catch (e: any) {
+      if (typeof e === 'object' && e.hasOwnProperty('message')) {
+        return E.left(e.message);
+      }
 
-        if (fs.existsSync(mapName)) {
-          const mapJson = JSON.parse(fs.readFileSync(mapName, 'utf8'));
-          const dirName = p.dirname(result);
-          const source = mapJson.sources[0];
-          const response = resolve.sync(source, { basedir: dirName });
-          return E.right(response);
-        }
+      return E.left(JSON.stringify(e));
+    }
+  }
 
-        return E.left('Map file not found for ' + path);
+  private findSourceFileFromPackage(path: string): E.Either<string, string> {
+    const mapName = path.replace('.js', '.js.map');
+
+    if (fs.existsSync(mapName)) {
+      const mapJson = JSON.parse(fs.readFileSync(mapName, 'utf8'));
+      const dirName = p.dirname(path);
+      const source = mapJson.sources[0];
+      const response = resolve.sync(source, { basedir: dirName });
+      return E.right(response);
+    }
+
+    return E.left('Map file not found for ' + path);
+  }
+
+  resolve(basedir: string, path: string): E.Either<string, string> {
+    const BITGO_PREFIX = '@bitgo';
+    try {
+      // TODO: add support for non-strict mode (swc errors out when handling express as it is not in strict mode)
+      if (path.includes('express')) return E.right('express');
+
+      let resolved = this.resolvePath(path, basedir);
+      if (E.isLeft(resolved)) {
+        // Could not resolve the path, try resolving in the types package
+        resolved = this.resolvePath('@types/' + path, basedir);
+      }
+
+      // Types package wasn't found, return an errord
+      if (E.isLeft(resolved)) {
+        return E.left('Could not resolve ' + path);
+      }
+
+      const result = resolved.right;
+
+      // If we are parsing an internal type package, we want to return the path to the source TS file
+      if (path.startsWith(BITGO_PREFIX)) {
+        return this.findSourceFileFromPackage(result);
       } else {
         const dTsName = result.replace('.js', '.d.ts');
 
