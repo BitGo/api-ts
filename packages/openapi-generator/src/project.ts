@@ -16,15 +16,25 @@ export class Project {
   private types: Record<string, string>;
   private type_packages: Array<string>;
 
-  constructor(
-    files: Record<string, SourceFile> = {},
-    knownImports = KNOWN_IMPORTS,
-    type_packages: Array<string> = [],
-  ) {
+  constructor(files: Record<string, SourceFile> = {}, knownImports = KNOWN_IMPORTS) {
     this.files = files;
     this.knownImports = knownImports;
     this.types = {};
-    this.type_packages = type_packages;
+    this.type_packages = [
+      '@bitgo-private/address-book-types',
+      '@bitgo-private/entity-validation-types',
+      '@bitgo-private/original-indexer-types',
+      '@bitgo-private/policy-service-types',
+      '@bitgo-private/query-param-types',
+      '@bitgo-private/request-types',
+      '@bitgo-private/schema-decoding',
+      '@bitgo-private/travel-rule-types',
+      '@bitgo-private/wallet-platform-types',
+      '@bitgo/public-types',
+      '@bitgo-private/compliance-tx-monitoring-types',
+      '@bitgo-private/event-service-types',
+      '@bitgo-private/ims-type',
+    ];
   }
 
   add(path: string, sourceFile: SourceFile): void {
@@ -54,6 +64,7 @@ export class Project {
       const src = await this.readFile(path);
       const sourceFile = await parseSource(path, src);
 
+      // map types to their file path
       for (const exp of sourceFile.symbols.exports) {
         this.types[exp.exportedName] = path;
       }
@@ -87,11 +98,23 @@ export class Project {
     return await readFile(filename, 'utf8');
   }
 
+  // add @types to beginning of path if path is a type package
+  maybeModifyPath(path: string) {
+    const typePackages = ['express', 'superagent', 'cookiejar'];
+    if (typePackages.includes(path)) return '@types/' + path;
+    return path;
+  }
+
   resolve(basedir: string, path: string): E.Either<string, string> {
     try {
+      path = this.maybeModifyPath(path);
+
+      // express doesn't parse for some reason
+      if (path.includes('express')) return E.right('express');
+
       const result = resolve.sync(path, {
         basedir,
-        extensions: ['.ts', '.js'],
+        extensions: ['.ts', '.js', '.d.ts'],
       });
 
       if (this.type_packages.includes(path)) {
@@ -101,11 +124,7 @@ export class Project {
           const mapJson = JSON.parse(fs.readFileSync(mapName, 'utf8'));
           const dirName = p.dirname(result);
           const source = mapJson.sources[0];
-
           const response = resolve.sync(source, { basedir: dirName });
-
-          console.error({ mapJson, dirName, source, response, path });
-
           return E.right(response);
         }
 
