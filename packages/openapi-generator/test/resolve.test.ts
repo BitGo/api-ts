@@ -6,6 +6,35 @@ import test from 'node:test';
 import { TestProject } from './testProject';
 import { parseCodecInitializer, Project, type Schema } from '../src';
 
+const IO_TS = `
+export const type = (props: any) => ({ type: 'object', ...props });
+export const string = { type: 'string' };
+export const number = { type: 'number' };
+export const union = (schemas: any[]) => ({ type: 'union', schemas });
+export const keyof = (keys: any) => ({ type: 'union', schemas: Object.keys(keys).map((key) => ({ type: 'string', enum: [key] })) });
+export const literal = (value: any) => ({ type: typeof value, enum: [value] });
+`;
+
+const IO_TS_PACKAGE_JSON = `{
+  "name": "io-ts",
+  "version": "1.0.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts"
+}`;
+
+const IO_TS_OBJECT = {
+  '/node_modules': {
+    '/io-ts': {
+      '/dist': {
+        '/src': {
+          '/index.js': IO_TS,
+        },
+      },
+      '/package.json': IO_TS_PACKAGE_JSON,
+    },
+  },
+};
+
 async function testCase(
   description: string,
   files: NestedDirectoryJSON,
@@ -14,7 +43,7 @@ async function testCase(
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
-    let project: Project = new TestProject(files);
+    let project: Project = new TestProject({ ...files, ...IO_TS_OBJECT });
     const projectE = await project.parseEntryPoint(entryPoint);
     if (E.isLeft(projectE)) {
       throw new Error(projectE.left);
@@ -55,7 +84,9 @@ export const FOO = t.type(fooProps);
 
 testCase(
   'const props initializer is parsed',
-  { '/index.ts': OBJECT_CONST },
+  {
+    '/index.ts': OBJECT_CONST,
+  },
   '/index.ts',
   {
     FOO: {
@@ -75,7 +106,9 @@ export const FOO = t.union(fooUnion);
 
 testCase(
   'const array initializer is parsed',
-  { '/index.ts': ARRAY_CONST },
+  {
+    '/index.ts': ARRAY_CONST,
+  },
   '/index.ts',
   {
     FOO: {
@@ -97,7 +130,9 @@ export const FOO = t.keyof(fooKeys);
 
 testCase(
   'const keyof initializer is parsed',
-  { '/index.ts': KEYOF_CONST },
+  {
+    '/index.ts': KEYOF_CONST,
+  },
   '/index.ts',
   {
     FOO: {
@@ -119,7 +154,9 @@ export const FOO = t.literal(foo);
 
 testCase(
   'const literal initializer is parsed',
-  { '/index.ts': LITERAL_CONST },
+  {
+    '/index.ts': LITERAL_CONST,
+  },
   '/index.ts',
   {
     FOO: { type: 'number', enum: [42] },
