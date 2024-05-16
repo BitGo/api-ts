@@ -360,7 +360,7 @@ export function parseCodecInitializer(
           // schema.location might be a package name -> need to resolve the path from the project types
           const path = project.getTypes()[schema.name];
           if (path === undefined)
-            return E.left(`Cannot find '${schema.name}' in the project`);
+            return E.left(`Cannot find module '${schema.location}' in the project`);
           refSource = project.get(path);
           if (refSource === undefined) {
             return E.left(`Cannot find '${schema.name}' from '${schema.location}'`);

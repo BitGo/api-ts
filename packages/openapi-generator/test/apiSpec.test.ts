@@ -5,6 +5,7 @@ import type { NestedDirectoryJSON } from 'memfs';
 
 import { TestProject } from './testProject';
 import { parseApiSpec, parseApiSpecComment, type Route } from '../src';
+import { MOCK_NODE_MODULES_DIR } from './externalModules';
 
 async function testCase(
   description: string,
@@ -14,7 +15,7 @@ async function testCase(
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
-    const project = new TestProject(files);
+    const project = new TestProject({ ...files, ...MOCK_NODE_MODULES_DIR });
 
     await project.parseEntryPoint(entryPoint);
     const sourceFile = project.get(entryPoint);
@@ -288,5 +289,5 @@ const MISSING_REFERENCE = {
 };
 
 testCase('missing reference', MISSING_REFERENCE, '/index.ts', {}, [
-  "Cannot find 'Foo' from 'foo'",
+  "Cannot find module 'foo' in the project",
 ]);

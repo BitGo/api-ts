@@ -5,35 +5,7 @@ import test from 'node:test';
 
 import { TestProject } from './testProject';
 import { parseCodecInitializer, Project, type Schema } from '../src';
-
-const IO_TS = `
-export const type = (props: any) => ({ type: 'object', ...props });
-export const string = { type: 'string' };
-export const number = { type: 'number' };
-export const union = (schemas: any[]) => ({ type: 'union', schemas });
-export const keyof = (keys: any) => ({ type: 'union', schemas: Object.keys(keys).map((key) => ({ type: 'string', enum: [key] })) });
-export const literal = (value: any) => ({ type: typeof value, enum: [value] });
-`;
-
-const IO_TS_PACKAGE_JSON = `{
-  "name": "io-ts",
-  "version": "1.0.0",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts"
-}`;
-
-const IO_TS_OBJECT = {
-  '/node_modules': {
-    '/io-ts': {
-      '/dist': {
-        '/src': {
-          '/index.js': IO_TS,
-        },
-      },
-      '/package.json': IO_TS_PACKAGE_JSON,
-    },
-  },
-};
+import { MOCK_NODE_MODULES_DIR } from './externalModules';
 
 async function testCase(
   description: string,
@@ -43,7 +15,7 @@ async function testCase(
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
-    let project: Project = new TestProject({ ...files, ...IO_TS_OBJECT });
+    let project: Project = new TestProject({ ...files, ...MOCK_NODE_MODULES_DIR });
     const projectE = await project.parseEntryPoint(entryPoint);
     if (E.isLeft(projectE)) {
       throw new Error(projectE.left);
