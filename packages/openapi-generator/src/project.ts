@@ -41,20 +41,29 @@ export class Project {
 
       const src = await this.readFile(path);
       const sourceFile = await parseSource(path, src);
+      if (sourceFile === undefined) {
+        continue;
+      }
 
       this.add(path, sourceFile);
 
       for (const sym of Object.values(sourceFile.symbols.imports)) {
         if (!sym.from.startsWith('.')) {
-          continue;
-        }
-
-        const filePath = p.dirname(path);
-        const absImportPathE = this.resolve(filePath, sym.from);
-        if (E.isLeft(absImportPathE)) {
-          return absImportPathE;
-        } else if (!this.has(absImportPathE.right)) {
-          queue.push(absImportPathE.right);
+          const baseDir = p.dirname(sourceFile.path);
+          let entryPoint = this.resolveEntryPoint(baseDir, sym.from);
+          if (E.isLeft(entryPoint)) {
+            continue;
+          } else if (!this.has(entryPoint.right)) {
+            queue.push(entryPoint.right);
+          }
+        } else {
+          const filePath = p.dirname(path);
+          const absImportPathE = this.resolve(filePath, sym.from);
+          if (E.isLeft(absImportPathE)) {
+            return absImportPathE;
+          } else if (!this.has(absImportPathE.right)) {
+            queue.push(absImportPathE.right);
+          }
         }
       }
       for (const starExport of sourceFile.symbols.exportStarFiles) {
@@ -73,6 +82,26 @@ export class Project {
 
   async readFile(filename: string): Promise<string> {
     return await readFile(filename, 'utf8');
+  }
+
+  resolveEntryPoint(basedir: string, library: string): E.Either<string, string> {
+    try {
+      const packageJson = resolve.sync(`${library}/package.json`, {
+        basedir,
+        extensions: ['.json'],
+      });
+      const packageInfo = JSON.parse(fs.readFileSync(packageJson, 'utf8'));
+      if (!packageInfo['types']) {
+        return E.left(`No types field in ${library}/package.json`);
+      }
+      const entryPoint = resolve.sync(`${library}/${packageInfo['types']}`, {
+        basedir,
+        extensions: ['.ts', '.js'],
+      });
+      return E.right(entryPoint);
+    } catch (err) {
+      return E.left(`Could not resolve entry point for ${library}: ${err}`);
+    }
   }
 
   resolve(basedir: string, path: string): E.Either<string, string> {

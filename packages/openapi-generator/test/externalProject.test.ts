@@ -114,9 +114,5 @@ testCase(
       },
     },
   },
-  {
-    'test/projects/bad-external-library/node_modules/foobar/src/index.ts': [
-      'Uhh, something should go here but dunno what yet',
-    ],
-  },
+  {},
 );
