@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/BitGo/api-ts#readme",
   "workspaces": [
-    "packages/**"
+    "packages/*"
   ],
   "packageManager": "npm@8.5.0",
   "scripts": {

@@ -33,10 +33,6 @@ export class Project {
     return this.files.hasOwnProperty(path);
   }
 
-  getSourceFile(): Record<string, SourceFile> {
-    return this.files;
-  }
-
   async parseEntryPoint(entryPoint: string): Promise<E.Either<string, Project>> {
     const queue: string[] = [entryPoint];
     let path: string | undefined;
@@ -118,18 +114,15 @@ export class Project {
   resolve(basedir: string, path: string): E.Either<string, string> {
     const BITGO_PREFIX = '@bitgo';
     try {
-      // TODO: add support for non-strict mode (swc errors out when handling express as it is not in strict mode)
-      if (path.includes('express')) return E.right('express');
-
       let resolved = this.resolvePath(path, basedir);
       if (E.isLeft(resolved)) {
         // Could not resolve the path, try resolving in the types package
         resolved = this.resolvePath('@types/' + path, basedir);
       }
 
-      // Types package wasn't found, return an errord
+      // Types package wasn't found, return an error
       if (E.isLeft(resolved)) {
-        return E.left('Could not resolve ' + path);
+        return E.left('Could not resolve ' + path + ' from ' + basedir);
       }
 
       const result = resolved.right;
@@ -138,6 +131,7 @@ export class Project {
       if (path.startsWith(BITGO_PREFIX)) {
         return this.findSourceFileFromPackage(result);
       } else {
+        // Else - find the declaration file and return it if it exists
         const dTsName = result.replace('.js', '.d.ts');
 
         if (fs.existsSync(dTsName)) {
@@ -158,10 +152,6 @@ export class Project {
   resolveKnownImport(path: string, name: string): KnownCodec | undefined {
     const baseKey = path.startsWith('.') ? '.' : path;
     return this.knownImports[baseKey]?.[name];
-  }
-
-  getKnownImports() {
-    return this.knownImports;
   }
 
   getTypes() {
