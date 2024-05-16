@@ -48,6 +48,8 @@ export class Project {
       const src = await this.readFile(path);
       const sourceFile = await parseSource(path, src);
 
+      if (sourceFile === undefined) continue;
+
       // map types to their file path
       for (const exp of sourceFile.symbols.exports) {
         this.types[exp.exportedName] = path;

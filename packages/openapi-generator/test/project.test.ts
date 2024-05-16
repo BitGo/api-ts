@@ -93,3 +93,29 @@ testCase(
     },
   },
 );
+
+const NON_STRICT_MODE_SRC = `
+import * as t from 'io-ts';
+import { bar } from './bar';
+var static: serveStatic.RequestHandlerConstructor<Response>;
+export const FOO = t.type({ bar: bar });
+`;
+
+test('non-strict files are ignored and logged to stderr', async () => {
+  let errorCalled = false;
+  const originalConsoleError = console.error;
+
+  console.error = (...args) => {
+    errorCalled = true;
+    originalConsoleError(...args);
+  };
+
+  const project = new TestProject({ '/index.ts': NON_STRICT_MODE_SRC }, {});
+  await project.parseEntryPoint('/index.ts');
+  const sourceFile = project.get('/index.ts');
+
+  assert.strictEqual(sourceFile, undefined);
+  assert.strictEqual(errorCalled, true, new Error('console.error was not called'));
+
+  console.error = originalConsoleError;
+});
