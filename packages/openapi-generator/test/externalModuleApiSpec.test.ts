@@ -88,25 +88,25 @@ async function testCase(
         }
         const sourceFile = project.get(ref.location);
         if (sourceFile === undefined) {
-          console.error(`Could not find '${ref.name}' from '${ref.location}'`);
-          process.exit(1);
+          errors.push(`Could not find '${ref.name}' from '${ref.location}'`);
+          break;
         }
 
         const initE = findSymbolInitializer(project, sourceFile, ref.name);
         if (E.isLeft(initE)) {
-          console.error(
+          errors.push(
             `Could not find symbol '${ref.name}' in '${ref.location}': ${initE.left}`,
           );
-          process.exit(1);
+          break;
         }
         const [newSourceFile, init] = initE.right;
 
         const codecE = parseCodecInitializer(project, newSourceFile, init);
         if (E.isLeft(codecE)) {
-          console.error(
-            `Could not parse codec '${ref.name}' in '${ref.location}': ${codecE.left}`,
+          errors.push(
+          `Could not parse codec '${ref.name}' in '${ref.location}': ${codecE.left}`,
           );
-          process.exit(1);
+          break;
         }
         components[ref.name] = codecE.right;
         queue.push(codecE.right);
