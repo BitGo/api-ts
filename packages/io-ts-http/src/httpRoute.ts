@@ -18,6 +18,7 @@ export type HttpRoute<M extends Method = Method> = {
   readonly method: Uppercase<M>;
   readonly request: HttpRequestCodec<any>;
   readonly response: HttpResponse;
+  readonly generate?: boolean;
 };
 
 export type RequestType<T extends HttpRoute> = t.TypeOf<T['request']>;

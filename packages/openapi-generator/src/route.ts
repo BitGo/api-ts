@@ -23,6 +23,10 @@ export type Route = {
   comment?: Block;
 };
 
+export type RouteWithGenerate = Route & {
+  generate: boolean;
+};
+
 type Request = {
   parameters: Parameter[];
   body?: Schema;
@@ -202,7 +206,22 @@ function parseRequestSchema(
   }
 }
 
-export function parseRoute(project: Project, schema: Schema): E.Either<string, Route> {
+function parseGenerateField(schema: Schema | undefined): E.Either<string, boolean> {
+  if (schema === undefined) {
+    return E.right(false);
+  }
+
+  if (schema.type !== 'boolean') {
+    return E.left('Route generate field must be a boolean');
+  }
+
+  return E.right(schema.enum![0] as boolean);
+}
+
+export function parseRoute(
+  project: Project,
+  schema: Schema,
+): E.Either<string, RouteWithGenerate> {
   if (schema.type !== 'object') {
     return E.left('Route must be an object');
   }
@@ -235,6 +254,12 @@ export function parseRoute(project: Project, schema: Schema): E.Either<string, R
   }
   const { parameters, body } = requestPropertiesE.right;
 
+  const generateField = schema.properties['generate'];
+  const generateFieldE = parseGenerateField(generateField);
+  if (E.isLeft(generateFieldE)) {
+    return generateFieldE;
+  }
+
   if (schema.properties['response'] === undefined) {
     return E.left('Route must have responses');
   } else if (schema.properties['response'].type !== 'object') {
@@ -246,6 +271,7 @@ export function parseRoute(project: Project, schema: Schema): E.Either<string, R
     method: schema.properties['method'].enum![0] as string,
     parameters,
     response: schema.properties['response'].properties,
+    generate: generateFieldE.right,
     ...(body !== undefined ? { body } : {}),
     ...(schema.comment !== undefined ? { comment: schema.comment } : {}),
   });

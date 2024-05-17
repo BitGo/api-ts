@@ -68,6 +68,7 @@ const SIMPLE = {
           response: {
             200: t.string,
           },
+          generate: true
         })
       }
     });`,
@@ -96,6 +97,7 @@ const ROUTE_REF = {
       response: {
         200: t.string,
       },
+      generate: true
     });
 
     export const test = h.apiSpec({
@@ -129,6 +131,7 @@ const ACTION_REF = {
         response: {
           200: t.string,
         },
+        generate: true
       }),
     };
 
@@ -169,6 +172,7 @@ const SPREAD = {
           response: {
             200: t.string,
           },
+          generate: true
         })
       }
     };
@@ -204,6 +208,7 @@ const COMPUTED_PROPERTY = {
           response: {
             200: t.string,
           },
+          generate: true
         })
       }
     });`,
@@ -238,6 +243,7 @@ const BASE_URL = {
           response: {
             200: t.string,
           },
+          generate: true
         })
       }
     });`,
@@ -282,6 +288,7 @@ const MISSING_REFERENCE = {
           response: {
             200: t.string,
           },
+          generate: true
         })
       }
     });`,

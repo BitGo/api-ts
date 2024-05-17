@@ -3,12 +3,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { TestProject } from './testProject';
-import { parseRoute, parsePlainInitializer, type Route } from '../src';
+import {
+  parseRoute,
+  parsePlainInitializer,
+  type Route,
+  type RouteWithGenerate,
+} from '../src';
 
 async function testCase(
   description: string,
   src: string,
-  expected: Record<string, Route>,
+  expected: Record<string, RouteWithGenerate>,
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
@@ -71,6 +76,7 @@ export const route = h.httpRoute({
   response: {
     200: t.string
   },
+  generate: true
 });
 `;
 
@@ -93,6 +99,7 @@ testCase('simple route', SIMPLE, {
         type: 'string',
       },
     },
+    generate: true,
   },
 });
 
@@ -110,6 +117,7 @@ export const route = h.httpRoute({
   response: {
     200: t.type({}),
   },
+  generate: true
 });
 `;
 
@@ -134,6 +142,7 @@ testCase('path params route', PATH_PARAMS, {
         required: [],
       },
     },
+    generate: true,
   },
 });
 
@@ -174,6 +183,7 @@ testCase('optional query param route', OPTIONAL_QUERY_PARAM, {
         type: 'string',
       },
     },
+    generate: false,
   },
 });
 
@@ -190,6 +200,7 @@ export const route = h.httpRoute({
   response: {
     200: t.string
   },
+  generate: true
 });
 `;
 
@@ -203,6 +214,7 @@ testCase('const request route', REQUEST_REF, {
         type: 'string',
       },
     },
+    generate: true,
   },
 });
 
@@ -219,6 +231,7 @@ export const route = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({}),
   response: responses,
+  generate: true
 });
 `;
 
@@ -230,6 +243,7 @@ testCase('const response route', RESPONSE_REF, {
     response: {
       200: { type: 'string' },
     },
+    generate: true,
   },
 });
 
@@ -254,6 +268,7 @@ export const route = h.httpRoute({
   response: {
     200: t.string
   },
+  generate: true
 });
 `;
 
@@ -291,6 +306,7 @@ testCase('query param union route', QUERY_PARAM_UNION, {
     response: {
       200: { type: 'string' },
     },
+    generate: true,
   },
 });
 
@@ -321,6 +337,7 @@ export const route = h.httpRoute({
   response: {
     200: t.string
   },
+  generate: true
 });
 `;
 
@@ -364,6 +381,7 @@ testCase('path param union route', PATH_PARAM_UNION, {
     response: {
       200: { type: 'string' },
     },
+    generate: true,
   },
 });
 
@@ -388,6 +406,7 @@ export const route = h.httpRoute({
   response: {
     200: t.string
   },
+  generate: true
 });
 `;
 
@@ -418,6 +437,7 @@ testCase('body union route', BODY_UNION, {
     response: {
       200: { type: 'string' },
     },
+    generate: true,
   },
 });
 
@@ -442,6 +462,7 @@ export const route = h.httpRoute({
   response: {
     200: t.string
   },
+  generate: true
 });
 `;
 
@@ -466,6 +487,7 @@ testCase('request intersection route', REQUEST_INTERSECTION, {
     response: {
       200: { type: 'string' },
     },
+    generate: true,
   },
 });
 
@@ -520,6 +542,7 @@ testCase('request body intersection route', BODY_INTERSECTION, {
     response: {
       200: { type: 'string' },
     },
+    generate: false,
   },
 });
 
@@ -550,6 +573,7 @@ testCase('route with operationId', WITH_OPERATION_ID, {
   route: {
     path: '/foo',
     method: 'GET',
+    generate: false,
     parameters: [
       {
         type: 'query',

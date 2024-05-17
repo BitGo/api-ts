@@ -5,7 +5,7 @@ import type { Block } from 'comment-parser';
 import { parsePlainInitializer } from './codec';
 import type { Project } from './project';
 import { resolveLiteralOrIdentifier } from './resolveInit';
-import { parseRoute, type Route } from './route';
+import { RouteWithGenerate, parseRoute, type Route } from './route';
 import { SourceFile } from './sourceFile';
 import { OpenAPIV3 } from 'openapi-types';
 
@@ -79,7 +79,14 @@ export function parseApiSpec(
       if (E.isLeft(routeResultE)) {
         return routeResultE;
       }
-      result.push(routeResultE.right);
+
+      const stripRouteWithGenerate = (route: RouteWithGenerate): Route => {
+        const { generate, ...rest } = route;
+        return rest;
+      };
+
+      if (routeResultE.right.generate)
+        result.push(stripRouteWithGenerate(routeResultE.right));
     }
   }
 

@@ -5,7 +5,7 @@ export { convertRoutesToOpenAPI } from './openapi';
 export { optimize } from './optimize';
 export { Project } from './project';
 export { getRefs } from './ref';
-export { parseRoute, type Route } from './route';
+export { parseRoute, type Route, type RouteWithGenerate } from './route';
 export { parseSource } from './sourceFile';
 export { parseTopLevelSymbols } from './symbol';
 export type { Schema } from './ir';
