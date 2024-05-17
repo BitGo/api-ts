@@ -88,8 +88,8 @@ export class Project {
       });
 
       return E.right(result);
-    } catch (e: any) {
-      if (typeof e === 'object' && e.hasOwnProperty('message')) {
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message) {
         return E.left(e.message);
       }
 
@@ -140,12 +140,12 @@ export class Project {
 
         return E.right(result);
       }
-    } catch (e: any) {
-      if (typeof e === 'object' && e.hasOwnProperty('message')) {
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message) {
         return E.left(e.message);
-      } else {
-        return E.left(JSON.stringify(e));
       }
+
+      return E.left(JSON.stringify(e));
     }
   }
 
