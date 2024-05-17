@@ -271,3 +271,51 @@ testCase(
   },
   [],
 );
+
+testCase(
+  'simple api spec with exported union type',
+  'test/sample-types/apiSpecWithUnion.ts',
+  {
+    openapi: "3.0.3",
+    info: {
+      title: "simple api spec with exported union type",
+      version: "4.7.4",
+      description: "simple api spec with exported union type"
+    },
+    paths: {
+      "/test": {
+        get: {
+          parameters: [],
+          responses: {
+            200: {
+              description: "OK",
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: "#/components/schemas/SampleUnion"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    components: {
+      schemas: {
+        SampleUnion: {
+          title: "SampleUnion",
+          oneOf: [
+            {
+              type: "string"
+            },
+            {
+              type: "number"
+            }
+          ]
+        }
+      }
+    }
+  },
+  []
+)
