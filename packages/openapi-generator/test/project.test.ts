@@ -107,7 +107,9 @@ test('non-strict files are ignored and logged to stderr', async () => {
 
   console.error = (...args) => {
     errorCalled = true;
-    originalConsoleError(...args);
+    console.error = originalConsoleError;
+    const errorRegex = /Error parsing source file: \/index.ts/;
+    assert(errorRegex.test(args[0]));
   };
 
   const project = new TestProject({ '/index.ts': NON_STRICT_MODE_SRC }, {});
@@ -116,6 +118,4 @@ test('non-strict files are ignored and logged to stderr', async () => {
 
   assert.strictEqual(sourceFile, undefined);
   assert.strictEqual(errorCalled, true, new Error('console.error was not called'));
-
-  console.error = originalConsoleError;
 });

@@ -38,7 +38,7 @@ export async function parseSource(
       span: module.span,
     };
   } catch (e: unknown) {
-    console.error('Error parsing source file: ', path, e);
+    console.error(`Error parsing source file: ${path}`, e);
     return undefined;
   }
 }
