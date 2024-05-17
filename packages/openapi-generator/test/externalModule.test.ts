@@ -22,10 +22,7 @@ async function testCase(
   test(description, async () => {
     const project = new Project({}, KNOWN_IMPORTS);
     const entryPointPath = p.resolve(entryPoint);
-    const result = await project.parseEntryPoint(entryPointPath);
-
-    if (E.isLeft(result)) {
-    }
+    await project.parseEntryPoint(entryPointPath);
 
     for (const path of Object.keys(expected)) {
       const resolvedPath = p.resolve(path);
@@ -119,16 +116,16 @@ const RANDOM_Object = (testNum: number): Schema => ({
 
 testCase(
   'type from correctly formatted external library with export declaration',
-  'test/projects/export-declaration/index.ts',
+  'test/sample-types/exportDeclaration.ts',
   {
-    'test/projects/export-declaration/index.ts': {
+    'test/sample-types/exportDeclaration.ts': {
       FOO: FOO_Object(1),
       RANDOM: RANDOM_Object(1),
     },
-    'test/projects/export-declaration/node_modules/@bitgo/foobar1/src/index.ts': {
+    'test/sample-types/node_modules/@bitgo/foobar1/src/index.ts': {
       Foobar: FoobarObject,
     },
-    'test/projects/export-declaration/node_modules/@bitgo/random-types1/src/index.ts': {
+    'test/sample-types/node_modules/@bitgo/random-types1/src/index.ts': {
       RandomType: RandomTypeObject,
     },
   },
@@ -136,16 +133,16 @@ testCase(
 
 testCase(
   'type from correctly formatted external library with export star declaration',
-  'test/projects/export-star/index.ts',
+  'test/sample-types/exportStar.ts',
   {
-    'test/projects/export-star/index.ts': {
+    'test/sample-types/exportStar.ts': {
       FOO: FOO_Object(2),
       RANDOM: RANDOM_Object(2),
     },
-    'test/projects/export-star/node_modules/@bitgo/foobar2/src/foobar.ts': {
+    'test/sample-types/node_modules/@bitgo/foobar2/src/foobar.ts': {
       Foobar: FoobarObject,
     },
-    'test/projects/export-star/node_modules/@bitgo/random-types2/src/randomType.ts': {
+    'test/sample-types/node_modules/@bitgo/random-types2/src/randomType.ts': {
       RandomType: RandomTypeObject,
     },
   },
@@ -153,16 +150,16 @@ testCase(
 
 testCase(
   'type from correctly formatted external library with export star declaration and import star declaration',
-  'test/projects/import-star/index.ts',
+  'test/sample-types/importStar.ts',
   {
-    'test/projects/import-star/index.ts': {
+    'test/sample-types/importStar.ts': {
       FOO: FOO_Object(4),
       RANDOM: RANDOM_Object(4),
     },
-    'test/projects/import-star/node_modules/@bitgo/foobar4/src/foobar.ts': {
+    'test/sample-types/node_modules/@bitgo/foobar4/src/foobar.ts': {
       Foobar: FoobarObject,
     },
-    'test/projects/import-star/node_modules/@bitgo/random-types4/src/randomType.ts': {
+    'test/sample-types/node_modules/@bitgo/random-types4/src/randomType.ts': {
       RandomType: RandomTypeObject,
     },
   },
@@ -170,50 +167,29 @@ testCase(
 
 testCase(
   'type from external library with syntax errors',
-  'test/projects/syntax-error/index.ts',
+  'test/sample-types/syntaxError.ts',
   {
-    'test/projects/syntax-error/index.ts': {
+    'test/sample-types/syntaxError.ts': {
       FOO: FOO_Object(5),
     },
-    'test/projects/syntax-error/node_modules/@bitgo/foobar5/src/foobar.ts': {},
+    'test/sample-types/node_modules/@bitgo/foobar5/src/foobar.ts': {},
   },
   {
-    'test/projects/syntax-error/node_modules/@bitgo/foobar5/src/foobar.ts': [
+    'test/sample-types/node_modules/@bitgo/foobar5/src/foobar.ts': [
       'Unknown identifier ttype',
     ],
   },
 );
 
 test('type from external library with import path error', async () => {
-  const entryPoint = 'test/projects/import-path-error/index.ts';
+  const entryPoint = 'test/sample-types/importPathError.ts';
   const project = new Project({}, KNOWN_IMPORTS);
   const entryPointPath = p.resolve(entryPoint);
   const result = await project.parseEntryPoint(entryPointPath);
 
   const errorRegex =
-    /Could not resolve .* from .*\/api-ts\/packages\/openapi-generator\/test\/projects\/import-path-error\/node_modules\/@bitgo\/foobar3\/src/;
+    /Could not resolve io-tsg from .*\/test\/sample-types\/node_modules\/@bitgo\/foobar3\/src/;
 
   assert(E.isLeft(result));
   assert(errorRegex.test(result.left));
 });
-
-// testCase(
-//   'type from external library with syntax errors',
-//   'test/projects/bad-external-library/index.ts',
-//   {
-//     'test/projects/bad-external-library/index.ts': {
-//       FOO: {
-//         type: 'object',
-//         properties: {
-//           foobar: {
-//             location: 'foobar',
-//             name: 'Foobar',
-//             type: 'ref',
-//           },
-//         },
-//         required: ['foobar'],
-//       },
-//     },
-//   },
-//   {},
-// );
