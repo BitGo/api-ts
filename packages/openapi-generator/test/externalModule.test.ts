@@ -18,11 +18,18 @@ async function testCase(
   entryPoint: string,
   expected: Record<string, Record<string, Schema>>,
   expectedErrors: Record<string, string[]> = {},
+  parseErrorRegex: RegExp | undefined = undefined,
 ) {
   test(description, async () => {
     const project = new Project({}, KNOWN_IMPORTS);
     const entryPointPath = p.resolve(entryPoint);
-    await project.parseEntryPoint(entryPointPath);
+    const parsed = await project.parseEntryPoint(entryPointPath);
+
+    if (parseErrorRegex !== undefined) {
+      assert(E.isLeft(parsed));
+      assert(parseErrorRegex.test(parsed.left));
+      return;
+    }
 
     for (const path of Object.keys(expected)) {
       const resolvedPath = p.resolve(path);
@@ -181,15 +188,18 @@ testCase(
   },
 );
 
-test('type from external library with import path error', async () => {
-  const entryPoint = 'test/sample-types/importPathError.ts';
-  const project = new Project({}, KNOWN_IMPORTS);
-  const entryPointPath = p.resolve(entryPoint);
-  const result = await project.parseEntryPoint(entryPointPath);
+testCase(
+  'type from external library with import path error',
+  'test/sample-types/importPathError.ts',
+  {},
+  {},
+  /Could not resolve io-tsg from .*\/test\/sample-types\/node_modules\/@bitgo\/foobar3\/src/,
+);
 
-  const errorRegex =
-    /Could not resolve io-tsg from .*\/test\/sample-types\/node_modules\/@bitgo\/foobar3\/src/;
-
-  assert(E.isLeft(result));
-  assert(errorRegex.test(result.left));
-});
+testCase(
+  'type from external library with export path error',
+  'test/sample-types/exportPathError.ts',
+  {},
+  {},
+  /Could not resolve .\/foobart from .*\/test\/sample-types\/node_modules\/@bitgo\/foobar6\/src/,
+);
