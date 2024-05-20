@@ -126,6 +126,26 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
   const isUnstable = jsdoc.tags?.unstable !== undefined;
   const example = jsdoc.tags?.example;
 
+  const knownTags = new Set([
+    'operationId',
+    'summary',
+    'private',
+    'unstable',
+    'example',
+    'tag',
+    'description',
+    'url',
+  ]);
+  const unknownTagsObject = Object.entries(jsdoc.tags ?? {}).reduce(
+    (acc, [key, value]) => {
+      if (!knownTags.has(key)) {
+        return { ...acc, [key]: value || true };
+      }
+      return acc;
+    },
+    {},
+  );
+
   const requestBody =
     route.body === undefined
       ? {}
@@ -147,6 +167,9 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
       ...(tag !== '' ? { tags: [tag] } : {}),
       ...(isInternal ? { 'x-internal': true } : {}),
       ...(isUnstable ? { 'x-unstable': true } : {}),
+      ...(Object.keys(unknownTagsObject).length > 0
+        ? { 'x-unknown-tags': unknownTagsObject }
+        : {}),
       parameters: route.parameters.map((p) => {
         // Array types not allowed here
         const schema = schemaToOpenAPI(p.schema);

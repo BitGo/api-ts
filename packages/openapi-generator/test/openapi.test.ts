@@ -16,7 +16,11 @@ import {
 async function testCase(
   description: string,
   src: string,
-  expected: OpenAPIV3_1.Document<{ 'x-internal'?: boolean; 'x-unstable'?: boolean }>,
+  expected: OpenAPIV3_1.Document<{
+    'x-internal'?: boolean;
+    'x-unstable'?: boolean;
+    'x-unknown-tags'?: object;
+  }>,
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
@@ -1192,3 +1196,135 @@ testCase(
     },
   },
 );
+
+const ROUTE_WITH_UNKNOWN_TAG = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ * @optout true
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with unknown tag', ROUTE_WITH_UNKNOWN_TAG, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        'x-unknown-tags': {
+          optout: 'true',
+        },
+        parameters: [],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['test'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
+
+const ROUTE_WITH_MULTIPLE_UNKNOWN_TAGS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ * @optout true
+ * @critical false
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with multiple unknown tags', ROUTE_WITH_MULTIPLE_UNKNOWN_TAGS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        'x-unknown-tags': {
+          optout: 'true',
+          critical: 'false',
+        },
+        parameters: [],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['test'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
