@@ -54,12 +54,23 @@ export class Project {
       this.add(path, sourceFile);
 
       for (const sym of Object.values(sourceFile.symbols.imports)) {
-        const filePath = p.dirname(path);
-        const absImportPathE = this.resolve(filePath, sym.from);
-        if (E.isLeft(absImportPathE)) {
-          return absImportPathE;
-        } else if (!this.has(absImportPathE.right)) {
-          queue.push(absImportPathE.right);
+        if (!sym.from.startsWith('.')) {
+          // If we are not resolving a relative path, we need to resolve the entry point
+          const baseDir = p.dirname(sourceFile.path);
+          let entryPoint = this.resolveEntryPoint(baseDir, sym.from);
+          if (E.isLeft(entryPoint)) {
+            continue;
+          } else if (!this.has(entryPoint.right)) {
+            queue.push(entryPoint.right);
+          }
+        } else {
+          const filePath = p.dirname(path);
+          const absImportPathE = this.resolve(filePath, sym.from);
+          if (E.isLeft(absImportPathE)) {
+            return absImportPathE;
+          } else if (!this.has(absImportPathE.right)) {
+            queue.push(absImportPathE.right);
+          }
         }
       }
       for (const starExport of sourceFile.symbols.exportStarFiles) {
@@ -80,66 +91,45 @@ export class Project {
     return await readFile(filename, 'utf8');
   }
 
-  private resolvePath(path: string, basedir: string): E.Either<string, string> {
+  resolveEntryPoint(basedir: string, library: string): E.Either<string, string> {
     try {
-      const result = resolve.sync(path, {
+      const packageJson = resolve.sync(`${library}/package.json`, {
         basedir,
-        extensions: ['.ts', '.js', '.d.ts'],
+        extensions: ['.json'],
       });
+      const packageInfo = JSON.parse(fs.readFileSync(packageJson, 'utf8'));
 
-      return E.right(result);
-    } catch (e: unknown) {
-      if (e instanceof Error && e.message) {
-        return E.left(e.message);
+      let typesEntryPoint = '';
+
+      if (packageInfo['types']) {
+        typesEntryPoint = packageInfo['types'];
       }
 
-      return E.left(JSON.stringify(e));
+      if (packageInfo['typings']) {
+        typesEntryPoint = packageInfo['typings'];
+      }
+
+      if (!typesEntryPoint) {
+        return E.left(`Could not find types entry point for ${library}`);
+      }
+
+      const entryPoint = resolve.sync(`${library}/${typesEntryPoint}`, {
+        basedir,
+        extensions: ['.ts', '.js'],
+      });
+      return E.right(entryPoint);
+    } catch (err) {
+      return E.left(`Could not resolve entry point for ${library}: ${err}`);
     }
-  }
-
-  private findSourceFileFromPackage(path: string): E.Either<string, string> {
-    const mapName = path.replace('.js', '.js.map');
-
-    if (fs.existsSync(mapName)) {
-      const mapJson = JSON.parse(fs.readFileSync(mapName, 'utf8'));
-      const dirName = p.dirname(path);
-      const source = mapJson.sources[0];
-      const response = resolve.sync(source, { basedir: dirName });
-      return E.right(response);
-    }
-
-    return E.left('Map file not found for ' + path);
   }
 
   resolve(basedir: string, path: string): E.Either<string, string> {
-    const BITGO_PREFIX = '@bitgo';
     try {
-      let resolved = this.resolvePath(path, basedir);
-      if (E.isLeft(resolved)) {
-        // Could not resolve the path, try resolving in the types package
-        resolved = this.resolvePath('@types/' + path, basedir);
-      }
-
-      // Types package wasn't found, return an error
-      if (E.isLeft(resolved)) {
-        return E.left('Could not resolve ' + path + ' from ' + basedir);
-      }
-
-      const result = resolved.right;
-
-      // If we are parsing an internal type package, we want to return the path to the source TS file
-      if (path.startsWith(BITGO_PREFIX)) {
-        return this.findSourceFileFromPackage(result);
-      } else {
-        // Else - find the declaration file and return it if it exists
-        const dTsName = result.replace('.js', '.d.ts');
-
-        if (fs.existsSync(dTsName)) {
-          return E.right(dTsName);
-        }
-
-        return E.right(result);
-      }
+      const result = resolve.sync(path, {
+        basedir,
+        extensions: ['.ts', '.js'],
+      });
+      return E.right(result);
     } catch (e: unknown) {
       if (e instanceof Error && e.message) {
         return E.left(e.message);

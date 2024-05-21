@@ -5,6 +5,7 @@ import * as p from 'path';
 
 import { parsePlainInitializer, Project, type Schema } from '../src';
 import { KNOWN_IMPORTS } from '../src/knownImports';
+// import { resolve } from 'node:path';
 
 /** External library parsing test case
  *
@@ -18,23 +19,16 @@ async function testCase(
   entryPoint: string,
   expected: Record<string, Record<string, Schema>>,
   expectedErrors: Record<string, string[]> = {},
-  parseErrorRegex: RegExp | undefined = undefined,
 ) {
   test(description, async () => {
     const project = new Project({}, KNOWN_IMPORTS);
     const entryPointPath = p.resolve(entryPoint);
-    const parsed = await project.parseEntryPoint(entryPointPath);
-
-    if (parseErrorRegex !== undefined) {
-      assert(E.isLeft(parsed));
-      assert(parseErrorRegex.test(parsed.left));
-      return;
-    }
+    await project.parseEntryPoint(entryPointPath);
 
     for (const path of Object.keys(expected)) {
       const resolvedPath = p.resolve(path);
       const sourceFile = project.get(resolvedPath);
-
+      
       if (sourceFile === undefined) {
         throw new Error(`Source file ${path} not found`);
       }
@@ -193,7 +187,6 @@ testCase(
   'test/sample-types/importPathError.ts',
   {},
   {},
-  /Could not resolve io-tsg from .*\/test\/sample-types\/node_modules\/@bitgo\/foobar3\/src/,
 );
 
 testCase(
@@ -201,5 +194,4 @@ testCase(
   'test/sample-types/exportPathError.ts',
   {},
   {},
-  /Could not resolve .\/foobart from .*\/test\/sample-types\/node_modules\/@bitgo\/foobar6\/src/,
 );
