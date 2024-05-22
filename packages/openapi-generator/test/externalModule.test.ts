@@ -5,7 +5,6 @@ import * as p from 'path';
 
 import { parsePlainInitializer, Project, type Schema } from '../src';
 import { KNOWN_IMPORTS } from '../src/knownImports';
-// import { resolve } from 'node:path';
 
 /** External library parsing test case
  *
