@@ -25,6 +25,9 @@ async function testCase(
 ) {
   test(description, async () => {
     const sourceFile = await parseSource('./index.ts', src);
+    if (sourceFile === undefined) {
+      throw new Error('Failed to parse source file');
+    }
 
     const project = new Project();
     const routes: Route[] = [];

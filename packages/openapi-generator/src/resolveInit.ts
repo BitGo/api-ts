@@ -13,7 +13,13 @@ function resolveImportPath(
   sourceFile: SourceFile,
   path: string,
 ): E.Either<string, SourceFile> {
-  const importPathE = project.resolve(dirname(sourceFile.path), path);
+  let importPathE;
+  if (path.startsWith('.')) {
+    importPathE = project.resolve(dirname(sourceFile.path), path);
+  } else {
+    importPathE = project.resolveEntryPoint(dirname(sourceFile.path), path);
+  }
+
   if (E.isLeft(importPathE)) {
     return importPathE;
   }

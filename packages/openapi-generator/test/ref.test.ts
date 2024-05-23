@@ -3,6 +3,11 @@ import test from 'node:test';
 
 import { getRefs, type Schema } from '../src';
 
+const typeMap: Record<string, string> = {
+  Foo: '/foo.ts',
+  Bar: '/bar.ts',
+};
+
 test('simple ref is returned', () => {
   const schema: Schema = {
     type: 'ref',
@@ -10,7 +15,7 @@ test('simple ref is returned', () => {
     location: '/foo.ts',
   };
 
-  assert.deepEqual(getRefs(schema), [schema]);
+  assert.deepEqual(getRefs(schema, typeMap), [schema]);
 });
 
 test('array ref is returned', () => {
@@ -23,7 +28,7 @@ test('array ref is returned', () => {
     },
   };
 
-  assert.deepEqual(getRefs(schema), [
+  assert.deepEqual(getRefs(schema, typeMap), [
     {
       type: 'ref',
       name: 'Foo',
@@ -49,7 +54,7 @@ test('intersection ref is returned', () => {
     ],
   };
 
-  assert.deepEqual(getRefs(schema), [
+  assert.deepEqual(getRefs(schema, typeMap), [
     {
       type: 'ref',
       name: 'Foo',
@@ -80,7 +85,7 @@ test('union ref is returned', () => {
     ],
   };
 
-  assert.deepEqual(getRefs(schema), [
+  assert.deepEqual(getRefs(schema, typeMap), [
     {
       type: 'ref',
       name: 'Foo',
@@ -111,7 +116,7 @@ test('tuple ref is returned', () => {
     ],
   };
 
-  assert.deepEqual(getRefs(schema), [
+  assert.deepEqual(getRefs(schema, typeMap), [
     {
       type: 'ref',
       name: 'Foo',
@@ -143,7 +148,7 @@ test('object ref is returned', () => {
     required: ['foo', 'bar'],
   };
 
-  assert.deepEqual(getRefs(schema), [
+  assert.deepEqual(getRefs(schema, typeMap), [
     {
       type: 'ref',
       name: 'Foo',
@@ -167,7 +172,7 @@ test('record ref is returned', () => {
     },
   };
 
-  assert.deepEqual(getRefs(schema), [
+  assert.deepEqual(getRefs(schema, typeMap), [
     {
       type: 'ref',
       name: 'Foo',

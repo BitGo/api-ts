@@ -14,7 +14,10 @@ export type SourceFile = {
 // increasing counter for this, so we also need to track it globally here
 let lastSpanEnd = -1;
 
-export async function parseSource(path: string, src: string): Promise<SourceFile> {
+export async function parseSource(
+  path: string,
+  src: string,
+): Promise<SourceFile | undefined> {
   try {
     const module = await swc.parse(src, {
       syntax: 'typescript',
@@ -34,8 +37,8 @@ export async function parseSource(path: string, src: string): Promise<SourceFile
       symbols,
       span: module.span,
     };
-  } catch (e) {
-    console.error(e);
-    process.exit(1);
+  } catch (e: unknown) {
+    console.error(`Error parsing source file: ${path}`, e);
+    return undefined;
   }
 }

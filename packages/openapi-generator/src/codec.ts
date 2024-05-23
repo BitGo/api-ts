@@ -96,12 +96,6 @@ function codecIdentifier(
       }
       const name = id.property.value;
 
-      if (!objectImportSym.from.startsWith('.')) {
-        return E.left(
-          `Unimplemented named member reference '${objectImportSym.localName}.${name}' from '${objectImportSym.from}'`,
-        );
-      }
-
       const newInitE = findSymbolInitializer(project, source, [
         objectImportSym.localName,
         name,
@@ -360,9 +354,17 @@ export function parseCodecInitializer(
       if (schema.type !== 'ref') {
         return E.right(schema);
       } else {
-        const refSource = project.get(schema.location);
+        let refSource = project.get(schema.location);
+
         if (refSource === undefined) {
-          return E.left(`Cannot find '${schema.name}' from '${schema.location}'`);
+          // schema.location might be a package name -> need to resolve the path from the project types
+          const path = project.getTypes()[schema.name];
+          if (path === undefined)
+            return E.left(`Cannot find module '${schema.location}' in the project`);
+          refSource = project.get(path);
+          if (refSource === undefined) {
+            return E.left(`Cannot find '${schema.name}' from '${schema.location}'`);
+          }
         }
         const initE = findSymbolInitializer(project, refSource, schema.name);
         if (E.isLeft(initE)) {

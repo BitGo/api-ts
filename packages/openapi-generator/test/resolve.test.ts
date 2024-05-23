@@ -5,6 +5,7 @@ import test from 'node:test';
 
 import { TestProject } from './testProject';
 import { parseCodecInitializer, Project, type Schema } from '../src';
+import { MOCK_NODE_MODULES_DIR } from './externalModules';
 
 async function testCase(
   description: string,
@@ -14,7 +15,7 @@ async function testCase(
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
-    let project: Project = new TestProject(files);
+    let project: Project = new TestProject({ ...files, ...MOCK_NODE_MODULES_DIR });
     const projectE = await project.parseEntryPoint(entryPoint);
     if (E.isLeft(projectE)) {
       throw new Error(projectE.left);
@@ -55,7 +56,9 @@ export const FOO = t.type(fooProps);
 
 testCase(
   'const props initializer is parsed',
-  { '/index.ts': OBJECT_CONST },
+  {
+    '/index.ts': OBJECT_CONST,
+  },
   '/index.ts',
   {
     FOO: {
@@ -75,7 +78,9 @@ export const FOO = t.union(fooUnion);
 
 testCase(
   'const array initializer is parsed',
-  { '/index.ts': ARRAY_CONST },
+  {
+    '/index.ts': ARRAY_CONST,
+  },
   '/index.ts',
   {
     FOO: {
@@ -97,7 +102,9 @@ export const FOO = t.keyof(fooKeys);
 
 testCase(
   'const keyof initializer is parsed',
-  { '/index.ts': KEYOF_CONST },
+  {
+    '/index.ts': KEYOF_CONST,
+  },
   '/index.ts',
   {
     FOO: {
@@ -119,7 +126,9 @@ export const FOO = t.literal(foo);
 
 testCase(
   'const literal initializer is parsed',
-  { '/index.ts': LITERAL_CONST },
+  {
+    '/index.ts': LITERAL_CONST,
+  },
   '/index.ts',
   {
     FOO: { type: 'number', enum: [42] },

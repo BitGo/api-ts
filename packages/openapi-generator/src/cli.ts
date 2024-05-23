@@ -159,7 +159,7 @@ const app = command({
     });
     let schema: Schema | undefined;
     while (((schema = queue.pop()), schema !== undefined)) {
-      const refs = getRefs(schema);
+      const refs = getRefs(schema, project.right.getTypes());
       for (const ref of refs) {
         if (components[ref.name] !== undefined) {
           continue;
@@ -169,6 +169,7 @@ const app = command({
           console.error(`Could not find '${ref.name}' from '${ref.location}'`);
           process.exit(1);
         }
+
         const initE = findSymbolInitializer(project.right, sourceFile, ref.name);
         if (E.isLeft(initE)) {
           console.error(
@@ -177,6 +178,7 @@ const app = command({
           process.exit(1);
         }
         const [newSourceFile, init] = initE.right;
+
         const codecE = parseCodecInitializer(project.right, newSourceFile, init);
         if (E.isLeft(codecE)) {
           console.error(
