@@ -53,6 +53,10 @@ function codecIdentifier(
   } else if (id.type === 'MemberExpression') {
     const object = id.object;
     if (object.type !== 'Identifier') {
+      if (object.type === 'MemberExpression')
+        return E.left(
+          `Object ${((object as swc.MemberExpression) && { value: String }).value} is deeply nested, which is unsupported`,
+        );
       return E.left(`Unimplemented object type ${object.type}`);
     }
 
