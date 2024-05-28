@@ -161,7 +161,6 @@ testCase('simple route', SIMPLE, {
             description: 'foo param',
             required: true,
             schema: {
-              description: 'foo param',
               type: 'string',
             },
           },
@@ -928,7 +927,6 @@ testCase('schema parameter with title tag', TITLE_TAG, {
             description: 'bar param',
             required: true,
             schema: {
-              description: 'bar param',
               title: 'this is a bar parameter',
               type: 'string',
             },
@@ -1349,6 +1347,10 @@ export const route = h.httpRoute({
   path: '/foo',
   method: 'GET',
   request: h.httpRequest({
+    query: {
+      /** bar param */
+      bar: t.string,
+    },
     body: {
       /** foo description */
       foo: t.string,
@@ -1380,7 +1382,17 @@ testCase('route with type descriptions', ROUTE_WITH_TYPE_DESCRIPTIONS, {
         summary: 'A simple route with type descriptions',
         operationId: 'api.v1.test',
         tags: ['Test Routes'],
-        parameters: [],
+        parameters: [
+          {
+            description: 'bar param',
+            in: 'query',
+            name: 'bar',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          }
+        ],
         requestBody: {
           content: {
             'application/json': {

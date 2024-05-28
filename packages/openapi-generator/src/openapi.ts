@@ -200,6 +200,10 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
         // Array types not allowed here
         const schema = schemaToOpenAPI(p.schema);
 
+        if (schema && 'description' in schema) {
+          delete schema.description;
+        }
+
         return {
           name: p.name,
           ...(p.schema?.comment?.description !== undefined
