@@ -161,6 +161,7 @@ testCase('simple route', SIMPLE, {
             description: 'foo param',
             required: true,
             schema: {
+              description: 'foo param',
               type: 'string',
             },
           },
@@ -927,6 +928,7 @@ testCase('schema parameter with title tag', TITLE_TAG, {
             description: 'bar param',
             required: true,
             schema: {
+              description: 'bar param',
               title: 'this is a bar parameter',
               type: 'string',
             },
