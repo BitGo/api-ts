@@ -14,13 +14,27 @@ function schemaToOpenAPI(
   const createOpenAPIObject = (
     schema: Schema,
   ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined => {
+    const description = schema.comment?.description;
+
+    const defaultObject = {
+      ...(description ? { description } : {}),
+    };
+
     switch (schema.type) {
       case 'boolean':
       case 'string':
       case 'number':
-        return { type: schema.type, ...(schema.enum ? { enum: schema.enum } : {}) };
+        return {
+          type: schema.type,
+          ...(schema.enum ? { enum: schema.enum } : {}),
+          ...defaultObject,
+        };
       case 'integer':
-        return { type: 'number', ...(schema.enum ? { enum: schema.enum } : {}) };
+        return {
+          type: 'number',
+          ...(schema.enum ? { enum: schema.enum } : {}),
+          ...defaultObject,
+        };
       case 'null':
         // TODO: OpenAPI v3 does not have an explicit null type, is there a better way to represent this?
         // Or should we just conflate explicit null and undefined properties?
@@ -32,7 +46,7 @@ function schemaToOpenAPI(
         if (innerSchema === undefined) {
           return undefined;
         }
-        return { type: 'array', items: innerSchema };
+        return { type: 'array', items: innerSchema, ...defaultObject };
       case 'object':
         return {
           type: 'object',
@@ -146,13 +160,25 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
     {},
   );
 
+  const stripTopLevelComment = (schema: Schema) => {
+    const copy = { ...schema };
+
+    if (copy.comment?.description !== undefined && copy.comment?.description !== '') {
+      copy.comment.description = '';
+    }
+
+    return copy;
+  };
+
+  const topLevelStripped = stripTopLevelComment(route.body!);
+
   const requestBody =
     route.body === undefined
       ? {}
       : {
           requestBody: {
             content: {
-              'application/json': { schema: schemaToOpenAPI(route.body) },
+              'application/json': { schema: schemaToOpenAPI(topLevelStripped) },
             },
           },
         };
@@ -173,6 +199,10 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
       parameters: route.parameters.map((p) => {
         // Array types not allowed here
         const schema = schemaToOpenAPI(p.schema);
+
+        if (schema && 'description' in schema) {
+          delete schema.description;
+        }
 
         return {
           name: p.name,
@@ -195,7 +225,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
             description,
             content: {
               'application/json': {
-                schema: schemaToOpenAPI(response),
+                schema: schemaToOpenAPI(stripTopLevelComment(response)),
                 ...(example !== undefined ? { example } : undefined),
               },
             },

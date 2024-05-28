@@ -1331,3 +1331,126 @@ testCase('route with multiple unknown tags', ROUTE_WITH_MULTIPLE_UNKNOWN_TAGS, {
     schemas: {},
   },
 });
+
+
+const ROUTE_WITH_TYPE_DESCRIPTIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /** bar param */
+      bar: t.string,
+    },
+    body: {
+      /** foo description */
+      foo: t.string,
+      /** bar description */
+      bar: t.number,
+      child: {
+        /** child description */
+        child: t.string,
+      }
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with type descriptions', ROUTE_WITH_TYPE_DESCRIPTIONS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        parameters: [
+          {
+            description: 'bar param',
+            in: 'query',
+            name: 'bar',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  bar: {
+                    description: 'bar description',
+                    type: 'number'
+                  },
+                  child: {
+                    properties: {
+                      child: {
+                        description: 'child description',
+                        type: 'string'
+                      }
+                    },
+                    required: [
+                      'child'
+                    ],
+                    type: 'object'
+                  },
+                  foo: {
+                    description: 'foo description',
+                    type: 'string'
+                  }
+                },
+                required: [
+                  'foo',
+                  'bar',
+                  'child'
+                ],
+                type: 'object'
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['test'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
