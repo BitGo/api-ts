@@ -38,8 +38,8 @@
     "typescript": "4.7.4"
   },
   "optionalDependencies": {
-    "@swc/core-linux-x64-gnu": "1.5.7",
-    "@swc/core-darwin-arm64": "1.5.7"
+    "@swc/core-linux-x64-gnu": "1.5.11",
+    "@swc/core-darwin-arm64": "1.5.11"
   },
   "publishConfig": {
     "access": "public"
