@@ -19,8 +19,8 @@ export async function parseSource(
   src: string,
 ): Promise<SourceFile | undefined> {
   try {
+    // Parse an empty string to get the last span
     const lastSpan = swc.parseSync('');
-    lastSpanEnd = lastSpan.span.end;
 
     const module = swc.parseSync(src, {
       syntax: 'typescript',
@@ -28,7 +28,10 @@ export async function parseSource(
       comments: true,
     });
 
+    // Set the start of the module to the end of the last span, so that we don't have any
+    // issues when parsing files that start with comments
     module.span.start = lastSpan.span.start;
+    lastSpanEnd = lastSpan.span.end;
 
     const symbols = parseTopLevelSymbols(src, lastSpanEnd, module.body);
     return {
