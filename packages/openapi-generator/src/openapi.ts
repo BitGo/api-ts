@@ -115,6 +115,7 @@ function schemaToOpenAPI(
         return {
           type: 'object',
           additionalProperties,
+          ...defaultObject,
         };
       case 'undefined':
         return undefined;

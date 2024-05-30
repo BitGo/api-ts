@@ -1899,3 +1899,140 @@ testCase('route with array types and descriptions', ROUTE_WITH_ARRAY_TYPES_AND_D
   }
 });
 
+const ROUTE_WITH_RECORD_TYPES_AND_DESCRIPTIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /** bar param */
+      bar: t.record(t.string, t.string),
+    },
+    body: {
+      /** foo description */
+      foo: t.record(t.string, t.number),
+      child: {
+        /** child description */
+        child: t.record(t.string, t.array(t.union([t.string, t.number]))),
+      }
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with record types and descriptions', ROUTE_WITH_RECORD_TYPES_AND_DESCRIPTIONS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions',
+        operationId: 'api.v1.test',
+        tags: [
+          'Test Routes'
+        ],
+        parameters: [
+          {
+            name: 'bar',
+            description: 'bar param',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'object',
+              additionalProperties: {
+                type: 'string'
+              }
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  foo: {
+                    type: 'object',
+                    additionalProperties: {
+                      type: 'number'
+                    },
+                    description: 'foo description'
+                  },
+                  child: {
+                    type: 'object',
+                    properties: {
+                      child: {
+                        type: 'object',
+                        additionalProperties: {
+                          type: 'array',
+                          items: {
+                            oneOf: [
+                              {
+                                type: 'string'
+                              },
+                              {
+                                type: 'number'
+                              }
+                            ]
+                          }
+                        },
+                        description: 'child description'
+                      }
+                    },
+                    required: [
+                      'child'
+                    ]
+                  }
+                },
+                required: [
+                  'foo',
+                  'child'
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
