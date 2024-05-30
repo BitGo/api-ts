@@ -19,18 +19,21 @@ export async function parseSource(
   src: string,
 ): Promise<SourceFile | undefined> {
   try {
-    const module = await swc.parse(src, {
+    // Parse an empty string to get the last span
+    const lastSpan = swc.parseSync('');
+
+    const module = swc.parseSync(src, {
       syntax: 'typescript',
       target: 'esnext',
+      comments: true,
     });
-    if (lastSpanEnd === -1) {
-      // Since the starting offset is seemingly arbitrary, simulate it by subtracting the length of the source file
-      // from the end of the first module. This probably doesn't matter since the first source file parsed will be
-      // the apiSpec file.
-      lastSpanEnd = module.span.end - src.length;
-    }
+
+    // Set the start of the module to the end of the last span, so that we don't have any
+    // issues when parsing files that start with comments
+    module.span.start = lastSpan.span.start;
+    lastSpanEnd = lastSpan.span.end;
+
     const symbols = parseTopLevelSymbols(src, lastSpanEnd, module.body);
-    lastSpanEnd = module.span.end;
     return {
       path,
       src,
