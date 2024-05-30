@@ -50,6 +50,7 @@ function schemaToOpenAPI(
       case 'object':
         return {
           type: 'object',
+          ...defaultObject,
           properties: Object.entries(schema.properties).reduce(
             (acc, [name, prop]) => {
               const innerSchema = schemaToOpenAPI(prop);
@@ -72,6 +73,7 @@ function schemaToOpenAPI(
             }
             return [innerSchema];
           }),
+          ...defaultObject,
         };
       case 'union':
         let nullable = false;
@@ -95,10 +97,15 @@ function schemaToOpenAPI(
             )[0] === '$ref'
           )
             // OpenAPI spec doesn't allow $ref properties to have siblings, so they're wrapped in an 'allOf' array
-            return { ...(nullable ? { nullable } : {}), allOf: oneOf };
-          else return { ...(nullable ? { nullable } : {}), ...oneOf[0] };
+            return {
+              ...(nullable ? { nullable } : {}),
+              allOf: oneOf,
+              ...defaultObject,
+            };
+          else
+            return { ...(nullable ? { nullable } : {}), ...oneOf[0], ...defaultObject };
         } else {
-          return { ...(nullable ? { nullable } : {}), oneOf };
+          return { ...(nullable ? { nullable } : {}), oneOf, ...defaultObject };
         }
       case 'record':
         const additionalProperties = schemaToOpenAPI(schema.codomain);

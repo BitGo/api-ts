@@ -106,7 +106,13 @@ export function optimize(schema: Schema): Schema {
         continue;
       }
       const [isOptional, filteredSchema] = filterUndefinedUnion(optimized);
+
+      if (prop.comment) {
+        filteredSchema.comment = prop.comment;
+      }
+
       properties[key] = filteredSchema;
+
       if (schema.required.indexOf(key) >= 0 && !isOptional) {
         required.push(key);
       }
@@ -123,7 +129,12 @@ export function optimize(schema: Schema): Schema {
   } else if (schema.type === 'intersection') {
     return foldIntersection(schema, optimize);
   } else if (schema.type === 'union') {
-    return simplifyUnion(schema, optimize);
+    const simplified = simplifyUnion(schema, optimize);
+    if (schema.comment) {
+      return { ...simplified, comment: schema.comment };
+    }
+
+    return simplified;
   } else if (schema.type === 'array') {
     const optimized = optimize(schema.items);
     return { type: 'array', items: optimized };
