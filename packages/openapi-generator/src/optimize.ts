@@ -137,8 +137,18 @@ export function optimize(schema: Schema): Schema {
     return simplified;
   } else if (schema.type === 'array') {
     const optimized = optimize(schema.items);
+    if (schema.comment) {
+      return { type: 'array', items: optimized, comment: schema.comment };
+    }
     return { type: 'array', items: optimized };
   } else if (schema.type === 'record') {
+    if (schema.comment) {
+      return {
+        type: 'record',
+        codomain: optimize(schema.codomain),
+        comment: schema.comment,
+      };
+    }
     return { type: 'record', codomain: optimize(schema.codomain) };
   } else if (schema.type === 'tuple') {
     const schemas = schema.schemas.map(optimize);

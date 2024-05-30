@@ -60,7 +60,6 @@ async function testCase(
       schemas,
     );
 
-
     assert.deepEqual(errors, expectedErrors);
     assert.deepEqual(actual, expected);
   });
@@ -1757,3 +1756,146 @@ testCase('route with mixed types and descriptions', ROUTE_WITH_MIXED_TYPES_AND_D
     schemas: {}
   }
 });
+
+const ROUTE_WITH_ARRAY_TYPES_AND_DESCRIPTIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /** bar param */
+      bar: t.string,
+    },
+    body: {
+      /** foo description */
+      foo: t.array(t.string),
+      /** bar description */
+      bar: t.array(t.number),
+      child: {
+        /** child description */
+        child: t.array(t.union([t.string, t.number])),
+      }
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with array types and descriptions', ROUTE_WITH_ARRAY_TYPES_AND_DESCRIPTIONS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions',
+        operationId: 'api.v1.test',
+        tags: [
+          'Test Routes'
+        ],
+        parameters: [
+          {
+            name: 'bar',
+            description: 'bar param',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  foo: {
+                    type: 'array',
+                    items: {
+                      type: 'string'
+                    },
+                    description: 'foo description'
+                  },
+                  bar: {
+                    type: 'array',
+                    items: {
+                      type: 'number'
+                    },
+                    description: 'bar description'
+                  },
+                  child: {
+                    type: 'object',
+                    properties: {
+                      child: {
+                        type: 'array',
+                        items: {
+                          oneOf: [
+                            {
+                              type: 'string'
+                            },
+                            {
+                              type: 'number'
+                            }
+                          ]
+                        },
+                        description: 'child description'
+                      }
+                    },
+                    required: [
+                      'child'
+                    ]
+                  }
+                },
+                required: [
+                  'foo',
+                  'bar',
+                  'child'
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
+
