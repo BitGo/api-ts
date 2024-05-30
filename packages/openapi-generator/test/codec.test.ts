@@ -638,8 +638,8 @@ testCase('first property comment is parsed', FIRST_PROPERTY_COMMENT, {
           problems: [],
           source: [
             {
-              number: 1,
-              source: '  /** this is a comment */',
+              number: 0,
+              source: '/** this is a comment */',
               tokens: {
                 delimiter: '/**',
                 description: 'this is a comment ',
@@ -650,7 +650,7 @@ testCase('first property comment is parsed', FIRST_PROPERTY_COMMENT, {
                 postName: '',
                 postTag: '',
                 postType: '',
-                start: '  ',
+                start: '',
                 tag: '',
                 type: '',
               },
@@ -685,8 +685,8 @@ testCase('second property comment is parsed', SECOND_PROPERTY_COMMENT, {
           problems: [],
           source: [
             {
-              number: 1,
-              source: '  /** this is a comment */',
+              number: 0,
+              source: '/** this is a comment */',
               tokens: {
                 delimiter: '/**',
                 description: 'this is a comment ',
@@ -697,7 +697,7 @@ testCase('second property comment is parsed', SECOND_PROPERTY_COMMENT, {
                 postName: '',
                 postTag: '',
                 postType: '',
-                start: '  ',
+                start: '',
                 tag: '',
                 type: '',
               },
