@@ -2036,3 +2036,146 @@ testCase('route with record types and descriptions', ROUTE_WITH_RECORD_TYPES_AND
     schemas: {}
   }
 });
+
+const ROUTE_WITH_DESCRIPTIONS_PATTERNS_EXAMPLES = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /** 
+       * This is a bar param.
+       * @example { "foo": "bar" }
+      */
+      bar: t.record(t.string, t.string),
+    },
+    body: {
+      /**
+       * foo description
+       * @pattern ^[1-9][0-9]{4}$
+       * @example 12345
+      */
+      foo: t.number,
+      child: {
+        /** 
+         * child description 
+        */
+        child: t.array(t.union([t.string, t.number])),
+      }
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with descriptions, patterns, and examples', ROUTE_WITH_DESCRIPTIONS_PATTERNS_EXAMPLES, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions',
+        operationId: 'api.v1.test',
+        tags: [
+          'Test Routes'
+        ],
+        parameters: [
+          {
+            name: 'bar',
+            description: 'This is a bar param.',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'object',
+              additionalProperties: {
+                type: 'string'
+              }
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  foo: {
+                    type: 'number',
+                    description: 'foo description',
+                    example: '12345',
+                    pattern: '^[1-9][0-9]{4}$'
+                  },
+                  child: {
+                    type: 'object',
+                    properties: {
+                      child: {
+                        type: 'array',
+                        items: {
+                          oneOf: [
+                            {
+                              type: 'string'
+                            },
+                            {
+                              type: 'number'
+                            }
+                          ]
+                        },
+                        description: 'child description'
+                      }
+                    },
+                    required: [
+                      'child'
+                    ]
+                  }
+                },
+                required: [
+                  'foo',
+                  'child'
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
