@@ -15,9 +15,13 @@ function schemaToOpenAPI(
     schema: Schema,
   ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined => {
     const description = schema.comment?.description;
+    const example = getTagName(schema, 'example');
+    const pattern = getTagName(schema, 'pattern');
 
-    const defaultObject = {
+    const defaultOpenAPIObject = {
       ...(description ? { description } : {}),
+      ...(example ? { example } : {}),
+      ...(pattern ? { pattern } : {}),
     };
 
     switch (schema.type) {
@@ -27,13 +31,13 @@ function schemaToOpenAPI(
         return {
           type: schema.type,
           ...(schema.enum ? { enum: schema.enum } : {}),
-          ...defaultObject,
+          ...defaultOpenAPIObject,
         };
       case 'integer':
         return {
           type: 'number',
           ...(schema.enum ? { enum: schema.enum } : {}),
-          ...defaultObject,
+          ...defaultOpenAPIObject,
         };
       case 'null':
         // TODO: OpenAPI v3 does not have an explicit null type, is there a better way to represent this?
@@ -46,11 +50,11 @@ function schemaToOpenAPI(
         if (innerSchema === undefined) {
           return undefined;
         }
-        return { type: 'array', items: innerSchema, ...defaultObject };
+        return { type: 'array', items: innerSchema, ...defaultOpenAPIObject };
       case 'object':
         return {
           type: 'object',
-          ...defaultObject,
+          ...defaultOpenAPIObject,
           properties: Object.entries(schema.properties).reduce(
             (acc, [name, prop]) => {
               const innerSchema = schemaToOpenAPI(prop);
@@ -73,7 +77,7 @@ function schemaToOpenAPI(
             }
             return [innerSchema];
           }),
-          ...defaultObject,
+          ...defaultOpenAPIObject,
         };
       case 'union':
         let nullable = false;
@@ -100,12 +104,16 @@ function schemaToOpenAPI(
             return {
               ...(nullable ? { nullable } : {}),
               allOf: oneOf,
-              ...defaultObject,
+              ...defaultOpenAPIObject,
             };
           else
-            return { ...(nullable ? { nullable } : {}), ...oneOf[0], ...defaultObject };
+            return {
+              ...(nullable ? { nullable } : {}),
+              ...oneOf[0],
+              ...defaultOpenAPIObject,
+            };
         } else {
-          return { ...(nullable ? { nullable } : {}), oneOf, ...defaultObject };
+          return { ...(nullable ? { nullable } : {}), oneOf, ...defaultOpenAPIObject };
         }
       case 'record':
         const additionalProperties = schemaToOpenAPI(schema.codomain);
@@ -115,7 +123,7 @@ function schemaToOpenAPI(
         return {
           type: 'object',
           additionalProperties,
-          ...defaultObject,
+          ...defaultOpenAPIObject,
         };
       case 'undefined':
         return undefined;
@@ -138,6 +146,10 @@ function schemaToOpenAPI(
   }
 
   return openAPIObject;
+}
+
+function getTagName(schema: Schema, tagName: String): string | undefined {
+  return schema.comment?.tags.find((t) => t.tag === tagName)?.name;
 }
 
 function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObject] {
