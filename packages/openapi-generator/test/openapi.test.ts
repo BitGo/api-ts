@@ -29,6 +29,7 @@ async function testCase(
       throw new Error('Failed to parse source file');
     }
 
+
     const project = new Project();
     const routes: Route[] = [];
     const schemas: Record<string, Schema> = {};
@@ -1453,4 +1454,585 @@ testCase('route with type descriptions', ROUTE_WITH_TYPE_DESCRIPTIONS, {
   components: {
     schemas: {},
   },
+});
+
+
+const ROUTE_WITH_TYPE_DESCRIPTIONS_OPTIONAL = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /** bar param */
+      bar: t.string,
+    },
+    body: {
+      /** foo description */
+      foo: h.optional(t.string),
+      /** bar description */
+      bar: h.optional(t.number),
+      child: {
+        /** child description */
+        child: h.optional(t.string),
+      }
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+
+testCase('route with type descriptions with optional fields', ROUTE_WITH_TYPE_DESCRIPTIONS_OPTIONAL, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        parameters: [
+          {
+            description: 'bar param',
+            in: 'query',
+            name: 'bar',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  bar: {
+                    description: 'bar description',
+                    type: 'number'
+                  },
+                  child: {
+                    properties: {
+                      child: {
+                        description: 'child description',
+                        type: 'string'
+                      }
+                    },
+                    type: 'object'
+                  },
+                  foo: {
+                    description: 'foo description',
+                    type: 'string'
+                  }
+                },
+                required: [
+                  'child'
+                ],
+                type: 'object'
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['test'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
+
+const ROUTE_WITH_MIXED_TYPES_AND_DESCRIPTIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /** bar param */
+      bar: t.string,
+    },
+    body: {
+      /** description to describe an optional string */
+      foo: h.optional(t.string),
+      /** description to describe an optional union of number and string */
+      bar: h.optional(t.union([t.number, t.string])),
+      /** description to describe an object */
+      child: {
+        /** dsecription to describe an intersection of a type and a partial */
+        child: t.intersection([t.type({ foo: t.string }), t.partial({ bar: t.number })]),
+      },
+      /** description to describe a t.type */
+      error: t.type({ error: t.string }),
+      /** description to describe an optional t.object */
+      obj: h.optional(t.object({})),
+      /** description to describe a t.exact */
+      exact: t.exact(t.type({ foo: t.string })),
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with mixed types and descriptions', ROUTE_WITH_MIXED_TYPES_AND_DESCRIPTIONS, 
+{
+  openapi: "3.0.3",
+  info: {
+    title: "Test",
+    version: "1.0.0"
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: "A simple route with type descriptions",
+        operationId: "api.v1.test",
+        tags: [
+          "Test Routes"
+        ],
+        parameters: [
+          {
+            name: "bar",
+            description: "bar param",
+            in: "query",
+            required: true,
+            schema: {
+              type: "string"
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: "object",
+                properties: {
+                  foo: {
+                    type: "string",
+                    description: "description to describe an optional string"
+                  },
+                  bar: {
+                    oneOf: [
+                      {
+                        type: "number"
+                      },
+                      {
+                        type: "string"
+                      }
+                    ],
+                    description: "description to describe an optional union of number and string"
+                  },
+                  child: {
+                    type: "object",
+                    description: "description to describe an object",
+                    properties: {
+                      child: {
+                        type: "object",
+                        description: "dsecription to describe an intersection of a type and a partial",
+                        properties: {
+                          foo: {
+                            type: "string"
+                          },
+                          bar: {
+                            type: "number"
+                          }
+                        },
+                        required: [
+                          "foo"
+                        ]
+                      }
+                    },
+                    required: [
+                      "child"
+                    ]
+                  },
+                  error: {
+                    type: "object",
+                    description: "description to describe a t.type",
+                    properties: {
+                      error: {
+                        type: "string"
+                      }
+                    },
+                    required: [
+                      "error"
+                    ]
+                  },
+                  obj: {
+                    type: "object",
+                    description: "description to describe an optional t.object",
+                    properties: {}
+                  },
+                  exact: {
+                    type: "object",
+                    description: "description to describe a t.exact",
+                    properties: {
+                      foo: {
+                        type: "string"
+                      }
+                    },
+                    required: [
+                      "foo"
+                    ]
+                  }
+                },
+                required: [
+                  "child",
+                  "error",
+                  "exact"
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "OK",
+            content: {
+              'application/json': {
+                schema: {
+                  type: "object",
+                  properties: {
+                    test: {
+                      type: "string"
+                    }
+                  },
+                  required: [
+                    "test"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
+
+const ROUTE_WITH_ARRAY_TYPES_AND_DESCRIPTIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /** bar param */
+      bar: t.string,
+    },
+    body: {
+      /** foo description */
+      foo: t.array(t.string),
+      /** bar description */
+      bar: t.array(t.number),
+      child: {
+        /** child description */
+        child: t.array(t.union([t.string, t.number])),
+      }
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with array types and descriptions', ROUTE_WITH_ARRAY_TYPES_AND_DESCRIPTIONS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions',
+        operationId: 'api.v1.test',
+        tags: [
+          'Test Routes'
+        ],
+        parameters: [
+          {
+            name: 'bar',
+            description: 'bar param',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  foo: {
+                    type: 'array',
+                    items: {
+                      type: 'string'
+                    },
+                    description: 'foo description'
+                  },
+                  bar: {
+                    type: 'array',
+                    items: {
+                      type: 'number'
+                    },
+                    description: 'bar description'
+                  },
+                  child: {
+                    type: 'object',
+                    properties: {
+                      child: {
+                        type: 'array',
+                        items: {
+                          oneOf: [
+                            {
+                              type: 'string'
+                            },
+                            {
+                              type: 'number'
+                            }
+                          ]
+                        },
+                        description: 'child description'
+                      }
+                    },
+                    required: [
+                      'child'
+                    ]
+                  }
+                },
+                required: [
+                  'foo',
+                  'bar',
+                  'child'
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
+
+const ROUTE_WITH_RECORD_TYPES_AND_DESCRIPTIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /** bar param */
+      bar: t.record(t.string, t.string),
+    },
+    body: {
+      /** foo description */
+      foo: t.record(t.string, t.number),
+      child: {
+        /** child description */
+        child: t.record(t.string, t.array(t.union([t.string, t.number]))),
+      }
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with record types and descriptions', ROUTE_WITH_RECORD_TYPES_AND_DESCRIPTIONS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions',
+        operationId: 'api.v1.test',
+        tags: [
+          'Test Routes'
+        ],
+        parameters: [
+          {
+            name: 'bar',
+            description: 'bar param',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'object',
+              additionalProperties: {
+                type: 'string'
+              }
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  foo: {
+                    type: 'object',
+                    additionalProperties: {
+                      type: 'number'
+                    },
+                    description: 'foo description'
+                  },
+                  child: {
+                    type: 'object',
+                    properties: {
+                      child: {
+                        type: 'object',
+                        additionalProperties: {
+                          type: 'array',
+                          items: {
+                            oneOf: [
+                              {
+                                type: 'string'
+                              },
+                              {
+                                type: 'number'
+                              }
+                            ]
+                          }
+                        },
+                        description: 'child description'
+                      }
+                    },
+                    required: [
+                      'child'
+                    ]
+                  }
+                },
+                required: [
+                  'foo',
+                  'child'
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
 });
