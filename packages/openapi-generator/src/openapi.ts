@@ -44,7 +44,14 @@ function schemaToOpenAPI(
         // Or should we just conflate explicit null and undefined properties?
         return { nullable: true, enum: [] };
       case 'ref':
-        return { $ref: `#/components/schemas/${schema.name}` };
+        // if defaultOpenAPIObject is empty, no need to wrap the $ref in an allOf array
+        if (Object.keys(defaultOpenAPIObject).length === 0) {
+          return { $ref: `#/components/schemas/${schema.name}` };
+        }
+        return {
+          allOf: [{ $ref: `#/components/schemas/${schema.name}` }],
+          ...defaultOpenAPIObject,
+        };
       case 'array':
         const innerSchema = schemaToOpenAPI(schema.items);
         if (innerSchema === undefined) {
