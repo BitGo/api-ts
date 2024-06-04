@@ -138,7 +138,8 @@ const patchRequest = <
         });
       }
       return pipe(
-        route.response[status].decode(res.body),
+        // deep copy to prevent modification of the inputs by sketchy codecs
+        route.response[status].decode(structuredClone(res.body)),
         E.map((body) =>
           decodedResponse<Route>({
             status,
@@ -194,7 +195,8 @@ export const requestForRoute =
     route: Route,
   ): BoundRequestFactory<Req, Route> =>
   (params: h.RequestType<Route>): PatchedRequest<Req, Route> => {
-    const reqProps = route.request.encode(params);
+    // deep copy to prevent modification of the inputs by sketchy codecs
+    const reqProps = route.request.encode(structuredClone(params));
 
     let path = route.path;
     for (const key in reqProps.params) {
