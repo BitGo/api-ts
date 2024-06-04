@@ -2180,3 +2180,149 @@ testCase('route with descriptions, patterns, and examples', ROUTE_WITH_DESCRIPTI
     schemas: {}
   }
 });
+
+const ROUTE_WITH_DESCRIPTIONS_FOR_REFERENCES = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+const Foo = t.type({ foo: t.string });
+const Bar = t.type({ bar: t.number });
+
+/**
+ * A simple route with type descriptions for references
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      bar: t.array(t.string),
+    },
+    body: {
+      /** 
+       * This is a foo description. 
+       * @example "BitGo Inc"
+      */
+      foo: Foo,
+      bar: Bar,
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with descriptions for references', ROUTE_WITH_DESCRIPTIONS_FOR_REFERENCES, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions for references',
+        operationId: 'api.v1.test',
+        tags: [
+          'Test Routes'
+        ],
+        parameters: [
+          {
+            name: 'bar',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'array',
+              items: {
+                type: 'string'
+              }
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  // needs to be wrapped in an allOf to preserve the description
+                  foo: {
+                    allOf: [
+                      {
+                        $ref: '#/components/schemas/Foo'
+                      }
+                    ],
+                    description: 'This is a foo description.',
+                    example: 'BitGo Inc'
+                  },
+                  // should not need to be wrapped in an allOf
+                  bar: {
+                    $ref: '#/components/schemas/Bar'
+                  }
+                },
+                required: [
+                  'foo',
+                  'bar'
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {
+      Foo: {
+        title: 'Foo',
+        type: 'object',
+        properties: {
+          foo: {
+            type: 'string'
+          }
+        },
+        required: [
+          'foo'
+        ]
+      },
+      Bar: {
+        title: 'Bar',
+        type: 'object',
+        properties: {
+          bar: {
+            type: 'number'
+          }
+        },
+        required: [
+          'bar'
+        ]
+      }
+    }
+  }
+});

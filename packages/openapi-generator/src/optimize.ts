@@ -153,6 +153,11 @@ export function optimize(schema: Schema): Schema {
   } else if (schema.type === 'tuple') {
     const schemas = schema.schemas.map(optimize);
     return { type: 'tuple', schemas };
+  } else if (schema.type === 'ref') {
+    if (schema.comment) {
+      return { ...schema, comment: schema.comment };
+    }
+    return schema;
   } else {
     return schema;
   }
