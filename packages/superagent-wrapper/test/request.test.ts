@@ -45,6 +45,37 @@ const PostTestRoute = h.httpRoute({
   },
 });
 
+const PostOptionalTestRoute = h.httpRoute({
+  path: '/test/optional/{id}',
+  method: 'POST',
+  request: h.httpRequest({
+    query: {
+      foo: t.string,
+    },
+    params: {
+      id: NumberFromString,
+    },
+    body: {
+      bar: t.number,
+      optional: h.optionalized({
+        baz: t.boolean,
+        qux: h.optional(t.string),
+      }),
+    },
+  }),
+  response: {
+    200: t.type({
+      id: t.number,
+      foo: t.string,
+      bar: t.number,
+      baz: t.boolean,
+    }),
+    401: t.type({
+      message: t.string,
+    }),
+  },
+});
+
 const HeaderGetTestRoute = h.httpRoute({
   path: '/getHeader',
   method: 'GET',
@@ -59,6 +90,9 @@ const HeaderGetTestRoute = h.httpRoute({
 const TestRoutes = h.apiSpec({
   'api.v1.test': {
     post: PostTestRoute,
+  },
+  'api.v1.test.optional': {
+    post: PostOptionalTestRoute,
   },
   'api.v1.getheader': {
     get: HeaderGetTestRoute,
@@ -103,6 +137,23 @@ const createTestServer = (port: number) => {
       });
       res.send(response);
     }
+  });
+
+  testApp.post('/test/optional/:id', (req, res) => {
+    const filteredReq = {
+      query: req.query,
+      params: req.params,
+      headers: req.headers,
+      body: req.body,
+    };
+    const params = E.getOrElseW((err) => {
+      throw new Error(JSON.stringify(err));
+    })(PostTestRoute.request.decode(filteredReq));
+    const response = PostTestRoute.response[200].encode({
+      ...params,
+      baz: true,
+    });
+    res.send(response);
   });
 
   testApp.get(HeaderGetTestRoute.path, (req, res) => {
@@ -241,6 +292,22 @@ describe('decodeExpecting', () => {
       result,
       'Could not decode response 200: [{"invalid":"response"}] due to error [Invalid value undefined supplied to : { id: number, foo: string, bar: number, baz: boolean }/id: number\nInvalid value undefined supplied to : { id: number, foo: string, bar: number, baz: boolean }/foo: string\nInvalid value undefined supplied to : { id: number, foo: string, bar: number, baz: boolean }/bar: number\nInvalid value undefined supplied to : { id: number, foo: string, bar: number, baz: boolean }/baz: boolean]',
     );
+  });
+
+  it('does not modify inputs by dropping keys with undefined values', async () => {
+    const body = {
+      id: 1337,
+      foo: 'test',
+      bar: 42,
+      optional: { baz: true, qux: undefined },
+    };
+    await apiClient['api.v1.test.optional'].post(body).decodeExpecting(200);
+    assert.deepEqual(body, {
+      id: 1337,
+      foo: 'test',
+      bar: 42,
+      optional: { baz: true, qux: undefined },
+    });
   });
 });
 
