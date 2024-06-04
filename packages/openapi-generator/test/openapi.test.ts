@@ -2054,7 +2054,7 @@ export const route = h.httpRoute({
     query: {
       /** 
        * This is a bar param.
-       * @example { "foo": "bar" }
+       * @example "{ 'foo': 'bar' }"
       */
       bar: t.record(t.string, t.string),
     },
@@ -2103,6 +2103,7 @@ testCase('route with descriptions, patterns, and examples', ROUTE_WITH_DESCRIPTI
             required: true,
             schema: {
               type: 'object',
+              example: "{ 'foo': 'bar' }",
               additionalProperties: {
                 type: 'string'
               }
