@@ -2327,7 +2327,7 @@ testCase('route with descriptions for references', ROUTE_WITH_DESCRIPTIONS_FOR_R
   }
 });
 
-const ROUTE_WITH_MIN_AND_MAX_VALUES_FOR_STRINGS = `
+const ROUTE_WITH_MIN_AND_MAX_VALUES_FOR_STRINGS_AND_DEFAULT = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
@@ -2349,7 +2349,8 @@ export const route = h.httpRoute({
        * This is a foo description. 
        * @minLength 5
        * @maxLength 10
-       * @example "BitgoInc"
+       * @example "SomeInc"
+       * @default "BitgoInc"
       */
       foo: t.string()
     },
@@ -2362,7 +2363,7 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase('route with min and max values for strings', ROUTE_WITH_MIN_AND_MAX_VALUES_FOR_STRINGS, {
+testCase('route with min and max values for strings and default value', ROUTE_WITH_MIN_AND_MAX_VALUES_FOR_STRINGS_AND_DEFAULT, {
   openapi: '3.0.3',
   info: {
     title: 'Test',
@@ -2398,7 +2399,8 @@ testCase('route with min and max values for strings', ROUTE_WITH_MIN_AND_MAX_VAL
                   foo: {
                     type: 'string',
                     description: 'This is a foo description.',
-                    example: 'BitgoInc',
+                    example: 'SomeInc',
+                    default: 'BitgoInc',
                     minLength: 5,
                     maxLength: 10
                   }
