@@ -152,7 +152,7 @@ function schemaToOpenAPI(
       ...(maxLength ? { maxLength: Number(maxLength) } : {}),
       ...(minLength ? { minLength: Number(minLength) } : {}),
       ...(pattern ? { pattern } : {}),
-      ...(format ? { format: `<${format}>` } : {}),
+      ...(format ? { format } : {}),
     };
     return defaultOpenAPIObject;
   }
