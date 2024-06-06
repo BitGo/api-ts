@@ -139,6 +139,7 @@ function schemaToOpenAPI(
     const maxLength = getTagName(schema, 'maxLength');
     const minLength = getTagName(schema, 'minLength');
     const pattern = getTagName(schema, 'pattern');
+    const format = getTagName(schema, 'format');
 
     const deprecated = schema.comment?.tags.find((t) => t.tag === 'deprecated');
     const description = schema.comment?.description;
@@ -151,6 +152,7 @@ function schemaToOpenAPI(
       ...(maxLength ? { maxLength: Number(maxLength) } : {}),
       ...(minLength ? { minLength: Number(minLength) } : {}),
       ...(pattern ? { pattern } : {}),
+      ...(format ? { format } : {}),
     };
     return defaultOpenAPIObject;
   }
