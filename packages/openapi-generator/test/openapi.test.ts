@@ -2531,3 +2531,117 @@ testCase('route with deprecated tag', ROUTE_WITH_DEPRECATED_TAG, {
     schemas: {}
   }
 });
+
+const ROUTE_WITH_MIN_MAX_AND_OTHER_TAGS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions for references
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    body: {
+      /** 
+       * This is a foo description. 
+       * @minimum 5
+       * @maximum 10
+       * @minItems 1
+       * @maxItems 5
+       * @minProperties 1
+       * @maxProperties 500
+       * @exclusiveMinimum true
+       * @exclusiveMaximum true
+       * @multipleOf 7
+       * @uniqueItems true
+       * @readOnly true
+       * @writeOnly true
+      */
+      foo: t.number()
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with min and max tags', ROUTE_WITH_MIN_MAX_AND_OTHER_TAGS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions for references',
+        operationId: 'api.v1.test',
+        parameters: [],
+        tags: [
+          'Test Routes'
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  foo: {
+                    type: 'number',
+                    description: 'This is a foo description.',
+                    minimum: 5,
+                    maximum: 10,
+                    minItems: 1,
+                    maxItems: 5,
+                    minProperties: 1,
+                    multipleOf: 7,
+                    maxProperties: 500,
+                    exclusiveMinimum: true,
+                    exclusiveMaximum: true,
+                    uniqueItems: true,
+                    readOnly: true,
+                    writeOnly: true
+                  }
+                },
+                required: [
+                  'foo'
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});

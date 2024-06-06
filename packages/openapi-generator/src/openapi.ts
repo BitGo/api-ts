@@ -139,6 +139,18 @@ function schemaToOpenAPI(
     const maxLength = getTagName(schema, 'maxLength');
     const minLength = getTagName(schema, 'minLength');
     const pattern = getTagName(schema, 'pattern');
+    const minimum = getTagName(schema, 'minimum');
+    const maximum = getTagName(schema, 'maximum');
+    const minItems = getTagName(schema, 'minItems');
+    const maxItems = getTagName(schema, 'maxItems');
+    const minProperties = getTagName(schema, 'minProperties');
+    const maxProperties = getTagName(schema, 'maxProperties');
+    const exclusiveMinimum = getTagName(schema, 'exclusiveMinimum');
+    const exclusiveMaximum = getTagName(schema, 'exclusiveMaximum');
+    const multipleOf = getTagName(schema, 'multipleOf');
+    const uniqueItems = getTagName(schema, 'uniqueItems');
+    const readOnly = getTagName(schema, 'readOnly');
+    const writeOnly = getTagName(schema, 'writeOnly');
     const format = getTagName(schema, 'format');
 
     const deprecated = schema.comment?.tags.find((t) => t.tag === 'deprecated');
@@ -152,6 +164,18 @@ function schemaToOpenAPI(
       ...(maxLength ? { maxLength: Number(maxLength) } : {}),
       ...(minLength ? { minLength: Number(minLength) } : {}),
       ...(pattern ? { pattern } : {}),
+      ...(minimum ? { minimum: Number(minimum) } : {}),
+      ...(maximum ? { maximum: Number(maximum) } : {}),
+      ...(minItems ? { minItems: Number(minItems) } : {}),
+      ...(maxItems ? { maxItems: Number(maxItems) } : {}),
+      ...(minProperties ? { minProperties: Number(minProperties) } : {}),
+      ...(maxProperties ? { maxProperties: Number(maxProperties) } : {}),
+      ...(exclusiveMinimum ? { exclusiveMinimum: true } : {}),
+      ...(exclusiveMaximum ? { exclusiveMaximum: true } : {}),
+      ...(multipleOf ? { multipleOf: Number(multipleOf) } : {}),
+      ...(uniqueItems ? { uniqueItems: true } : {}),
+      ...(readOnly ? { readOnly: true } : {}),
+      ...(writeOnly ? { writeOnly: true } : {}),
       ...(format ? { format } : {}),
     };
     return defaultOpenAPIObject;
