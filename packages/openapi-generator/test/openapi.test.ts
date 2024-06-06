@@ -2439,3 +2439,95 @@ testCase('route with min and max values for strings and default value', ROUTE_WI
     schemas: {}
   }
 });
+
+const ROUTE_WITH_DEPRECATED_TAG = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions for references
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    body: {
+      /** 
+       * This is a foo description. 
+       * @deprecated
+      */
+      foo: t.string()
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with deprecated tag', ROUTE_WITH_DEPRECATED_TAG, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions for references',
+        operationId: 'api.v1.test',
+        parameters: [],
+        tags: [
+          'Test Routes'
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  foo: {
+                    type: 'string',
+                    description: 'This is a foo description.',
+                    deprecated: true
+                  }
+                },
+                required: [
+                  'foo'
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
