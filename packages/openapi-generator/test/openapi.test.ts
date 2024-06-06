@@ -2326,3 +2326,114 @@ testCase('route with descriptions for references', ROUTE_WITH_DESCRIPTIONS_FOR_R
     }
   }
 });
+
+const ROUTE_WITH_MIN_AND_MAX_VALUES_FOR_STRINGS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions for references
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      bar: t.array(t.string),
+    },
+    body: {
+      /** 
+       * This is a foo description. 
+       * @minLength 5
+       * @maxLength 10
+       * @example "BitgoInc"
+      */
+      foo: t.string()
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with min and max values for strings', ROUTE_WITH_MIN_AND_MAX_VALUES_FOR_STRINGS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions for references',
+        operationId: 'api.v1.test',
+        tags: [
+          'Test Routes'
+        ],
+        parameters: [
+          {
+            name: 'bar',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'array',
+              items: {
+                type: 'string'
+              }
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  foo: {
+                    type: 'string',
+                    description: 'This is a foo description.',
+                    example: 'BitgoInc',
+                    minLength: 5,
+                    maxLength: 10
+                  }
+                },
+                required: [
+                  'foo'
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});

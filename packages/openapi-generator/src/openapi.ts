@@ -14,15 +14,7 @@ function schemaToOpenAPI(
   const createOpenAPIObject = (
     schema: Schema,
   ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined => {
-    const description = schema.comment?.description;
-    const example = getTagName(schema, 'example');
-    const pattern = getTagName(schema, 'pattern');
-
-    const defaultOpenAPIObject = {
-      ...(description ? { description } : {}),
-      ...(example ? { example } : {}),
-      ...(pattern ? { pattern } : {}),
-    };
+    const defaultOpenAPIObject = buildDefaultOpenAPIObject(schema);
 
     switch (schema.type) {
       case 'boolean':
@@ -140,6 +132,23 @@ function schemaToOpenAPI(
         return {};
     }
   };
+
+  function buildDefaultOpenAPIObject(schema: Schema): OpenAPIV3.SchemaObject {
+    const description = schema.comment?.description;
+    const example = getTagName(schema, 'example');
+    const maxLength = getTagName(schema, 'maxLength');
+    const minLength = getTagName(schema, 'minLength');
+    const pattern = getTagName(schema, 'pattern');
+
+    const defaultOpenAPIObject = {
+      ...(description ? { description } : {}),
+      ...(example ? { example } : {}),
+      ...(maxLength ? { maxLength: Number(maxLength) } : {}),
+      ...(minLength ? { minLength: Number(minLength) } : {}),
+      ...(pattern ? { pattern } : {}),
+    };
+    return defaultOpenAPIObject;
+  }
 
   const titleObject = schema.comment?.tags.find((t) => t.tag === 'title');
 
