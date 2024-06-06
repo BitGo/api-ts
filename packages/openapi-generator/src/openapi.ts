@@ -134,6 +134,7 @@ function schemaToOpenAPI(
   };
 
   function buildDefaultOpenAPIObject(schema: Schema): OpenAPIV3.SchemaObject {
+    const defaultValue = getTagName(schema, 'default');
     const description = schema.comment?.description;
     const example = getTagName(schema, 'example');
     const maxLength = getTagName(schema, 'maxLength');
@@ -141,6 +142,7 @@ function schemaToOpenAPI(
     const pattern = getTagName(schema, 'pattern');
 
     const defaultOpenAPIObject = {
+      ...(defaultValue ? { default: defaultValue } : {}),
       ...(description ? { description } : {}),
       ...(example ? { example } : {}),
       ...(maxLength ? { maxLength: Number(maxLength) } : {}),
