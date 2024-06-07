@@ -137,15 +137,10 @@ function schemaToOpenAPI(
    *  This function will return the field value parsed as the type of the schema. i.e. if the schema is a number, it will return the field as a JS number.
    *
    * @param schema A schema object
-   * @param field The target field to parse in that schema
+   * @param fieldValue The value to parse
    * @returns the parsed value
    */
-  const parseField = (schema: Schema, field: string): any => {
-    const fieldValue = getTagName(schema, field);
-    if (!fieldValue) {
-      return;
-    }
-
+  const parseField = (schema: Schema, fieldValue: string): any => {
     if (schema.type === 'number' || schema.type === 'integer') {
       return Number(fieldValue);
     } else if (schema.type === 'boolean') {
@@ -181,10 +176,10 @@ function schemaToOpenAPI(
     const description = schema.comment?.description;
 
     const defaultOpenAPIObject = {
-      ...(defaultValue ? { default: parseField(schema, 'default') } : {}),
+      ...(defaultValue ? { default: parseField(schema, defaultValue) } : {}),
       ...(deprecated ? { deprecated: true } : {}),
       ...(description ? { description } : {}),
-      ...(example ? { example: parseField(schema, 'example') } : {}),
+      ...(example ? { example: parseField(schema, example) } : {}),
       ...(maxLength ? { maxLength: Number(maxLength) } : {}),
       ...(minLength ? { minLength: Number(minLength) } : {}),
       ...(pattern ? { pattern } : {}),
