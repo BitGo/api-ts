@@ -2119,7 +2119,7 @@ testCase('route with descriptions, patterns, and examples', ROUTE_WITH_DESCRIPTI
                   foo: {
                     type: 'number',
                     description: 'foo description',
-                    example: '12345',
+                    example: 12345,
                     pattern: '^[1-9][0-9]{4}$'
                   },
                   child: {
