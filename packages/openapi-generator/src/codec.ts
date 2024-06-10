@@ -358,24 +358,29 @@ export function parseCodecInitializer(
       if (schema.type !== 'ref') {
         return E.right(schema);
       } else {
-        let refSource = project.get(schema.location);
+        if (schema.location.startsWith('@dev-portal/')) {
+          // schema is located within dev-portal
+          return E.right({ type: 'ref', name: schema.name, location: schema.location });
+        } else {
+          let refSource = project.get(schema.location);
 
-        if (refSource === undefined) {
-          // schema.location might be a package name -> need to resolve the path from the project types
-          const path = project.getTypes()[schema.name];
-          if (path === undefined)
-            return E.left(`Cannot find module '${schema.location}' in the project`);
-          refSource = project.get(path);
           if (refSource === undefined) {
-            return E.left(`Cannot find '${schema.name}' from '${schema.location}'`);
+            // schema.location might be a package name -> need to resolve the path from the project types
+            const path = project.getTypes()[schema.name];
+            if (path === undefined)
+              return E.left(`Cannot find module '${schema.location}' in the project`);
+            refSource = project.get(path);
+            if (refSource === undefined) {
+              return E.left(`Cannot find '${schema.name}' from '${schema.location}'`);
+            }
           }
+          const initE = findSymbolInitializer(project, refSource, schema.name);
+          if (E.isLeft(initE)) {
+            return initE;
+          }
+          const [newSourceFile, init] = initE.right;
+          return parsePlainInitializer(project, newSourceFile, init);
         }
-        const initE = findSymbolInitializer(project, refSource, schema.name);
-        if (E.isLeft(initE)) {
-          return initE;
-        }
-        const [newSourceFile, init] = initE.right;
-        return parsePlainInitializer(project, newSourceFile, init);
       }
     }
     const args = init.arguments.map<E.Either<string, Schema>>(({ expression }) => {
