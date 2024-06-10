@@ -141,7 +141,12 @@ export const KNOWN_IMPORTS: KnownImports = {
     BigIntFromString: () => E.right({ type: 'string' }),
     BooleanFromNumber: () => E.right({ type: 'number' }),
     BooleanFromString: () => E.right({ type: 'string' }),
-    DateFromISOString: () => E.right({ type: 'string' }),
+    DateFromISOString: () =>
+      E.right({
+        type: 'ref',
+        name: 'DateFromISOString',
+        location: '@dev-portal/shared/DateFromISOString.yaml',
+      }),
     DateFromNumber: () => E.right({ type: 'number' }),
     DateFromUnixTime: () => E.right({ type: 'number' }),
     IntFromString: () => E.right({ type: 'string' }),
