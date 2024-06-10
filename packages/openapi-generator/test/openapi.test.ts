@@ -2645,3 +2645,80 @@ testCase('route with min and max tags', ROUTE_WITH_MIN_MAX_AND_OTHER_TAGS, {
     schemas: {}
   }
 });
+
+const ROUTE_USING_DEV_PORTAL_REF = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+import { DateFromISOString } from 'io-ts-types';
+
+/**
+ * A route that imports a $ref from dev-portal
+ *
+ * @operationId api.v1.date
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    body: {
+      foo: DateFromISOString
+    },
+  }),
+  response: {
+    /** foo response */
+    200: t.string
+  },
+});
+`
+testCase('route using dev-portal $ref', ROUTE_USING_DEV_PORTAL_REF, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        operationId: 'api.v1.date',
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  foo: {
+                    '$ref': '../shared/DateFromISOString.yaml'
+                  }
+                },
+                required: [
+                  'foo'
+                ],
+                type: 'object'
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string'
+                }
+              }
+            },
+            description: 'foo response'
+          }
+        },
+        summary: 'A route that imports a $ref from dev-portal',
+        tags: [
+          'Test Routes'
+        ]
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
