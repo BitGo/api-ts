@@ -1828,16 +1828,16 @@ testCase('route with array types and descriptions', ROUTE_WITH_ARRAY_TYPES_AND_D
                   foo: {
                     type: 'array',
                     items: {
-                      type: 'string'
+                      type: 'string',
+                      description: 'foo description'
                     },
-                    description: 'foo description'
                   },
                   bar: {
                     type: 'array',
                     items: {
-                      type: 'number'
+                      type: 'number',
+                      description: 'bar description'
                     },
-                    description: 'bar description'
                   },
                   child: {
                     type: 'object',
@@ -1852,9 +1852,9 @@ testCase('route with array types and descriptions', ROUTE_WITH_ARRAY_TYPES_AND_D
                             {
                               type: 'number'
                             }
-                          ]
+                          ],
+                          description: 'child description'
                         },
-                        description: 'child description'
                       }
                     },
                     required: [
@@ -2128,6 +2128,7 @@ testCase('route with descriptions, patterns, and examples', ROUTE_WITH_DESCRIPTI
                       child: {
                         type: 'array',
                         items: {
+                          description: 'child description',
                           oneOf: [
                             {
                               type: 'string'
@@ -2137,7 +2138,6 @@ testCase('route with descriptions, patterns, and examples', ROUTE_WITH_DESCRIPTI
                             }
                           ]
                         },
-                        description: 'child description'
                       }
                     },
                     required: [
@@ -2618,6 +2618,95 @@ testCase('route with min and max tags', ROUTE_WITH_MIN_MAX_AND_OTHER_TAGS, {
             }
           }
         },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
+
+const ROUTE_WITH_ARRAY_QUERY_PARAM = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions for references
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /** 
+       * This is a foo description. 
+       * @example "abc"
+       * @pattern ^[a-z]+$
+      */
+      foo: h.optional(t.array(t.string))
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with optional array query parameter and documentation', ROUTE_WITH_ARRAY_QUERY_PARAM, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions for references',
+        operationId: 'api.v1.test',
+        tags: [
+          'Test Routes'
+        ],
+        parameters: [
+          {
+            description: 'This is a foo description.',
+            in: 'query',
+            name: 'foo',
+            schema: {
+              items: {
+                description: 'This is a foo description.',
+                example: 'abc',
+                type: 'string',
+                pattern: '^[a-z]+$'
+              },
+              type: 'array'
+            }
+          }
+        ],
         responses: {
           '200': {
             description: 'OK',

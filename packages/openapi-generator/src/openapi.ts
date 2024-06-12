@@ -49,7 +49,7 @@ function schemaToOpenAPI(
         if (innerSchema === undefined) {
           return undefined;
         }
-        return { type: 'array', items: innerSchema, ...defaultOpenAPIObject };
+        return { type: 'array', items: { ...innerSchema, ...defaultOpenAPIObject } };
       case 'object':
         return {
           type: 'object',
@@ -81,6 +81,17 @@ function schemaToOpenAPI(
       case 'union':
         let nullable = false;
         let oneOf: (OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject)[] = [];
+
+        // If there are two schemas and one of the schemas is undefined, that means the union is a case of `optional` type
+        const undefinedSchema = schema.schemas.find((s) => s.type === 'undefined');
+        const nonUndefinedSchema = schema.schemas.find((s) => s.type !== 'undefined');
+        // and we can just return the other schema (while attaching the comment to that schema)
+        const isOptional =
+          schema.schemas.length == 2 && undefinedSchema && nonUndefinedSchema;
+        if (isOptional) {
+          return schemaToOpenAPI({ ...nonUndefinedSchema, comment: schema.comment });
+        }
+
         for (const s of schema.schemas) {
           if (s.type === 'null') {
             nullable = true;
@@ -171,6 +182,7 @@ function schemaToOpenAPI(
     const readOnly = getTagName(schema, 'readOnly');
     const writeOnly = getTagName(schema, 'writeOnly');
     const format = getTagName(schema, 'format');
+    const title = getTagContent(schema, 'title');
 
     const deprecated = schema.comment?.tags.find((t) => t.tag === 'deprecated');
     const description = schema.comment?.description;
@@ -196,26 +208,27 @@ function schemaToOpenAPI(
       ...(readOnly ? { readOnly: true } : {}),
       ...(writeOnly ? { writeOnly: true } : {}),
       ...(format ? { format } : {}),
+      ...(title ? { title } : {}),
     };
     return defaultOpenAPIObject;
   }
 
-  const titleObject = schema.comment?.tags.find((t) => t.tag === 'title');
-
   let openAPIObject = createOpenAPIObject(schema);
-
-  if (titleObject !== undefined) {
-    openAPIObject = {
-      ...openAPIObject,
-      title: `${titleObject.name} ${titleObject.description}`.trim(),
-    };
-  }
 
   return openAPIObject;
 }
 
 function getTagName(schema: Schema, tagName: String): string | undefined {
   return schema.comment?.tags.find((t) => t.tag === tagName)?.name;
+}
+
+function getTagContent(schema: Schema, tagName: String): string | undefined {
+  if (schema.comment === undefined) return undefined;
+
+  const tag = schema.comment.tags.find((t) => t.tag === tagName);
+  if (tag === undefined) return undefined;
+
+  return `${tag.name} ${tag.description}`.trim();
 }
 
 function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObject] {
