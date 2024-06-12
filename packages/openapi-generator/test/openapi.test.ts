@@ -2733,4 +2733,4 @@ testCase('route with optional array query parameter and documentation', ROUTE_WI
   components: {
     schemas: {}
   }
-}, [])
+});
