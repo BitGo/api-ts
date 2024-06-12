@@ -2054,7 +2054,7 @@ export const route = h.httpRoute({
     query: {
       /** 
        * This is a bar param.
-       * @example "{ 'foo': 'bar' }"
+       * @example { "foo": "bar" }
       */
       bar: t.record(t.string, t.string),
     },
@@ -2103,7 +2103,9 @@ testCase('route with descriptions, patterns, and examples', ROUTE_WITH_DESCRIPTI
             required: true,
             schema: {
               type: 'object',
-              example: "{ 'foo': 'bar' }",
+              example: {
+                foo: 'bar'
+              },
               additionalProperties: {
                 type: 'string'
               }
@@ -2204,7 +2206,7 @@ export const route = h.httpRoute({
     body: {
       /** 
        * This is a foo description. 
-       * @example "BitGo Inc"
+       * @example BitGo Inc
       */
       foo: Foo,
       bar: Bar,
@@ -2349,8 +2351,8 @@ export const route = h.httpRoute({
        * This is a foo description. 
        * @minLength 5
        * @maxLength 10
-       * @example "SomeInc"
-       * @default "BitgoInc"
+       * @example SomeInc
+       * @default BitgoInc
       */
       foo: t.string()
     },
@@ -2663,7 +2665,7 @@ export const route = h.httpRoute({
     query: {
       /** 
        * This is a foo description. 
-       * @example "abc"
+       * @example abc
        * @pattern ^[a-z]+$
       */
       foo: h.optional(t.array(t.string))

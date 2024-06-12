@@ -5,6 +5,7 @@ import { parseCommentBlock } from './jsdoc';
 import { optimize } from './optimize';
 import type { Route } from './route';
 import type { Schema } from './ir';
+import { Block } from 'comment-parser';
 
 function schemaToOpenAPI(
   schema: Schema,
@@ -158,33 +159,39 @@ function schemaToOpenAPI(
       return fieldValue === 'true';
     } else if (schema.type === 'null') {
       return null;
+    } else if (schema.type === 'string') {
+      // Remove extraneous double quotes around the fieldValue
+      return fieldValue?.replace(/^"(.*)"$/, '$1');
     } else {
       return fieldValue;
     }
   };
 
   function buildDefaultOpenAPIObject(schema: Schema): OpenAPIV3.SchemaObject {
-    const defaultValue = getTagName(schema, 'default');
-    const example = getTagName(schema, 'example');
-    const maxLength = getTagName(schema, 'maxLength');
-    const minLength = getTagName(schema, 'minLength');
-    const pattern = getTagName(schema, 'pattern');
-    const minimum = getTagName(schema, 'minimum');
-    const maximum = getTagName(schema, 'maximum');
-    const minItems = getTagName(schema, 'minItems');
-    const maxItems = getTagName(schema, 'maxItems');
-    const minProperties = getTagName(schema, 'minProperties');
-    const maxProperties = getTagName(schema, 'maxProperties');
-    const exclusiveMinimum = getTagName(schema, 'exclusiveMinimum');
-    const exclusiveMaximum = getTagName(schema, 'exclusiveMaximum');
-    const multipleOf = getTagName(schema, 'multipleOf');
-    const uniqueItems = getTagName(schema, 'uniqueItems');
-    const readOnly = getTagName(schema, 'readOnly');
-    const writeOnly = getTagName(schema, 'writeOnly');
-    const format = getTagName(schema, 'format');
-    const title = getTagContent(schema, 'title');
+    const emptyBlock: Block = { description: '', tags: [], source: [], problems: [] };
+    const jsdoc = parseCommentBlock(schema.comment ?? emptyBlock);
 
-    const deprecated = schema.comment?.tags.find((t) => t.tag === 'deprecated');
+    const defaultValue = jsdoc?.tags?.default;
+    const example = jsdoc?.tags?.example;
+    const maxLength = jsdoc?.tags?.maxLength;
+    const minLength = jsdoc?.tags?.minLength;
+    const pattern = jsdoc?.tags?.pattern;
+    const minimum = jsdoc?.tags?.minimum;
+    const maximum = jsdoc?.tags?.maximum;
+    const minItems = jsdoc?.tags?.minItems;
+    const maxItems = jsdoc?.tags?.maxItems;
+    const minProperties = jsdoc?.tags?.minProperties;
+    const maxProperties = jsdoc?.tags?.maxProperties;
+    const exclusiveMinimum = jsdoc?.tags?.exclusiveMinimum;
+    const exclusiveMaximum = jsdoc?.tags?.exclusiveMaximum;
+    const multipleOf = jsdoc?.tags?.multipleOf;
+    const uniqueItems = jsdoc?.tags?.uniqueItems;
+    const readOnly = jsdoc?.tags?.readOnly;
+    const writeOnly = jsdoc?.tags?.writeOnly;
+    const format = jsdoc?.tags?.format;
+    const title = jsdoc?.tags?.title;
+
+    const deprecated = Object.keys(jsdoc?.tags || {}).includes('deprecated');
     const description = schema.comment?.description;
 
     const defaultOpenAPIObject = {
@@ -216,19 +223,6 @@ function schemaToOpenAPI(
   let openAPIObject = createOpenAPIObject(schema);
 
   return openAPIObject;
-}
-
-function getTagName(schema: Schema, tagName: String): string | undefined {
-  return schema.comment?.tags.find((t) => t.tag === tagName)?.name;
-}
-
-function getTagContent(schema: Schema, tagName: String): string | undefined {
-  if (schema.comment === undefined) return undefined;
-
-  const tag = schema.comment.tags.find((t) => t.tag === tagName);
-  if (tag === undefined) return undefined;
-
-  return `${tag.name} ${tag.description}`.trim();
 }
 
 function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObject] {
