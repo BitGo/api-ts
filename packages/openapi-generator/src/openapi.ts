@@ -86,11 +86,17 @@ function schemaToOpenAPI(
         // If there are two schemas and one of the schemas is undefined, that means the union is a case of `optional` type
         const undefinedSchema = schema.schemas.find((s) => s.type === 'undefined');
         const nonUndefinedSchema = schema.schemas.find((s) => s.type !== 'undefined');
+        // If nullSchema exists, that means that the union is also nullable
+        const nullSchema = schema.schemas.find((s) => s.type === 'null');
         // and we can just return the other schema (while attaching the comment to that schema)
         const isOptional =
-          schema.schemas.length == 2 && undefinedSchema && nonUndefinedSchema;
+          schema.schemas.length >= 2 && undefinedSchema && nonUndefinedSchema;
         if (isOptional) {
-          return schemaToOpenAPI({ ...nonUndefinedSchema, comment: schema.comment });
+          return schemaToOpenAPI({
+            ...nonUndefinedSchema,
+            comment: schema.comment,
+            ...(nullSchema ? { nullable: true } : {}),
+          });
         }
 
         for (const s of schema.schemas) {

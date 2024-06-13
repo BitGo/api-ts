@@ -2736,3 +2736,93 @@ testCase('route with optional array query parameter and documentation', ROUTE_WI
     schemas: {}
   }
 });
+
+
+const ROUTE_WITH_ARRAY_UNION_NULL_UNDEFINED_QUERY_PARAM = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions for references
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /** 
+       * This is a foo description. 
+       * @example abc
+       * @pattern ^[a-z]+$
+       */
+      ipRestrict: t.union([t.array(t.string), t.null, t.undefined]),
+    },
+  }),
+  response: {
+    200: {
+      test: t.string
+    }
+  },
+});
+`;
+
+testCase('route with array union of null and undefined', ROUTE_WITH_ARRAY_UNION_NULL_UNDEFINED_QUERY_PARAM, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions for references',
+        operationId: 'api.v1.test',
+        tags: [
+          'Test Routes'
+        ],
+        parameters: [
+          {
+            description: 'This is a foo description.',
+            in: 'query',
+            name: 'ipRestrict',
+            schema: {
+              items: {
+                description: 'This is a foo description.',
+                example: 'abc',
+                type: 'string',
+                pattern: '^[a-z]+$'
+              },
+              type: 'array'
+            }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      type: 'string'
+                    }
+                  },
+                  required: [
+                    'test'
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
