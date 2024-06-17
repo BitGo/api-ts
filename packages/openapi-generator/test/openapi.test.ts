@@ -29,7 +29,6 @@ async function testCase(
       throw new Error('Failed to parse source file');
     }
 
-
     const project = new Project();
     const routes: Route[] = [];
     const schemas: Record<string, Schema> = {};
@@ -1619,143 +1618,143 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase('route with mixed types and descriptions', ROUTE_WITH_MIXED_TYPES_AND_DESCRIPTIONS, 
-{
-  openapi: "3.0.3",
-  info: {
-    title: "Test",
-    version: "1.0.0"
-  },
-  paths: {
-    '/foo': {
-      get: {
-        summary: "A simple route with type descriptions",
-        operationId: "api.v1.test",
-        tags: [
-          "Test Routes"
-        ],
-        parameters: [
-          {
-            name: "bar",
-            description: "bar param",
-            in: "query",
-            required: true,
-            schema: {
-              type: "string"
-            }
-          }
-        ],
-        requestBody: {
-          content: {
-            'application/json': {
+testCase('route with mixed types and descriptions', ROUTE_WITH_MIXED_TYPES_AND_DESCRIPTIONS,
+  {
+    openapi: "3.0.3",
+    info: {
+      title: "Test",
+      version: "1.0.0"
+    },
+    paths: {
+      '/foo': {
+        get: {
+          summary: "A simple route with type descriptions",
+          operationId: "api.v1.test",
+          tags: [
+            "Test Routes"
+          ],
+          parameters: [
+            {
+              name: "bar",
+              description: "bar param",
+              in: "query",
+              required: true,
               schema: {
-                type: "object",
-                properties: {
-                  foo: {
-                    type: "string",
-                    description: "description to describe an optional string"
-                  },
-                  bar: {
-                    oneOf: [
-                      {
-                        type: "number"
-                      },
-                      {
-                        type: "string"
-                      }
-                    ],
-                    description: "description to describe an optional union of number and string"
-                  },
-                  child: {
-                    type: "object",
-                    description: "description to describe an object",
-                    properties: {
-                      child: {
-                        type: "object",
-                        description: "dsecription to describe an intersection of a type and a partial",
-                        properties: {
-                          foo: {
-                            type: "string"
-                          },
-                          bar: {
-                            type: "number"
-                          }
-                        },
-                        required: [
-                          "foo"
-                        ]
-                      }
-                    },
-                    required: [
-                      "child"
-                    ]
-                  },
-                  error: {
-                    type: "object",
-                    description: "description to describe a t.type",
-                    properties: {
-                      error: {
-                        type: "string"
-                      }
-                    },
-                    required: [
-                      "error"
-                    ]
-                  },
-                  obj: {
-                    type: "object",
-                    description: "description to describe an optional t.object",
-                    properties: {}
-                  },
-                  exact: {
-                    type: "object",
-                    description: "description to describe a t.exact",
-                    properties: {
-                      foo: {
-                        type: "string"
-                      }
-                    },
-                    required: [
-                      "foo"
-                    ]
-                  }
-                },
-                required: [
-                  "child",
-                  "error",
-                  "exact"
-                ]
+                type: "string"
               }
             }
-          }
-        },
-        responses: {
-          200: {
-            description: "OK",
+          ],
+          requestBody: {
             content: {
               'application/json': {
                 schema: {
                   type: "object",
                   properties: {
-                    test: {
-                      type: "string"
+                    foo: {
+                      type: "string",
+                      description: "description to describe an optional string"
+                    },
+                    bar: {
+                      oneOf: [
+                        {
+                          type: "number"
+                        },
+                        {
+                          type: "string"
+                        }
+                      ],
+                      description: "description to describe an optional union of number and string"
+                    },
+                    child: {
+                      type: "object",
+                      description: "description to describe an object",
+                      properties: {
+                        child: {
+                          type: "object",
+                          description: "dsecription to describe an intersection of a type and a partial",
+                          properties: {
+                            foo: {
+                              type: "string"
+                            },
+                            bar: {
+                              type: "number"
+                            }
+                          },
+                          required: [
+                            "foo"
+                          ]
+                        }
+                      },
+                      required: [
+                        "child"
+                      ]
+                    },
+                    error: {
+                      type: "object",
+                      description: "description to describe a t.type",
+                      properties: {
+                        error: {
+                          type: "string"
+                        }
+                      },
+                      required: [
+                        "error"
+                      ]
+                    },
+                    obj: {
+                      type: "object",
+                      description: "description to describe an optional t.object",
+                      properties: {}
+                    },
+                    exact: {
+                      type: "object",
+                      description: "description to describe a t.exact",
+                      properties: {
+                        foo: {
+                          type: "string"
+                        }
+                      },
+                      required: [
+                        "foo"
+                      ]
                     }
                   },
                   required: [
-                    "test"
+                    "child",
+                    "error",
+                    "exact"
                   ]
+                }
+              }
+            }
+          },
+          responses: {
+            200: {
+              description: "OK",
+              content: {
+                'application/json': {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      test: {
+                        type: "string"
+                      }
+                    },
+                    required: [
+                      "test"
+                    ]
+                  }
                 }
               }
             }
           }
         }
       }
+    },
+    components: {
+      schemas: {}
     }
-  },
-  components: {
-    schemas: {}
-  }
-});
+  });
 
 const ROUTE_WITH_ARRAY_TYPES_AND_DESCRIPTIONS = `
 import * as t from 'io-ts';
@@ -2825,4 +2824,113 @@ testCase('route with array union of null and undefined', ROUTE_WITH_ARRAY_UNION_
   components: {
     schemas: {}
   }
+});
+
+const ROUTE_WITH_SCHEMA_WITH_COMMENT = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route with type descriptions for references
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: SimpleRouteResponse,
+    400: ApiError
+  },
+ });
+
+/**
+ * Human readable description of the Simple Route Response
+ * @title Human Readable Simple Route Response
+ */
+const SimpleRouteResponse = t.type({
+  test: t.string,
+});
+
+/**
+ * Human readable description of the ApiError schema
+ * @title Human Readable Api Error Schema
+ */
+const ApiError = t.type({
+  error: t.string,
+});
+ `
+
+testCase('route with api error schema', ROUTE_WITH_SCHEMA_WITH_COMMENT, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route with type descriptions for references',
+        operationId: 'api.v1.test',
+        tags: [
+          'Test Routes'
+        ],
+        parameters: [],
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  '$ref': '#/components/schemas/SimpleRouteResponse'
+                }
+              }
+            }
+          },
+          '400': {
+            content: {
+              'application/json': {
+                schema: {
+                  '$ref': '#/components/schemas/ApiError'
+                }
+              }
+            },
+            description: 'Bad Request'
+          }
+        }
+      }
+    },
+  },
+  components: {
+    schemas: {
+      ApiError: {
+        properties: {
+          error: {
+            type: 'string'
+          }
+        },
+        required: [
+          'error'
+        ],
+        title: 'Human Readable Api Error Schema',
+        description: 'Human readable description of the ApiError schema',
+        type: 'object'
+      },
+      SimpleRouteResponse: {
+        description: 'Human readable description of the Simple Route Response',
+        properties: {
+          test: {
+            type: 'string'
+          }
+        },
+        required: [
+          'test'
+        ],
+        title: 'Human Readable Simple Route Response',
+        type: 'object'
+      }
+    },
+  },
 });
