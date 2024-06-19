@@ -669,6 +669,91 @@ testCase('request body ref', SCHEMA_REF, {
   },
 });
 
+const SCHEMA_REF_WITH_COMMENT_AT_DECLARATION = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    params: {
+      body: t.string,
+      /**
+       * Size of the body
+       * @example 10
+       */
+      size: t.number,
+    }
+  }),
+  response: {
+    200: Foo
+  },
+});
+
+/**
+ * a Foo of type 'string'
+ * @example "foo"
+ */
+const Foo = t.string;
+`;
+
+testCase('request body ref with comments', SCHEMA_REF_WITH_COMMENT_AT_DECLARATION, {
+  openapi: "3.0.3",
+  info: {
+    title: "Test",
+    version: "1.0.0"
+  },
+  paths: {
+    "/foo": {
+      get: {
+        parameters: [
+          {
+            name: "body",
+            in: "path",
+            required: true,
+            schema: {
+              type: "string"
+            }
+          },
+          {
+            name: "size",
+            description: "Size of the body",
+            in: "path",
+            required: true,
+            schema: {
+              type: "number",
+              example: 10
+            }
+          }
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/Foo"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {
+      Foo: {
+        title: "Foo",
+        type: "string",
+        description: "a Foo of type 'string'",
+        example: "foo"
+      }
+    }
+  }
+});
+
 const SCHEMA_DOUBLE_REF = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
