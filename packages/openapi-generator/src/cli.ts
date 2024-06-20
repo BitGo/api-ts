@@ -177,7 +177,7 @@ const app = command({
           );
           process.exit(1);
         }
-        const [newSourceFile, init] = initE.right;
+        const [newSourceFile, init, comment] = initE.right;
 
         const codecE = parseCodecInitializer(project.right, newSourceFile, init);
         if (E.isLeft(codecE)) {
@@ -186,6 +186,10 @@ const app = command({
           );
           process.exit(1);
         }
+        if (comment !== undefined) {
+          codecE.right.comment = comment;
+        }
+
         components[ref.name] = codecE.right;
         queue.push(codecE.right);
       }
