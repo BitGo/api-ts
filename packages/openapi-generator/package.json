@@ -21,7 +21,7 @@
     "test:target": "c8 --all --src src node --require @swc-node/register"
   },
   "dependencies": {
-    "@swc/core": "1.5.7",
+    "@swc/core": "1.6.5",
     "cmd-ts": "0.13.0",
     "comment-parser": "1.4.1",
     "fp-ts": "2.16.6",
@@ -38,8 +38,8 @@
     "typescript": "4.7.4"
   },
   "optionalDependencies": {
-    "@swc/core-linux-x64-gnu": "1.5.7",
-    "@swc/core-darwin-arm64": "1.5.7"
+    "@swc/core-linux-x64-gnu": "1.6.5",
+    "@swc/core-darwin-arm64": "1.6.5"
   },
   "publishConfig": {
     "access": "public"
