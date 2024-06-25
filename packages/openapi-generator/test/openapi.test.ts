@@ -3198,7 +3198,7 @@ export const route = h.httpRoute({
     200: t.string,
     400: ApiError
   },
-});
+})
 `
 testCase('route with many response codes uses default status code descriptions', SCHEMA_WITH_MANY_RESPONSE_TYPES, {
   openapi: '3.0.3',
