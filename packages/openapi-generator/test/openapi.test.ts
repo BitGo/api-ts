@@ -167,10 +167,11 @@ testCase('simple route', SIMPLE, {
         ],
         responses: {
           200: {
-            description: 'foo response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
+                  description: 'foo response',
                   type: 'string',
                 },
               },
@@ -291,10 +292,11 @@ testCase('request body route', REQUEST_BODY, {
         },
         responses: {
           200: {
-            description: 'foo response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
+                  description: 'foo response',
                   type: 'string',
                 },
               },
@@ -377,10 +379,11 @@ testCase('request union route', UNION, {
         ],
         responses: {
           200: {
-            description: 'foo response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
+                  description: 'foo response',
                   type: 'string',
                 },
               },
@@ -442,10 +445,11 @@ testCase('nullable property route', NULLABLE_PROPERTY, {
         },
         responses: {
           200: {
-            description: 'foo response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
+                  description: 'foo response',
                   type: 'string',
                 },
               },
@@ -543,7 +547,10 @@ export const route = h.httpRoute({
   }),
   response: {
     /** foo response */
-    200: t.partial({ foo: t.string })
+    200: t.partial({
+      /** string called foo */
+      foo: t.string
+    })
   },
 });
 `;
@@ -576,13 +583,15 @@ testCase('object with no required properties', EMPTY_REQUIRED, {
         },
         responses: {
           200: {
-            description: 'foo response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
                   type: 'object',
+                  description: 'foo response',
                   properties: {
                     foo: {
+                      description: 'string called foo',
                       type: 'string',
                     },
                   },
@@ -639,10 +648,11 @@ testCase('request body ref', SCHEMA_REF, {
         },
         responses: {
           200: {
-            description: 'foo response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
+                  description: 'foo response',
                   type: 'string',
                 },
               },
@@ -795,10 +805,11 @@ testCase('request body double ref', SCHEMA_DOUBLE_REF, {
         },
         responses: {
           200: {
-            description: 'foo response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
+                  description: 'foo response',
                   type: 'string',
                 },
               },
@@ -872,10 +883,11 @@ testCase('request body nullable ref', SCHEMA_NULLABLE_REF, {
         },
         responses: {
           200: {
-            description: 'foo response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
+                  description: 'foo response',
                   type: 'string',
                 },
               },
@@ -991,10 +1003,11 @@ testCase('schema parameter with title tag', TITLE_TAG, {
         ],
         responses: {
           200: {
-            description: 'foo response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
+                  description: 'foo response',
                   type: 'string',
                 },
               },
@@ -1019,10 +1032,11 @@ testCase('schema parameter with title tag', TITLE_TAG, {
         ],
         responses: {
           200: {
-            description: 'bar response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
+                  description: 'bar response',
                   type: 'string',
                 },
               },
@@ -1076,10 +1090,11 @@ testCase('optional parameter', OPTIONAL_PARAM, {
         ],
         responses: {
           200: {
-            description: 'foo response',
+            description: 'OK',
             content: {
               'application/json': {
                 schema: {
+                  description: 'foo response',
                   type: 'string',
                 },
               },
@@ -3161,5 +3176,81 @@ testCase('route with schema with default metadata', ROUTE_WITH_OVERIDDEN_METADAT
   },
   components: {
     schemas: {}
+  }
+});
+
+
+const SCHEMA_WITH_MANY_RESPONSE_TYPES = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+const ApiError = t.type({
+  /** error message */
+  error: t.string,
+});
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    /** string response type */
+    200: t.string,
+    400: ApiError
+  },
+})
+`
+testCase('route with many response codes uses default status code descriptions', SCHEMA_WITH_MANY_RESPONSE_TYPES, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [],
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  description: 'string response type',
+                  type: 'string'
+                }
+              }
+            }
+          },
+          '400': {
+            description: 'Bad Request',
+            content: {
+              'application/json': {
+                schema: {
+                  '$ref': '#/components/schemas/ApiError'
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {
+      ApiError: {
+        properties: {
+          error: {
+            type: 'string',
+            description: 'error message',
+          }
+        },
+        required: [
+          'error'
+        ],
+        type: 'object',
+        title: 'ApiError'
+      },
+    }
   }
 });
