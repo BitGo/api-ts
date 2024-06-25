@@ -3039,7 +3039,7 @@ export const route = h.httpRoute({
     }
   },
 });
-`
+`;
 
 testCase('route with schema with default metadata', ROUTE_WITH_SCHEMA_WITH_DEFAULT_METADATA, {
   openapi: '3.0.3',
@@ -3113,7 +3113,7 @@ export const route = h.httpRoute({
     }
   },
 });
-`
+`;
 
 testCase('route with schema with default metadata', ROUTE_WITH_OVERIDDEN_METADATA, {
   openapi: '3.0.3',
