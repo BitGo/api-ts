@@ -1,4 +1,5 @@
 import { Block } from 'comment-parser';
+import { OpenAPIV3 } from 'openapi-types';
 import type { PseudoBigInt } from 'typescript';
 
 export type AnyValue = {
@@ -65,4 +66,20 @@ export type HasComment = {
   comment?: Block;
 };
 
-export type Schema = BaseSchema & HasComment;
+export type SchemaMetadata = Omit<
+  OpenAPIV3.SchemaObject,
+  | 'type'
+  | 'additionalProperties'
+  | 'properties'
+  | 'enum'
+  | 'anyOf'
+  | 'allOf'
+  | 'oneOf'
+  | 'not'
+  | 'nullable'
+  | 'discriminator'
+  | 'xml'
+  | 'externalDocs'
+>;
+
+export type Schema = BaseSchema & HasComment & SchemaMetadata;

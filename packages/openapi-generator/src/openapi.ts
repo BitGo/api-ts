@@ -177,28 +177,29 @@ function schemaToOpenAPI(
     const emptyBlock: Block = { description: '', tags: [], source: [], problems: [] };
     const jsdoc = parseCommentBlock(schema.comment ?? emptyBlock);
 
-    const defaultValue = jsdoc?.tags?.default;
-    const example = jsdoc?.tags?.example;
-    const maxLength = jsdoc?.tags?.maxLength;
-    const minLength = jsdoc?.tags?.minLength;
-    const pattern = jsdoc?.tags?.pattern;
-    const minimum = jsdoc?.tags?.minimum;
-    const maximum = jsdoc?.tags?.maximum;
-    const minItems = jsdoc?.tags?.minItems;
-    const maxItems = jsdoc?.tags?.maxItems;
-    const minProperties = jsdoc?.tags?.minProperties;
-    const maxProperties = jsdoc?.tags?.maxProperties;
-    const exclusiveMinimum = jsdoc?.tags?.exclusiveMinimum;
-    const exclusiveMaximum = jsdoc?.tags?.exclusiveMaximum;
-    const multipleOf = jsdoc?.tags?.multipleOf;
-    const uniqueItems = jsdoc?.tags?.uniqueItems;
-    const readOnly = jsdoc?.tags?.readOnly;
-    const writeOnly = jsdoc?.tags?.writeOnly;
-    const format = jsdoc?.tags?.format;
-    const title = jsdoc?.tags?.title;
+    const defaultValue = jsdoc?.tags?.default ?? schema.default;
+    const example = jsdoc?.tags?.example ?? schema.example;
+    const maxLength = jsdoc?.tags?.maxLength ?? schema.maxLength;
+    const minLength = jsdoc?.tags?.minLength ?? schema.minLength;
+    const pattern = jsdoc?.tags?.pattern ?? schema.pattern;
+    const minimum = jsdoc?.tags?.minimum ?? schema.maximum;
+    const maximum = jsdoc?.tags?.maximum ?? schema.minimum;
+    const minItems = jsdoc?.tags?.minItems ?? schema.minItems;
+    const maxItems = jsdoc?.tags?.maxItems ?? schema.maxItems;
+    const minProperties = jsdoc?.tags?.minProperties ?? schema.minProperties;
+    const maxProperties = jsdoc?.tags?.maxProperties ?? schema.maxProperties;
+    const exclusiveMinimum = jsdoc?.tags?.exclusiveMinimum ?? schema.exclusiveMinimum;
+    const exclusiveMaximum = jsdoc?.tags?.exclusiveMaximum ?? schema.exclusiveMaximum;
+    const multipleOf = jsdoc?.tags?.multipleOf ?? schema.multipleOf;
+    const uniqueItems = jsdoc?.tags?.uniqueItems ?? schema.uniqueItems;
+    const readOnly = jsdoc?.tags?.readOnly ?? schema.readOnly;
+    const writeOnly = jsdoc?.tags?.writeOnly ?? schema.writeOnly;
+    const format = jsdoc?.tags?.format ?? schema.format ?? schema.format;
+    const title = jsdoc?.tags?.title ?? schema.title;
 
-    const deprecated = Object.keys(jsdoc?.tags || {}).includes('deprecated');
-    const description = schema.comment?.description;
+    const deprecated =
+      Object.keys(jsdoc?.tags || {}).includes('deprecated') || !!schema.deprecated;
+    const description = schema.comment?.description ?? schema.description;
 
     const defaultOpenAPIObject = {
       ...(defaultValue ? { default: parseField(schema, defaultValue) } : {}),
