@@ -317,7 +317,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
       }),
       ...requestBody,
       responses: Object.entries(route.response).reduce((acc, [code, response]) => {
-        const description = response.comment?.description ?? STATUS_CODES[code] ?? '';
+        const description = STATUS_CODES[code] ?? '';
 
         return {
           ...acc,
@@ -325,7 +325,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
             description,
             content: {
               'application/json': {
-                schema: schemaToOpenAPI(stripTopLevelComment(response)),
+                schema: schemaToOpenAPI(response),
                 ...(example !== undefined ? { example } : undefined),
               },
             },
