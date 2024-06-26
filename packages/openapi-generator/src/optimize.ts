@@ -127,7 +127,11 @@ export function optimize(schema: Schema): Schema {
 
     return schemaObject;
   } else if (schema.type === 'intersection') {
-    return foldIntersection(schema, optimize);
+    const newSchema = foldIntersection(schema, optimize);
+    if (schema.comment) {
+      return { ...newSchema, comment: schema.comment };
+    }
+    return newSchema;
   } else if (schema.type === 'union') {
     const simplified = simplifyUnion(schema, optimize);
     if (schema.comment) {

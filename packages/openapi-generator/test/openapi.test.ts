@@ -2942,7 +2942,8 @@ export const route = h.httpRoute({
   request: h.httpRequest({}),
   response: {
     200: SimpleRouteResponse,
-    400: ApiError
+    400: ApiError,
+    401: InvalidError
   },
  });
 
@@ -2953,6 +2954,14 @@ export const route = h.httpRoute({
 const SimpleRouteResponse = t.type({
   test: t.string,
 });
+
+/**
+ * Human readable description of the InvalidError schema
+ * @title Human Readable Invalid Error Schema
+ */
+const InvalidError = t.intersection([
+  ApiError, 
+  t.type({ error: t.literal('invalid') })]);
 
 /**
  * Human readable description of the ApiError schema
@@ -2998,6 +3007,16 @@ testCase('route with api error schema', ROUTE_WITH_SCHEMA_WITH_COMMENT, {
               }
             },
             description: 'Bad Request'
+          },
+          '401': {
+            description: 'Unauthorized',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/InvalidError'
+                }
+              }
+            }
           }
         }
       }
@@ -3029,10 +3048,33 @@ testCase('route with api error schema', ROUTE_WITH_SCHEMA_WITH_COMMENT, {
           'test'
         ],
         title: 'Human Readable Simple Route Response',
-        type: 'object'
-      }
-    },
-  },
+        type: 'object',
+      },
+      InvalidError: {
+        title: 'Human Readable Invalid Error Schema',
+        description: 'Human readable description of the InvalidError schema',
+        allOf: [
+          {
+            type: 'object',
+            properties: {
+              error: {
+                type: 'string',
+                enum: [
+                  'invalid'
+                ]
+              }
+            },
+            required: [
+              'error'
+            ]
+          },
+          {
+            $ref: '#/components/schemas/ApiError'
+          }
+        ],
+      },
+    }
+  }
 });
 
 const ROUTE_WITH_SCHEMA_WITH_DEFAULT_METADATA = `
