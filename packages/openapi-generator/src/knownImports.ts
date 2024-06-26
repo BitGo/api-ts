@@ -138,77 +138,143 @@ export const KNOWN_IMPORTS: KnownImports = {
     void: () => E.right({ type: 'undefined' }),
   },
   'io-ts-numbers': {
-    NumberFromString: () => E.right({ type: 'string', format: 'number' }),
-    NaturalFromString: () => E.right({ type: 'string', format: 'number' }),
-    Negative: () => E.right({ type: 'number' }),
-    NegativeFromString: () => E.right({ type: 'string', format: 'number' }),
-    NegativeInt: () => E.right({ type: 'number' }),
-    NegativeIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    NonNegative: () => E.right({ type: 'number' }),
-    NonNegativeFromString: () => E.right({ type: 'string', format: 'number' }),
-    NonNegativeInt: () => E.right({ type: 'number' }),
-    NonNegativeIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    NonPositive: () => E.right({ type: 'number' }),
-    NonPositiveFromString: () => E.right({ type: 'string', format: 'number' }),
-    NonPositiveInt: () => E.right({ type: 'number' }),
-    NonPositiveIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    NonZero: () => E.right({ type: 'number' }),
-    NonZeroFromString: () => E.right({ type: 'string', format: 'number' }),
-    NonZeroInt: () => E.right({ type: 'number' }),
-    NonZeroIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    Positive: () => E.right({ type: 'number' }),
-    PositiveFromString: () => E.right({ type: 'string', format: 'number' }),
-    Zero: () => E.right({ type: 'number' }),
-    ZeroFromString: () => E.right({ type: 'string', format: 'number' }),
+    NumberFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Number String' }),
+    NaturalFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Natural Number String' }),
+    Negative: () => E.right({ type: 'number', title: 'Negative Number' }),
+    NegativeFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Negative Number String' }),
+    NegativeInt: () => E.right({ type: 'number', title: 'Negative Integer' }),
+    NegativeIntFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Negative Integer String' }),
+    NonNegative: () => E.right({ type: 'number', title: 'Non-Negative Number' }),
+    NonNegativeFromString: () =>
+      E.right({
+        type: 'string',
+        format: 'number',
+        title: 'Non-Negative Number String',
+      }),
+    NonNegativeInt: () => E.right({ type: 'number', title: 'Non-Negative Integer' }),
+    NonNegativeIntFromString: () =>
+      E.right({
+        type: 'string',
+        format: 'number',
+        title: 'Non-Negative Integer String',
+      }),
+    NonPositive: () => E.right({ type: 'number', title: 'Non-Positive Number' }),
+    NonPositiveFromString: () =>
+      E.right({
+        type: 'string',
+        format: 'number',
+        title: 'Non-Positive Number String',
+      }),
+    NonPositiveInt: () => E.right({ type: 'number', title: 'Non-Positive Integer' }),
+    NonPositiveIntFromString: () =>
+      E.right({
+        type: 'string',
+        format: 'number',
+        title: 'Non-Positive Integer String',
+      }),
+    NonZero: () => E.right({ type: 'number', title: 'Non-Zero Number' }),
+    NonZeroFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Non-Zero Number String' }),
+    NonZeroInt: () => E.right({ type: 'number', title: 'Non-Zero Integer' }),
+    NonZeroIntFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Non-Zero Integer String' }),
+    Positive: () => E.right({ type: 'number', title: 'Positive Number' }),
+    PositiveFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Positive Number String' }),
+    Zero: () => E.right({ type: 'number', title: 'Zero' }),
+    ZeroFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Zero String' }),
   },
   'io-ts-bigint': {
-    BigIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    NegativeBigInt: () => E.right({ type: 'number' }),
-    NegativeBigIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    NonEmptyString: () => E.right({ type: 'string' }),
-    NonNegativeBigInt: () => E.right({ type: 'number' }),
-    NonNegativeBigIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    NonPositiveBigInt: () => E.right({ type: 'number' }),
-    NonPositiveBigIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    NonZeroBigInt: () => E.right({ type: 'number' }),
-    NonZeroBigIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    PositiveBigInt: () => E.right({ type: 'number' }),
-    PositiveBigIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    ZeroBigInt: () => E.right({ type: 'number' }),
-    ZeroBigIntFromString: () => E.right({ type: 'string', format: 'number' }),
+    BigIntFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Big Integer String' }),
+    NegativeBigInt: () => E.right({ type: 'number', title: 'Negative Big Integer' }),
+    NegativeBigIntFromString: () =>
+      E.right({
+        type: 'string',
+        format: 'number',
+        title: 'Negative Big Integer String',
+      }),
+    NonEmptyString: () => E.right({ type: 'string', title: 'Non-Empty String' }),
+    NonNegativeBigInt: () =>
+      E.right({ type: 'number', title: 'Non-Negative Big Integer' }),
+    NonNegativeBigIntFromString: () =>
+      E.right({
+        type: 'string',
+        format: 'number',
+        title: 'Non-Negative Big Integer String',
+      }),
+    NonPositiveBigInt: () =>
+      E.right({ type: 'number', title: 'Non-Positive Big Integer' }),
+    NonPositiveBigIntFromString: () =>
+      E.right({
+        type: 'string',
+        format: 'number',
+        title: 'Non-Positive Big Integer String',
+      }),
+    NonZeroBigInt: () => E.right({ type: 'number', title: 'Non-Zero Big Integer' }),
+    NonZeroBigIntFromString: () =>
+      E.right({
+        type: 'string',
+        format: 'number',
+        title: 'Non-Zero Big Integer String',
+      }),
+    PositiveBigInt: () => E.right({ type: 'number', title: 'Positive Big Integer' }),
+    PositiveBigIntFromString: () =>
+      E.right({
+        type: 'string',
+        format: 'number',
+        title: 'Positive Big Integer String',
+      }),
+    ZeroBigInt: () => E.right({ type: 'number', title: 'Zero Big Integer' }),
+    ZeroBigIntFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Zero Big Integer String' }),
   },
   'io-ts-types': {
-    NumberFromString: () => E.right({ type: 'string', format: 'number' }),
-    BigIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    BooleanFromNumber: () => E.right({ type: 'number', enum: [0, 1] }),
-    BooleanFromString: () => E.right({ type: 'string', enum: ['true', 'false'] }),
-    DateFromISOString: () => E.right({ type: 'string', format: 'date-time' }),
+    NumberFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Number String' }),
+    BigIntFromString: () =>
+      E.right({ type: 'string', format: 'number', title: 'Big Integer String' }),
+    BooleanFromNumber: () =>
+      E.right({ type: 'number', enum: [0, 1], title: 'Boolean Number' }),
+    BooleanFromString: () =>
+      E.right({ type: 'string', enum: ['true', 'false'], title: 'Boolean String' }),
+    DateFromISOString: () =>
+      E.right({ type: 'string', format: 'date-time', title: 'ISO Date String' }),
     DateFromNumber: () =>
       E.right({
+        title: 'Unix Time (milliseconds)',
         type: 'number',
-        format: 'number',
         description: 'Number of milliseconds since the Unix epoch',
+        format: 'number',
       }),
     DateFromUnixTime: () =>
       E.right({
+        title: 'Unix Time (seconds)',
         type: 'number',
         format: 'number',
         description: 'Number of seconds since the Unix epoch',
       }),
-    IntFromString: () => E.right({ type: 'string', format: 'integer' }),
-    JsonFromString: () => E.right({ type: 'string' }),
-    nonEmptyArray: (_, innerSchema) => E.right({ type: 'array', items: innerSchema }),
-    NonEmptyString: () => E.right({ type: 'string' }),
+    IntFromString: () =>
+      E.right({ type: 'string', format: 'integer', title: 'Integer String' }),
+    JsonFromString: () => E.right({ type: 'string', title: 'JSON String' }),
+    nonEmptyArray: (_, innerSchema) =>
+      E.right({ type: 'array', items: innerSchema, title: 'Non-Empty Array' }),
+    NonEmptyString: () => E.right({ type: 'string', title: 'Non-Empty String' }),
     readonlyNonEmptyArray: (_, innerSchema) =>
       E.right({ type: 'array', items: innerSchema }),
-    UUID: () => E.right({ type: 'string' }),
-    Json: () => E.right({ type: 'any' }),
+    UUID: () => E.right({ type: 'string', title: 'UUID' }),
+    Json: () => E.right({ type: 'any', title: 'JSON' }),
     JsonRecord: () => E.right({ type: 'record', codomain: { type: 'any' } }),
     withFallback: (_, schema, fallback) =>
       E.right({ type: 'union', schemas: [schema, fallback] }),
     fromNullable: (_, schema) =>
       E.right({ type: 'union', schemas: [schema, { type: 'null' }] }),
-    date: () => E.right({ type: 'string', format: 'date' }),
+    date: () => E.right({ type: 'string', format: 'date', title: 'Date String' }),
   },
   '@api-ts/io-ts-http': {
     optional: (_, innerSchema) =>

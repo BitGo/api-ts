@@ -3071,6 +3071,7 @@ testCase('route with schema with default metadata', ROUTE_WITH_SCHEMA_WITH_DEFAU
                     test: {
                       type: 'number',
                       format: 'number',
+                      title: 'Unix Time (milliseconds)',
                       description: 'Number of milliseconds since the Unix epoch',
                     }
                   },
@@ -3145,6 +3146,7 @@ testCase('route with schema with default metadata', ROUTE_WITH_OVERIDDEN_METADAT
                     test: {
                       type: 'number',
                       format: 'string',
+                      title: 'Unix Time (milliseconds)',
                       description: 'Testing overridden metadata',
                     }
                   },
