@@ -28,7 +28,7 @@ export function foldIntersection(schema: Schema, optimize: OptimizeFn): Schema {
     }
   });
 
-  return result;
+  return schema.comment ? { ...result, comment: schema.comment } : result;
 }
 
 export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
