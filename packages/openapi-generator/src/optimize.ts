@@ -52,12 +52,15 @@ function mergeUnions(schema: Schema): Schema {
               .map(([k, v]) => ({ [k]: sortObj(v) })),
           );
 
+  // Deterministic version of JSON.stringify
+  const deterministicStringify = (obj: object) => JSON.stringify(sortObj(obj));
+
   schema.schemas.forEach((innerSchema) => {
     if (innerSchema.type === 'union') {
       const merged = mergeUnions(innerSchema);
-      resultingSchemas.add(JSON.stringify(sortObj(merged)));
+      resultingSchemas.add(deterministicStringify(merged));
     } else {
-      resultingSchemas.add(JSON.stringify(sortObj(innerSchema)));
+      resultingSchemas.add(deterministicStringify(innerSchema));
     }
   });
 
