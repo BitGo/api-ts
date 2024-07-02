@@ -31,6 +31,47 @@ export function foldIntersection(schema: Schema, optimize: OptimizeFn): Schema {
   return result;
 }
 
+function mergeUnions(schema: Schema): Schema {
+  if (schema.type !== 'union') return schema;
+  else if (schema.schemas.length === 1) return schema.schemas[0]!;
+  else if (schema.schemas.length === 0) return { type: 'undefined' };
+
+  // Stringified schemas (i.e. hashes of the schemas) to avoid duplicates
+  const resultingSchemas: Set<string> = new Set();
+
+  // Function to make the result of JSON.stringify deterministic (i.e. keys are all sorted alphabetically)
+  const sortObj = (obj: object): object =>
+    obj === null || typeof obj !== 'object'
+      ? obj
+      : Array.isArray(obj)
+        ? obj.map(sortObj)
+        : Object.assign(
+            {},
+            ...Object.entries(obj)
+              .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+              .map(([k, v]) => ({ [k]: sortObj(v) })),
+          );
+
+  // Deterministic version of JSON.stringify
+  const deterministicStringify = (obj: object) => JSON.stringify(sortObj(obj));
+
+  schema.schemas.forEach((innerSchema) => {
+    if (innerSchema.type === 'union') {
+      const merged = mergeUnions(innerSchema);
+      resultingSchemas.add(deterministicStringify(merged));
+    } else {
+      resultingSchemas.add(deterministicStringify(innerSchema));
+    }
+  });
+
+  if (resultingSchemas.size === 1) return JSON.parse(Array.from(resultingSchemas)[0]!);
+
+  return {
+    type: 'union',
+    schemas: Array.from(resultingSchemas).map((s) => JSON.parse(s)),
+  };
+}
+
 export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
   if (schema.type !== 'union') {
     return schema;
@@ -134,11 +175,13 @@ export function optimize(schema: Schema): Schema {
     return newSchema;
   } else if (schema.type === 'union') {
     const simplified = simplifyUnion(schema, optimize);
+    const merged = mergeUnions(simplified);
+
     if (schema.comment) {
-      return { ...simplified, comment: schema.comment };
+      return { ...merged, comment: schema.comment };
     }
 
-    return simplified;
+    return merged;
   } else if (schema.type === 'array') {
     const optimized = optimize(schema.items);
     if (schema.comment) {

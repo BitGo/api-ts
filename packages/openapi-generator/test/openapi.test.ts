@@ -3298,3 +3298,160 @@ testCase('route with many response codes uses default status code descriptions',
     }
   }
 });
+
+const SCHEMA_WITH_REDUNDANT_UNIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      foo: t.union([t.string, t.string]),
+      bar: t.union([t.number, t.number, t.number]),
+      bucket: t.union([t.string, t.number, t.boolean, t.string, t.number, t.boolean]),
+    },
+    body: {
+      typeUnion: t.union([
+        t.type({ foo: t.string, bar: t.number }),
+        t.type({ bar: t.number, foo: t.string}),
+        ]),
+      nestedTypeUnion: t.union([
+        t.type({ nested: t.type({ foo: t.string, bar: t.number }) }),
+        t.type({ nested: t.type({ foo: t.string, bar: t.number }) })
+      ])
+    }
+  }),
+  response: {
+    200: t.union([t.string, t.string, t.union([t.number, t.number])]),
+    400: t.union([t.boolean, t.boolean, t.boolean])
+  },
+})
+`
+
+testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [
+          {
+            in: 'query',
+            name: 'foo',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          },
+          {
+            in: 'query',
+            name: 'bar',
+            required: true,
+            schema: {
+              type: 'number'
+            }
+          },
+          {
+            in: 'query',
+            name: 'bucket',
+            required: true,
+            schema: {
+              oneOf: [
+                { type: 'string' },
+                { type: 'number' },
+                { type: 'boolean' }
+              ]
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+              'application/json': {
+              schema: {
+                properties: {
+                  nestedTypeUnion: {
+                    properties: {
+                      nested: {
+                        properties: {
+                          bar: {
+                            type: 'number'
+                          },
+                          foo: {
+                            type: 'string'
+                          }
+                        },
+                        required: [
+                            'bar',
+                            'foo'
+                        ],
+                        type: 'object'
+                      }
+                    },
+                    required: [
+                        'nested'
+                    ],
+                    type: 'object'
+                  },
+                  typeUnion: {
+                    properties: {
+                      bar: {
+                        type: 'number'
+                      },
+                      foo: {
+                        type: 'string'
+                      }
+                    },
+                    required: [
+                        'bar',
+                        'foo'
+                    ],
+                    type: 'object'
+                  }
+                },
+                required: [
+                  'typeUnion',
+                  'nestedTypeUnion'
+                ],
+                type: 'object'
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  oneOf: [{
+                    type: 'string'
+                  }, {
+                    type: 'number'
+                  }]
+                }
+              }
+            }
+          },
+          '400': {
+            description: 'Bad Request',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'boolean'
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
