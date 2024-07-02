@@ -68,7 +68,9 @@ function mergeUnions(schema: Schema): Schema {
 
   return {
     type: 'union',
-    schemas: Array.from(resultingSchemas).map((s) => JSON.parse(s)),
+    schemas: Array.from(resultingSchemas)
+      .filter((s) => s != undefined)
+      .map((s) => JSON.parse(s)),
   };
 }
 
