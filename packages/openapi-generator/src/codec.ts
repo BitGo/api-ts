@@ -374,8 +374,13 @@ export function parseCodecInitializer(
         if (E.isLeft(initE)) {
           return initE;
         }
-        const [newSourceFile, init] = initE.right;
-        return parsePlainInitializer(project, newSourceFile, init);
+        const [newSourceFile, init, comment] = initE.right;
+        const plainInitE = parsePlainInitializer(project, newSourceFile, init);
+
+        if (E.isLeft(plainInitE)) return plainInitE;
+        if (comment !== undefined) plainInitE.right.comment = comment;
+
+        return plainInitE;
       }
     }
     const args = init.arguments.map<E.Either<string, Schema>>(({ expression }) => {

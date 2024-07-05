@@ -260,25 +260,13 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
     {},
   );
 
-  const stripTopLevelComment = (schema: Schema) => {
-    const copy = { ...schema };
-
-    if (copy.comment?.description !== undefined && copy.comment?.description !== '') {
-      copy.comment.description = '';
-    }
-
-    return copy;
-  };
-
-  const topLevelStripped = stripTopLevelComment(route.body!);
-
   const requestBody =
     route.body === undefined
       ? {}
       : {
           requestBody: {
             content: {
-              'application/json': { schema: schemaToOpenAPI(topLevelStripped) },
+              'application/json': { schema: schemaToOpenAPI(route.body) },
             },
           },
         };
