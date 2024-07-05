@@ -12,6 +12,7 @@ import {
   type Route,
   type Schema,
 } from '../src';
+import { SourceFile } from '../src/sourceFile';
 
 async function testCase(
   description: string,
@@ -28,8 +29,8 @@ async function testCase(
     if (sourceFile === undefined) {
       throw new Error('Failed to parse source file');
     }
-
-    const project = new Project();
+    const files: Record<string, SourceFile> = { './index.ts': sourceFile };
+    const project = new Project(files);
     const routes: Route[] = [];
     const schemas: Record<string, Schema> = {};
     const errors: string[] = [];
@@ -3453,5 +3454,115 @@ testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, 
   },
   components: {
     schemas: {}
+  }
+});
+
+const SCHEMA_WITH_TITLES_IN_REQUEST_BODIES = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * @title Some Readable BodyFoo Title
+ */
+const BodyFoo = t.type({ 
+  /** a foo description */
+  foo: t.string,
+});
+
+/**
+ * @title Some Readable ParamsFoo Title
+ */
+const ParamsFoo = { someId: t.string };
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'POST',
+  request: h.httpRequest({ 
+    params: {}, 
+    body: h.httpRequest({ params: ParamsFoo, body: BodyFoo, })
+  }),
+  response: {
+    200: t.literal('OK'),
+  },
+});
+`
+
+testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BODIES, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      post: {
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  params: {
+                    type: 'object',
+                    title: "Some Readable ParamsFoo Title",
+                    properties: {
+                      someId: { type: 'string' }
+                    },
+                    required: [ 'someId' ]
+                  },
+                  body: {
+                    type: 'object',
+                    title: 'Some Readable BodyFoo Title',
+                    properties: {
+                      foo: {
+                        type: 'string',
+                        description: 'a foo description'
+                      }
+                    },
+                    required: [ 'foo' ]
+                  }
+                },
+                required: [ 'params', 'body' ]
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                  enum: [ 'OK' ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {
+      ParamsFoo: {
+        title: 'Some Readable ParamsFoo Title',
+        type: 'object',
+        properties: { someId: { type: 'string' } },
+        required: [ 'someId' ]
+      },
+      BodyFoo: {
+        title: 'Some Readable BodyFoo Title',
+        type: 'object',
+        properties: {
+          foo: {
+            type: 'string',
+            description: 'a foo description'
+          }
+        },
+        required: [ 'foo' ]
+      }
+    }
   }
 });
