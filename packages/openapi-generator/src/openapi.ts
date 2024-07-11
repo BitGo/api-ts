@@ -7,6 +7,10 @@ import type { Route } from './route';
 import type { Schema } from './ir';
 import { Block } from 'comment-parser';
 
+type ExtendedOpenApiSchema = OpenAPIV3.SchemaObject & {
+  arrayExample?: string;
+};
+
 function schemaToOpenAPI(
   schema: Schema,
 ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined {
@@ -50,7 +54,14 @@ function schemaToOpenAPI(
         if (innerSchema === undefined) {
           return undefined;
         }
-        return { type: 'array', items: { ...innerSchema, ...defaultOpenAPIObject } };
+
+        const { arrayExample, ...rest } = defaultOpenAPIObject;
+
+        return {
+          type: 'array',
+          ...(arrayExample ? { example: JSON.parse(arrayExample) } : {}), // Add example to array if it exists
+          items: { ...innerSchema, ...rest },
+        };
       case 'object':
         return {
           type: 'object',
@@ -173,7 +184,7 @@ function schemaToOpenAPI(
     }
   };
 
-  function buildDefaultOpenAPIObject(schema: Schema): OpenAPIV3.SchemaObject {
+  function buildDefaultOpenAPIObject(schema: Schema): ExtendedOpenApiSchema {
     const emptyBlock: Block = { description: '', tags: [], source: [], problems: [] };
     const jsdoc = parseCommentBlock(schema.comment ?? emptyBlock);
 
@@ -196,6 +207,7 @@ function schemaToOpenAPI(
     const writeOnly = jsdoc?.tags?.writeOnly ?? schema.writeOnly;
     const format = jsdoc?.tags?.format ?? schema.format ?? schema.format;
     const title = jsdoc?.tags?.title ?? schema.title;
+    const arrayExample = jsdoc?.tags?.arrayExample ?? '';
 
     const deprecated =
       Object.keys(jsdoc?.tags || {}).includes('deprecated') || !!schema.deprecated;
@@ -223,7 +235,9 @@ function schemaToOpenAPI(
       ...(writeOnly ? { writeOnly: true } : {}),
       ...(format ? { format } : {}),
       ...(title ? { title } : {}),
+      ...(arrayExample ? { arrayExample } : {}),
     };
+
     return defaultOpenAPIObject;
   }
 
