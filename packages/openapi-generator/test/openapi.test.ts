@@ -2971,7 +2971,7 @@ const InvalidError = t.intersection([
 const ApiError = t.type({
   error: t.string,
 });
- `
+ `;
 
 testCase('route with api error schema', ROUTE_WITH_SCHEMA_WITH_COMMENT, {
   openapi: '3.0.3',
@@ -3244,7 +3244,8 @@ export const route = h.httpRoute({
     400: ApiError
   },
 })
-`
+`;
+
 testCase('route with many response codes uses default status code descriptions', SCHEMA_WITH_MANY_RESPONSE_TYPES, {
   openapi: '3.0.3',
   info: {
@@ -3329,7 +3330,7 @@ export const route = h.httpRoute({
     400: t.union([t.boolean, t.boolean, t.boolean])
   },
 })
-`
+`;
 
 testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, {
   openapi: '3.0.3',
@@ -3485,7 +3486,7 @@ export const route = h.httpRoute({
     200: t.literal('OK'),
   },
 });
-`
+`;
 
 testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BODIES, {
   openapi: '3.0.3',
