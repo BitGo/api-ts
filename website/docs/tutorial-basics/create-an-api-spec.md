@@ -51,7 +51,7 @@ In your new directory, create a `package.json` file:
   },
   "dependencies": {
     "@api-ts/io-ts-http": "0.2.0-beta.9",
-    "io-ts": "2.1.3"
+    "io-ts": "npm:@bitgo-forks/io-ts@2.1.4"
   },
   "devDependencies": {
     "typescript": "4.7.4"

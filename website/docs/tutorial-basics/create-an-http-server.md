@@ -29,7 +29,7 @@ First, edit your `package.json` file to add a few new dependencies (highlighted)
     "@api-ts/express-wrapper": "1.0.0-beta.20",
     "@api-ts/io-ts-http": "0.2.0-beta.9",
     "@api-ts/response": "0.1.2-beta.2",
-    "io-ts": "2.1.3"
+    "io-ts": "npm:@bitgo-forks/io-ts@2.1.4"
   },
   "devDependencies": {
     "@types/express": "4.17.13",

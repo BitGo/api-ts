@@ -28,7 +28,7 @@ As before, first edit your `package.json` file to add our new dependencies
     "@api-ts/io-ts-http": "0.2.0-beta.9",
     "@api-ts/response": "0.1.2-beta.2",
     "@api-ts/superagent-wrapper": "0.2.0-beta.13",
-    "io-ts": "2.1.3",
+    "io-ts": "npm:@bitgo-forks/io-ts@2.1.4",
     "superagent": "9.0.1"
   },
   "devDependencies": {
