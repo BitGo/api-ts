@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@de22e16c4711fca50c816cc9081563429d1cf563 # v10
+        uses: DeterminateSystems/nix-installer-action@7993355175c2765e5733dae74f3e0786fe0e5c4f # v12
 
       - name: Checkout
         uses: actions/checkout@v4
