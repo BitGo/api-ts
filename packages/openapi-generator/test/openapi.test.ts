@@ -3567,3 +3567,112 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
     }
   }
 });
+
+
+const ROUTE_WITH_ARRAY_EXAMPLE = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'POST',
+  request: h.httpRequest({ 
+    params: {}, 
+    body: t.type({ 
+      /**
+       * @example "btc"
+       */
+      array1: t.array(t.string),
+      /**
+       * @example "btc" 
+       * @arrayExample ["btc", "eth"]
+       */
+      array2: t.array(t.string),
+      objectWithArray: t.type({
+        /**
+         * @arrayExample ["btc", "eth"]
+         */
+        nestedArray: t.array(t.string)
+      })
+    })
+  }),
+  response: {
+    200: t.literal('OK'),
+  },
+});`
+
+testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      post: {
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  array1: {
+                    type: 'array',
+                    items: {
+                      type: 'string',
+                      example: '"btc"'
+                    },
+                  },
+                  array2: {
+                    type: 'array',
+                    example: ['btc', 'eth'],
+                    items: {
+                      type: 'string',
+                      example: '"btc"'
+                    },
+                  },
+                  objectWithArray: {
+                    properties: {
+                      nestedArray: {
+                        example: [
+                          'btc',
+                          'eth'
+                        ],
+                        items: {
+                          type: 'string'
+                        },
+                        type: 'array'
+                      }
+                    },
+                    required: [
+                      'nestedArray'
+                    ],
+                    type: 'object'
+                  },   
+                },
+                required: [ 'array1', 'array2', 'objectWithArray' ],
+              },
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                  enum: [ 'OK' ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
