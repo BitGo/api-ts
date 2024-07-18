@@ -3599,7 +3599,7 @@ export const route = h.httpRoute({
   response: {
     200: t.literal('OK'),
   },
-});`
+});`;
 
 testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
   openapi: '3.0.3',
