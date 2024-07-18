@@ -28,4 +28,4 @@ jobs:
           target-base-branch: master
           target-repository: ${{ github.repository }}
           caller-pr: ${{ github.event.pull_request.number }}
-          trigger-token: ${{ secrets.BITGOBOT_RENOVATE_ACTIONS_GITHUB_TOKEN }} # Should be a PAT
+          github-token: ${{ secrets.BITGOBOT_SHARED_ORG_TOKEN }}
