@@ -3588,6 +3588,11 @@ export const route = h.httpRoute({
        * @arrayExample ["btc", "eth"]
        */
       array2: t.array(t.string),
+      /**
+       * @minItems 1
+       * @maxItems 5
+       */
+      array3: t.array(t.number),
       objectWithArray: t.type({
         /**
          * @arrayExample ["btc", "eth"]
@@ -3632,6 +3637,14 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
                       example: '"btc"'
                     },
                   },
+                  array3: {
+                    items: {
+                      type: 'number'
+                    },
+                    maxItems: 5,
+                    minItems: 1,
+                    type: 'array'
+                  },
                   objectWithArray: {
                     properties: {
                       nestedArray: {
@@ -3651,7 +3664,7 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
                     type: 'object'
                   },   
                 },
-                required: [ 'array1', 'array2', 'objectWithArray' ],
+                required: [ 'array1', 'array2', 'array3', 'objectWithArray' ],
               },
             }
           }
