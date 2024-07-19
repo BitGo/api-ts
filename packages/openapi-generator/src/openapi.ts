@@ -55,10 +55,12 @@ function schemaToOpenAPI(
           return undefined;
         }
 
-        const { arrayExample, ...rest } = defaultOpenAPIObject;
+        const { arrayExample, minItems, maxItems, ...rest } = defaultOpenAPIObject;
 
         return {
           type: 'array',
+          ...(minItems ? { minItems } : {}),
+          ...(maxItems ? { maxItems } : {}),
           ...(arrayExample ? { example: JSON.parse(arrayExample) } : {}), // Add example to array if it exists
           items: { ...innerSchema, ...rest },
         };
