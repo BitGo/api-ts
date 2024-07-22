@@ -315,7 +315,7 @@ export const KNOWN_IMPORTS: KnownImports = {
     NumberFromString: () => E.right({ type: 'string', format: 'number' }),
     BigIntFromString: () => E.right({ type: 'string', format: 'number' }),
     BooleanFromNumber: () => E.right({ type: 'number', enum: [0, 1] }),
-    BooleanFromString: () => E.right({ type: 'string', enum: ['true', 'false'] }),
+    BooleanFromString: () => E.right({ type: 'boolean' }),
     DateFromISOString: () =>
       E.right({ type: 'string', format: 'date-time', title: 'ISO Date String' }),
     DateFromNumber: () =>
