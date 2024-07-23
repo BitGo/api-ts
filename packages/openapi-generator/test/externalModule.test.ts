@@ -69,9 +69,11 @@ const FoobarObject: Schema = {
   properties: {
     foo: {
       type: 'string',
+      primitive: true,
     },
     bar: {
       type: 'number',
+      primitive: true,
     },
   },
   required: ['foo', 'bar'],
@@ -82,9 +84,11 @@ const RandomTypeObject: Schema = {
   properties: {
     random: {
       type: 'string',
+      primitive: true,
     },
     type: {
       type: 'number',
+      primitive: true,
     },
   },
   required: ['random', 'type'],
