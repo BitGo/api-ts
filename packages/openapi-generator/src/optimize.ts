@@ -31,10 +31,48 @@ export function foldIntersection(schema: Schema, optimize: OptimizeFn): Schema {
   return result;
 }
 
+function consolidateUnion(schema: Schema): Schema {
+  if (schema.type !== 'union') return schema;
+  if (schema.schemas.length === 1) return schema.schemas[0]!;
+  if (schema.schemas.length === 0) return { type: 'undefined' };
+
+  const consolidatableTypes = ['boolean', 'number', 'string'];
+  const innerSchemas = schema.schemas.map(optimize);
+
+  const isConsolidatableType = (s: Schema): boolean => {
+    return (
+      (s.primitive && consolidatableTypes.includes(s.type)) ||
+      (s.decodedType !== undefined && consolidatableTypes.includes(s.decodedType))
+    );
+  };
+
+  /**
+   * We need to check three things:
+   * 1. All the schemas satisfy isConsolidatableType
+   * 2. All the schemas have the same decodedType type (aka type at runtime, or the `A` type of the codec)
+   * 3. At least one of the schemas is a primitive type
+   *
+   * If all these conditions are satisfied, we can prove to ourselves that this is a union that
+   * we can consolidate to the decodedType (runtime) type.
+   */
+
+  const allConsolidatable = innerSchemas.every(isConsolidatableType);
+  const hasPrimitive = innerSchemas.some((s: Schema) => s.primitive);
+
+  const innerSchemaTypes = new Set(innerSchemas.map((s) => s.decodedType || s.type));
+  const areSameRuntimeType = innerSchemaTypes.size === 1;
+
+  if (allConsolidatable && areSameRuntimeType && hasPrimitive) {
+    return { type: Array.from(innerSchemaTypes)[0] as Primitive['type'] };
+  } else {
+    return schema;
+  }
+}
+
 function mergeUnions(schema: Schema): Schema {
   if (schema.type !== 'union') return schema;
-  else if (schema.schemas.length === 1) return schema.schemas[0]!;
-  else if (schema.schemas.length === 0) return { type: 'undefined' };
+  if (schema.schemas.length === 1) return schema.schemas[0]!;
+  if (schema.schemas.length === 0) return { type: 'undefined' };
 
   // Stringified schemas (i.e. hashes of the schemas) to avoid duplicates
   const resultingSchemas: Set<string> = new Set();
@@ -75,13 +113,9 @@ function mergeUnions(schema: Schema): Schema {
 }
 
 export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
-  if (schema.type !== 'union') {
-    return schema;
-  } else if (schema.schemas.length === 1) {
-    return schema.schemas[0]!;
-  } else if (schema.schemas.length === 0) {
-    return { type: 'undefined' };
-  }
+  if (schema.type !== 'union') return schema;
+  if (schema.schemas.length === 1) return schema.schemas[0]!;
+  if (schema.schemas.length === 0) return { type: 'undefined' };
 
   const innerSchemas = schema.schemas.map(optimize);
 
@@ -176,7 +210,8 @@ export function optimize(schema: Schema): Schema {
     }
     return newSchema;
   } else if (schema.type === 'union') {
-    const simplified = simplifyUnion(schema, optimize);
+    const consolidated = consolidateUnion(schema);
+    const simplified = simplifyUnion(consolidated, optimize);
     const merged = mergeUnions(simplified);
 
     if (schema.comment) {
