@@ -144,3 +144,39 @@ test('comments are exposed in objects', () => {
 
   assert.deepEqual(optimize(input), expected);
 });
+
+test('consolidatable unions are consolidated to single primitive type', () => {
+  const input: Schema = {
+    type: 'union',
+    schemas: [
+      { type: 'string', enum: ['true', 'false'], decodedType: 'boolean' },
+      { type: 'boolean', primitive: true },
+    ],
+    required: [],
+  };
+
+  const expected: Schema = { type: 'boolean', };
+
+  assert.deepEqual(optimize(input), expected);
+});
+
+test('non-consolidatable unions are not consolidated', () => {
+  const input: Schema = {
+    type: 'union',
+    schemas: [
+      { type: 'string', enum: ['true', 'false'], decodedType: 'boolean' },
+      { type: 'string', primitive: true },
+    ],
+    required: [],
+  };
+
+  const expected: Schema = {
+    type: 'union',
+    schemas: [
+      { type: 'string', primitive: true },
+      { type: 'string', enum: [ 'true', 'false' ] },
+    ]
+  };
+
+  assert.deepEqual(optimize(input), expected);
+});
