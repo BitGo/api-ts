@@ -63,7 +63,7 @@ testCase(
   {
     FOO: {
       type: 'object',
-      properties: { foo: { type: 'string' } },
+      properties: { foo: { type: 'string', primitive: true } },
       required: ['foo'],
     },
   },
@@ -85,7 +85,7 @@ testCase(
   {
     FOO: {
       type: 'union',
-      schemas: [{ type: 'string' }, { type: 'number' }],
+      schemas: [{ type: 'string', primitive: true }, { type: 'number', primitive: true }],
     },
   },
   ['Unimplemented initializer type ArrayExpression'],
@@ -544,7 +544,7 @@ testCase(
     FOO: {
       type: 'object',
       properties: {
-        foo: { type: 'number' },
+        foo: { type: 'number', primitive: true },
       },
       required: ['foo'],
     },

@@ -46,10 +46,10 @@ export const KNOWN_IMPORTS: KnownImports = {
     },
   },
   'io-ts': {
-    string: () => E.right({ type: 'string' }),
-    number: () => E.right({ type: 'number' }),
+    string: () => E.right({ type: 'string', primitive: true }),
+    number: () => E.right({ type: 'number', primitive: true }),
     bigint: () => E.right({ type: 'number' }),
-    boolean: () => E.right({ type: 'boolean' }),
+    boolean: () => E.right({ type: 'boolean', primitive: true }),
     null: () => E.right({ type: 'null' }),
     nullType: () => E.right({ type: 'null' }),
     undefined: () => E.right({ type: 'undefined' }),
@@ -143,11 +143,13 @@ export const KNOWN_IMPORTS: KnownImports = {
         type: 'string',
         format: 'number',
         pattern: '^\\d+$',
+        decodedType: 'number',
       }),
     NaturalFromString: () =>
       E.right({
         type: 'string',
         format: 'number',
+        decodedType: 'number',
       }),
     Negative: () =>
       E.right({
@@ -161,6 +163,7 @@ export const KNOWN_IMPORTS: KnownImports = {
         format: 'number',
         maximum: 0,
         exclusiveMaximum: true,
+        decodedType: 'number',
       }),
     NegativeInt: () =>
       E.right({
@@ -174,6 +177,7 @@ export const KNOWN_IMPORTS: KnownImports = {
         format: 'number',
         maximum: 0,
         exclusiveMaximum: true,
+        decodedType: 'number',
       }),
     NonNegative: () =>
       E.right({
@@ -185,6 +189,7 @@ export const KNOWN_IMPORTS: KnownImports = {
         type: 'string',
         format: 'number',
         minimum: 0,
+        decodedType: 'number',
       }),
     NonNegativeInt: () =>
       E.right({
@@ -195,6 +200,7 @@ export const KNOWN_IMPORTS: KnownImports = {
       E.right({
         type: 'string',
         format: 'number',
+        decodedType: 'number',
       }),
     NonPositive: () =>
       E.right({
@@ -206,6 +212,7 @@ export const KNOWN_IMPORTS: KnownImports = {
         type: 'string',
         format: 'number',
         maximum: 0,
+        decodedType: 'number',
       }),
     NonPositiveInt: () =>
       E.right({
@@ -217,6 +224,7 @@ export const KNOWN_IMPORTS: KnownImports = {
         type: 'string',
         format: 'number',
         maximum: 0,
+        decodedType: 'number',
       }),
     NonZero: () =>
       E.right({
@@ -226,6 +234,7 @@ export const KNOWN_IMPORTS: KnownImports = {
       E.right({
         type: 'string',
         format: 'number',
+        decodedType: 'number',
       }),
     NonZeroInt: () =>
       E.right({
@@ -235,6 +244,7 @@ export const KNOWN_IMPORTS: KnownImports = {
       E.right({
         type: 'string',
         format: 'number',
+        decodedType: 'number',
       }),
     Positive: () =>
       E.right({
@@ -248,6 +258,7 @@ export const KNOWN_IMPORTS: KnownImports = {
         format: 'number',
         minimum: 0,
         exclusiveMinimum: true,
+        decodedType: 'number',
       }),
     Zero: () =>
       E.right({
@@ -257,6 +268,7 @@ export const KNOWN_IMPORTS: KnownImports = {
       E.right({
         type: 'string',
         format: 'number',
+        decodedType: 'number',
       }),
   },
   'io-ts-bigint': {
@@ -264,6 +276,7 @@ export const KNOWN_IMPORTS: KnownImports = {
       E.right({
         type: 'string',
         format: 'number',
+        decodedType: 'bigint',
       }),
     NegativeBigInt: () =>
       E.right({
@@ -275,6 +288,7 @@ export const KNOWN_IMPORTS: KnownImports = {
         type: 'string',
         format: 'number',
         maximum: -1,
+        decodedType: 'bigint',
       }),
     NonEmptyString: () => E.right({ type: 'string', minLength: 1 }),
     NonNegativeBigInt: () => E.right({ type: 'number', minimum: 0 }),
@@ -283,6 +297,7 @@ export const KNOWN_IMPORTS: KnownImports = {
         type: 'string',
         format: 'number',
         maximum: 0,
+        decodedType: 'bigint',
       }),
     NonPositiveBigInt: () =>
       E.right({
@@ -294,12 +309,14 @@ export const KNOWN_IMPORTS: KnownImports = {
         type: 'string',
         format: 'number',
         maximum: 0,
+        decodedType: 'bigint',
       }),
     NonZeroBigInt: () => E.right({ type: 'number' }),
     NonZeroBigIntFromString: () =>
       E.right({
         type: 'string',
         format: 'number',
+        decodedType: 'bigint',
       }),
     PositiveBigInt: () => E.right({ type: 'number', minimum: 1 }),
     PositiveBigIntFromString: () =>
@@ -307,15 +324,21 @@ export const KNOWN_IMPORTS: KnownImports = {
         type: 'string',
         format: 'number',
         minimum: 1,
+        decodedType: 'bigint',
       }),
     ZeroBigInt: () => E.right({ type: 'number' }),
-    ZeroBigIntFromString: () => E.right({ type: 'string', format: 'number' }),
+    ZeroBigIntFromString: () =>
+      E.right({ type: 'string', format: 'number', decodedType: 'bigint' }),
   },
   'io-ts-types': {
-    NumberFromString: () => E.right({ type: 'string', format: 'number' }),
-    BigIntFromString: () => E.right({ type: 'string', format: 'number' }),
-    BooleanFromNumber: () => E.right({ type: 'number', enum: [0, 1] }),
-    BooleanFromString: () => E.right({ type: 'string', enum: ['true', 'false'] }),
+    NumberFromString: () =>
+      E.right({ type: 'string', format: 'number', decodedType: 'number' }),
+    BigIntFromString: () =>
+      E.right({ type: 'string', format: 'number', decodedType: 'bigint' }),
+    BooleanFromNumber: () =>
+      E.right({ type: 'number', enum: [0, 1], decodedType: 'boolean' }),
+    BooleanFromString: () =>
+      E.right({ type: 'string', enum: ['true', 'false'], decodedType: 'boolean' }),
     DateFromISOString: () =>
       E.right({ type: 'string', format: 'date-time', title: 'ISO Date String' }),
     DateFromNumber: () =>
@@ -332,7 +355,8 @@ export const KNOWN_IMPORTS: KnownImports = {
         format: 'number',
         description: 'Number of seconds since the Unix epoch',
       }),
-    IntFromString: () => E.right({ type: 'string', format: 'integer' }),
+    IntFromString: () =>
+      E.right({ type: 'string', format: 'integer', decodedType: 'number' }),
     JsonFromString: () => E.right({ type: 'string', title: 'JSON String' }),
     nonEmptyArray: (_, innerSchema) =>
       E.right({ type: 'array', items: innerSchema, minItems: 1 }),

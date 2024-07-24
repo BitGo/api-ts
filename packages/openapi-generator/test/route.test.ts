@@ -85,12 +85,14 @@ testCase('simple route', SIMPLE, {
         required: true,
         schema: {
           type: 'string',
+          primitive: true,
         },
       },
     ],
     response: {
       200: {
         type: 'string',
+        primitive: true,
       },
     },
   },
@@ -124,6 +126,7 @@ testCase('path params route', PATH_PARAMS, {
         required: true,
         schema: {
           type: 'string',
+          primitive: true,
         },
       },
     ],
@@ -165,13 +168,14 @@ testCase('optional query param route', OPTIONAL_QUERY_PARAM, {
         required: false,
         schema: {
           type: 'union',
-          schemas: [{ type: 'string' }, { type: 'undefined' }],
+          schemas: [{ type: 'string', primitive: true }, { type: 'undefined' }],
         },
       },
     ],
     response: {
       200: {
         type: 'string',
+        primitive: true,
       },
     },
   },
@@ -201,6 +205,7 @@ testCase('const request route', REQUEST_REF, {
     response: {
       200: {
         type: 'string',
+        primitive: true,
       },
     },
   },
@@ -228,7 +233,7 @@ testCase('const response route', RESPONSE_REF, {
     method: 'GET',
     parameters: [],
     response: {
-      200: { type: 'string' },
+      200: { type: 'string', primitive: true },
     },
   },
 });
@@ -273,14 +278,14 @@ testCase('query param union route', QUERY_PARAM_UNION, {
             {
               type: 'object',
               properties: {
-                foo: { type: 'string' },
+                foo: { type: 'string', primitive: true },
               },
               required: ['foo'],
             },
             {
               type: 'object',
               properties: {
-                bar: { type: 'string' },
+                bar: { type: 'string', primitive: true },
               },
               required: ['bar'],
             },
@@ -289,7 +294,7 @@ testCase('query param union route', QUERY_PARAM_UNION, {
       },
     ],
     response: {
-      200: { type: 'string' },
+      200: { type: 'string', primitive: true },
     },
   },
 });
@@ -340,14 +345,14 @@ testCase('path param union route', PATH_PARAM_UNION, {
             {
               type: 'object',
               properties: {
-                foo: { type: 'string' },
+                foo: { type: 'string', primitive: true },
               },
               required: ['foo'],
             },
             {
               type: 'object',
               properties: {
-                bar: { type: 'string' },
+                bar: { type: 'string', primitive: true },
               },
               required: ['bar'],
             },
@@ -358,11 +363,11 @@ testCase('path param union route', PATH_PARAM_UNION, {
         type: 'path',
         name: 'id',
         required: true,
-        schema: { type: 'string' },
+        schema: { type: 'string', primitive: true },
       },
     ],
     response: {
-      200: { type: 'string' },
+      200: { type: 'string', primitive: true },
     },
   },
 });
@@ -402,21 +407,21 @@ testCase('body union route', BODY_UNION, {
         {
           type: 'object',
           properties: {
-            foo: { type: 'string' },
+            foo: { type: 'string', primitive: true },
           },
           required: ['foo'],
         },
         {
           type: 'object',
           properties: {
-            bar: { type: 'string' },
+            bar: { type: 'string', primitive: true },
           },
           required: ['bar'],
         },
       ],
     },
     response: {
-      200: { type: 'string' },
+      200: { type: 'string', primitive: true },
     },
   },
 });
@@ -454,17 +459,17 @@ testCase('request intersection route', REQUEST_INTERSECTION, {
         type: 'query',
         name: 'foo',
         required: true,
-        schema: { type: 'string' },
+        schema: { type: 'string', primitive: true },
       },
       {
         type: 'query',
         name: 'bar',
         required: true,
-        schema: { type: 'string' },
+        schema: { type: 'string', primitive: true },
       },
     ],
     response: {
-      200: { type: 'string' },
+      200: { type: 'string', primitive: true },
     },
   },
 });
@@ -504,21 +509,21 @@ testCase('request body intersection route', BODY_INTERSECTION, {
         {
           type: 'object',
           properties: {
-            foo: { type: 'string' },
+            foo: { type: 'string', primitive: true },
           },
           required: ['foo'],
         },
         {
           type: 'object',
           properties: {
-            bar: { type: 'string' },
+            bar: { type: 'string', primitive: true },
           },
           required: ['bar'],
         },
       ],
     },
     response: {
-      200: { type: 'string' },
+      200: { type: 'string', primitive: true },
     },
   },
 });
@@ -557,12 +562,14 @@ testCase('route with operationId', WITH_OPERATION_ID, {
         required: true,
         schema: {
           type: 'string',
+          primitive: true,
         },
       },
     ],
     response: {
       200: {
         type: 'string',
+        primitive: true,
       },
     },
     comment: {

@@ -3689,3 +3689,121 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
     schemas: {}
   }
 });
+
+const ROUTE_WITH_CONSOLIDATABLE_UNION_SCHEMAS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+import { BooleanFromString, BooleanFromNumber, NumberFromString } from 'io-ts-types';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      // are not consolidatable
+      firstUnion: t.union([t.string, t.number]),
+      secondUnion: t.union([BooleanFromString, NumberFromString]),
+      thirdUnion: t.union([t.string, BooleanFromString]),
+      firstNonUnion: BooleanFromString,
+      secondNonUnion: NumberFromString,
+      thirdNonUnion: t.string,
+    },
+  }),
+  response: {
+    200: {
+      // are consolidatable
+      fourthUnion: t.union([t.boolean, BooleanFromNumber]),
+      fifthUnion: h.optional(t.union([t.boolean, t.boolean, BooleanFromNumber, BooleanFromString])),
+      sixthUnion: t.union([t.number, NumberFromString]),
+    }
+  },
+});
+`;
+
+testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UNION_SCHEMAS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [
+          {
+            name: 'firstUnion',
+            in: 'query',
+            required: true,
+            schema: {
+              oneOf: [
+                { type: 'string' },
+                { type: 'number' }
+              ]
+            }
+          },
+          {
+            name: 'secondUnion',
+            in: 'query',
+            required: true,
+            schema: {
+              oneOf: [
+                { type: 'string', format: 'number' },
+                { type: 'string', enum: [ 'true', 'false' ] }
+              ]
+            }
+          },
+          {
+            name: 'thirdUnion',
+            in: 'query',
+            required: true,
+            schema: {
+              oneOf: [
+                { type: 'string' },
+                { type: 'string', enum: [ 'true', 'false' ] }
+              ]
+            }
+          },
+          {
+            name: 'firstNonUnion',
+            in: 'query',
+            required: true,
+            schema: { type: 'string', enum: [ 'true', 'false' ] }
+          },
+          {
+            name: 'secondNonUnion',
+            in: 'query',
+            required: true,
+            schema: { type: 'string', format: 'number' }
+          },
+          {
+            name: 'thirdNonUnion',
+            in: 'query',
+            required: true,
+            schema: { type: 'string' }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    fourthUnion: { type: 'boolean' },
+                    fifthUnion: { type: 'boolean' },
+                    sixthUnion: { type: 'number' }
+                  },
+                  required: [ 'fourthUnion', 'sixthUnion' ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});

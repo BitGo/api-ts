@@ -80,7 +80,7 @@ testCase('simple api spec', SIMPLE, '/index.ts', {
       path: '/test',
       method: 'GET',
       parameters: [],
-      response: { 200: { type: 'string' } },
+      response: { 200: { type: 'string', primitive: true } },
     },
   ],
 });
@@ -112,7 +112,7 @@ testCase('const route reference', ROUTE_REF, '/index.ts', {
       path: '/test',
       method: 'GET',
       parameters: [],
-      response: { 200: { type: 'string' } },
+      response: { 200: { type: 'string', primitive: true } },
     },
   ],
 });
@@ -144,7 +144,7 @@ testCase('const action reference', ACTION_REF, '/index.ts', {
       path: '/test',
       method: 'GET',
       parameters: [],
-      response: { 200: { type: 'string' } },
+      response: { 200: { type: 'string', primitive: true } },
     },
   ],
 });
@@ -182,7 +182,7 @@ testCase('spread api spec', SPREAD, '/index.ts', {
       path: '/test',
       method: 'GET',
       parameters: [],
-      response: { 200: { type: 'string' } },
+      response: { 200: { type: 'string', primitive: true } },
     },
   ],
 });
@@ -216,7 +216,7 @@ testCase('computed property api spec', COMPUTED_PROPERTY, '/index.ts', {
       path: '/test',
       method: 'GET',
       parameters: [],
-      response: { 200: { type: 'string' } },
+      response: { 200: { type: 'string', primitive: true } },
     },
   ],
 });
