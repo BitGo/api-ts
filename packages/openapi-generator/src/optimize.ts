@@ -226,14 +226,12 @@ export function optimize(schema: Schema): Schema {
     }
     return { type: 'array', items: optimized };
   } else if (schema.type === 'record') {
-    if (schema.comment) {
-      return {
-        type: 'record',
-        codomain: optimize(schema.codomain),
-        comment: schema.comment,
-      };
-    }
-    return { type: 'record', codomain: optimize(schema.codomain) };
+    return {
+      type: 'record',
+      ...(schema.domain ? { domain: optimize(schema.domain) } : {}),
+      codomain: optimize(schema.codomain),
+      ...(schema.comment ? { comment: schema.comment } : {}),
+    };
   } else if (schema.type === 'tuple') {
     const schemas = schema.schemas.map(optimize);
     return { type: 'tuple', schemas };

@@ -38,6 +38,7 @@ export type Object = {
 
 export type RecordObject = {
   type: 'record';
+  domain?: Schema;
   codomain: Schema;
 };
 

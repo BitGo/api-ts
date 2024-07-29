@@ -285,7 +285,7 @@ export const FOO = t.record(t.string, t.number);
 `;
 
 testCase('record type is parsed', RECORD, {
-  FOO: { type: 'record', codomain: { type: 'number', primitive: true } },
+  FOO: { type: 'record', domain: {type: 'string', primitive: true}, codomain: { type: 'number', primitive: true } },
 });
 
 const ENUM = `
