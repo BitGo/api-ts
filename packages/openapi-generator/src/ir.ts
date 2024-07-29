@@ -82,9 +82,9 @@ export type SchemaMetadata = Omit<
   | 'externalDocs'
 >;
 
-type ExtendedSchemaMetadata = SchemaMetadata & {
+type SchemaTypeInfo = {
   primitive?: boolean;
   decodedType?: string;
 };
 
-export type Schema = BaseSchema & HasComment & ExtendedSchemaMetadata;
+export type Schema = BaseSchema & HasComment & SchemaMetadata & SchemaTypeInfo;
