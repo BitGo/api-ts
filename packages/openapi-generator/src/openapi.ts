@@ -7,10 +7,6 @@ import type { Route } from './route';
 import type { Schema } from './ir';
 import { Block } from 'comment-parser';
 
-type ExtendedOpenApiSchema = OpenAPIV3.SchemaObject & {
-  arrayExample?: string;
-};
-
 function schemaToOpenAPI(
   schema: Schema,
 ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined {
@@ -55,14 +51,19 @@ function schemaToOpenAPI(
           return undefined;
         }
 
-        const { arrayExample, minItems, maxItems, ...rest } = defaultOpenAPIObject;
+        const { example, minItems, maxItems, ...rest } = defaultOpenAPIObject;
+        const isArrayExample = example && Array.isArray(example);
 
         return {
           type: 'array',
           ...(minItems ? { minItems } : {}),
           ...(maxItems ? { maxItems } : {}),
-          ...(arrayExample ? { example: JSON.parse(arrayExample) } : {}), // Add example to array if it exists
-          items: { ...innerSchema, ...rest },
+          ...(isArrayExample ? { example } : {}),
+          items: {
+            ...innerSchema,
+            ...rest,
+            ...(!isArrayExample && example ? { example } : {}),
+          },
         };
       case 'object':
         return {
@@ -186,7 +187,7 @@ function schemaToOpenAPI(
     }
   };
 
-  function buildDefaultOpenAPIObject(schema: Schema): ExtendedOpenApiSchema {
+  function buildDefaultOpenAPIObject(schema: Schema): OpenAPIV3.SchemaObject {
     const emptyBlock: Block = { description: '', tags: [], source: [], problems: [] };
     const jsdoc = parseCommentBlock(schema.comment ?? emptyBlock);
 
@@ -209,7 +210,6 @@ function schemaToOpenAPI(
     const writeOnly = jsdoc?.tags?.writeOnly ?? schema.writeOnly;
     const format = jsdoc?.tags?.format ?? schema.format ?? schema.format;
     const title = jsdoc?.tags?.title ?? schema.title;
-    const arrayExample = jsdoc?.tags?.arrayExample ?? '';
 
     const deprecated =
       Object.keys(jsdoc?.tags || {}).includes('deprecated') || !!schema.deprecated;
@@ -237,7 +237,6 @@ function schemaToOpenAPI(
       ...(writeOnly ? { writeOnly: true } : {}),
       ...(format ? { format } : {}),
       ...(title ? { title } : {}),
-      ...(arrayExample ? { arrayExample } : {}),
     };
 
     return defaultOpenAPIObject;
