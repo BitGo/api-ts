@@ -3851,43 +3851,43 @@ export const route = h.httpRoute({
     200: t.literal('OK'),
   },
 });
-`
+`;
 
 testCase("route with nested array examples", ROUTE_WITH_NESTED_ARRAY_EXAMPLES, {
-  "openapi": "3.0.3",
-  "info": {
-    "title": "Test",
-    "version": "1.0.0"
+  openapi: "3.0.3",
+  info: {
+    title: "Test",
+    version: "1.0.0"
   },
-  "paths": {
+  paths: {
     "/foo": {
-      "post": {
-        "parameters": [],
-        "requestBody": {
-          "content": {
+      post: {
+        parameters: [],
+        requestBody: {
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "nested": {
+              schema: {
+                type: "object",
+                properties: {
+                  nested: {
                     "$ref": "#/components/schemas/thirdLevel"
                   }
                 },
-                "required": [
+                required: [
                   "nested"
                 ]
               }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
+        responses: {
+          200: {
+            description: "OK",
+            content: {
               "application/json": {
-                "schema": {
-                  "type": "string",
-                  "enum": [
+                schema: {
+                  type: "string",
+                  enum: [
                     "OK"
                   ]
                 }
@@ -3898,40 +3898,40 @@ testCase("route with nested array examples", ROUTE_WITH_NESTED_ARRAY_EXAMPLES, {
       }
     }
   },
-  "components": {
-    "schemas": {
-      "firstLevel": {
-        "title": "firstLevel",
-        "type": "array",
-        "example": [ "a", "b" ],
-        "items": {
-          "type": "string"
+  components: {
+    schemas: {
+      firstLevel: {
+        title: "firstLevel",
+        type: "array",
+        example: [ "a", "b" ],
+        items: {
+          type: "string"
         }
       },
-      "secondLevel": {
-        "title": "secondLevel",
-        "type": "array",
-        "example": [ [ "a", "b" ], [ "c", "d" ] ],
-        "items": {
-          "type": "array",
-          "example": [ "a", "b" ],
-          "items": {
-            "type": "string"
+      secondLevel: {
+        title: "secondLevel",
+        type: "array",
+        example: [ [ "a", "b" ], [ "c", "d" ] ],
+        items: {
+          type: "array",
+          example: [ "a", "b" ],
+          items: {
+            type: "string"
           }
         }
       },
-      "thirdLevel": {
-        "title": "thirdLevel",
-        "type": "array",
-        "example": [[["a"],["b"]],[["c"],["d"]]],
-        "items": {
-          "type": "array",
-          "example": [["a","b"],["c","d"]],
-          "items": {
-            "type": "array",
-            "example": ["a","b"],
-            "items": {
-              "type": "string"
+      thirdLevel: {
+        title: "thirdLevel",
+        type: "array",
+        example: [[["a"],["b"]],[["c"],["d"]]],
+        items: {
+          type: "array",
+          example: [["a","b"],["c","d"]],
+          items: {
+            type: "array",
+            example: ["a","b"],
+            items: {
+              type: "string"
             }
           }
         }
