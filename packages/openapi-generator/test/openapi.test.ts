@@ -3373,7 +3373,7 @@ testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, 
         ],
         requestBody: {
           content: {
-              'application/json': {
+            'application/json': {
               schema: {
                 properties: {
                   nestedTypeUnion: {
@@ -3388,14 +3388,14 @@ testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, 
                           }
                         },
                         required: [
-                            'bar',
-                            'foo'
+                          'bar',
+                          'foo'
                         ],
                         type: 'object'
                       }
                     },
                     required: [
-                        'nested'
+                      'nested'
                     ],
                     type: 'object'
                   },
@@ -3409,8 +3409,8 @@ testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, 
                       }
                     },
                     required: [
-                        'bar',
-                        'foo'
+                      'bar',
+                      'foo'
                     ],
                     type: 'object'
                   }
@@ -3510,7 +3510,7 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
                     properties: {
                       someId: { type: 'string' }
                     },
-                    required: [ 'someId' ]
+                    required: ['someId']
                   },
                   body: {
                     type: 'object',
@@ -3521,10 +3521,10 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
                         description: 'a foo description'
                       }
                     },
-                    required: [ 'foo' ]
+                    required: ['foo']
                   }
                 },
-                required: [ 'params', 'body' ]
+                required: ['params', 'body']
               }
             }
           }
@@ -3536,7 +3536,7 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
               'application/json': {
                 schema: {
                   type: 'string',
-                  enum: [ 'OK' ]
+                  enum: ['OK']
                 }
               }
             }
@@ -3551,7 +3551,7 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
         title: 'Some Readable ParamsFoo Title',
         type: 'object',
         properties: { someId: { type: 'string' } },
-        required: [ 'someId' ]
+        required: ['someId']
       },
       BodyFoo: {
         title: 'Some Readable BodyFoo Title',
@@ -3562,7 +3562,7 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
             description: 'a foo description'
           }
         },
-        required: [ 'foo' ]
+        required: ['foo']
       }
     }
   }
@@ -3572,6 +3572,11 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
 const ROUTE_WITH_ARRAY_EXAMPLE = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
+
+/** 
+ * @example btc
+ */
+const innerItems = t.string;
 
 export const route = h.httpRoute({
   path: '/foo',
@@ -3584,10 +3589,9 @@ export const route = h.httpRoute({
        */
       array1: t.array(t.string),
       /**
-       * @example "btc" 
-       * @arrayExample ["btc", "eth"]
+       * @example ["btc", "eth"]
        */
-      array2: t.array(t.string),
+      array2: t.array(innerItems),
       /**
        * @minItems 1
        * @maxItems 5
@@ -3595,9 +3599,9 @@ export const route = h.httpRoute({
       array3: t.array(t.number),
       objectWithArray: t.type({
         /**
-         * @arrayExample ["btc", "eth"]
+         * @example ["btc", "eth"]
          */
-        nestedArray: t.array(t.string)
+        nestedArray: t.array(innerItems)
       })
     })
   }),
@@ -3606,7 +3610,7 @@ export const route = h.httpRoute({
   },
 });`;
 
-testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
+testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE, {
   openapi: '3.0.3',
   info: {
     title: 'Test',
@@ -3634,7 +3638,7 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
                     example: ['btc', 'eth'],
                     items: {
                       type: 'string',
-                      example: '"btc"'
+                      example: 'btc'
                     },
                   },
                   array3: {
@@ -3653,6 +3657,7 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
                           'eth'
                         ],
                         items: {
+                          example: 'btc',
                           type: 'string'
                         },
                         type: 'array'
@@ -3662,9 +3667,9 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
                       'nestedArray'
                     ],
                     type: 'object'
-                  },   
+                  },
                 },
-                required: [ 'array1', 'array2', 'array3', 'objectWithArray' ],
+                required: ['array1', 'array2', 'array3', 'objectWithArray'],
               },
             }
           }
@@ -3676,7 +3681,7 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
               'application/json': {
                 schema: {
                   type: 'string',
-                  enum: [ 'OK' ]
+                  enum: ['OK']
                 }
               }
             }
@@ -3686,7 +3691,13 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE,  {
     }
   },
   components: {
-    schemas: {}
+    schemas: {
+      innerItems: {
+        title: "innerItems",
+        type: "string",
+        example: 'btc'
+      }
+    }
   }
 });
 
@@ -3748,7 +3759,7 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
             schema: {
               oneOf: [
                 { type: 'string', format: 'number' },
-                { type: 'string', enum: [ 'true', 'false' ] }
+                { type: 'string', enum: ['true', 'false'] }
               ]
             }
           },
@@ -3759,7 +3770,7 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
             schema: {
               oneOf: [
                 { type: 'string' },
-                { type: 'string', enum: [ 'true', 'false' ] }
+                { type: 'string', enum: ['true', 'false'] }
               ]
             }
           },
@@ -3767,7 +3778,7 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
             name: 'firstNonUnion',
             in: 'query',
             required: true,
-            schema: { type: 'string', enum: [ 'true', 'false' ] }
+            schema: { type: 'string', enum: ['true', 'false'] }
           },
           {
             name: 'secondNonUnion',
@@ -3794,7 +3805,7 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
                     fifthUnion: { type: 'boolean' },
                     sixthUnion: { type: 'number' }
                   },
-                  required: [ 'fourthUnion', 'sixthUnion' ]
+                  required: ['fourthUnion', 'sixthUnion']
                 }
               }
             }
@@ -3805,5 +3816,126 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
   },
   components: {
     schemas: {}
+  }
+});
+
+const ROUTE_WITH_NESTED_ARRAY_EXAMPLES = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/** 
+ * @example ["a", "b"]
+ */
+const firstLevel = t.array(t.string);
+
+/** 
+ * @example [["a", "b"], ["c", "d"]]
+ */
+const secondLevel = t.array(firstLevel);
+
+/** 
+ * @example [[["a"], ["b"]], [["c"], ["d"]]] 
+ */
+const thirdLevel = t.array(secondLevel);
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'POST',
+  request: h.httpRequest({ 
+    params: {}, 
+    body: t.type({ 
+      nested: thirdLevel
+    })
+  }),
+  response: {
+    200: t.literal('OK'),
+  },
+});
+`
+
+testCase("route with nested array examples", ROUTE_WITH_NESTED_ARRAY_EXAMPLES, {
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Test",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/foo": {
+      "post": {
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nested": {
+                    "$ref": "#/components/schemas/thirdLevel"
+                  }
+                },
+                "required": [
+                  "nested"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "OK"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "firstLevel": {
+        "title": "firstLevel",
+        "type": "array",
+        "example": [ "a", "b" ],
+        "items": {
+          "type": "string"
+        }
+      },
+      "secondLevel": {
+        "title": "secondLevel",
+        "type": "array",
+        "example": [ [ "a", "b" ], [ "c", "d" ] ],
+        "items": {
+          "type": "array",
+          "example": [ "a", "b" ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "thirdLevel": {
+        "title": "thirdLevel",
+        "type": "array",
+        "example": [[["a"],["b"]],[["c"],["d"]]],
+        "items": {
+          "type": "array",
+          "example": [["a","b"],["c","d"]],
+          "items": {
+            "type": "array",
+            "example": ["a","b"],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
   }
 });
