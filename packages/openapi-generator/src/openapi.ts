@@ -147,9 +147,24 @@ function schemaToOpenAPI(
         }
       case 'record':
         const additionalProperties = schemaToOpenAPI(schema.codomain);
-        if (additionalProperties === undefined) {
-          return undefined;
+        if (additionalProperties === undefined) return undefined;
+
+        if (schema.domain !== undefined) {
+          const keys = schemaToOpenAPI(schema.domain) as OpenAPIV3.SchemaObject;
+          if (keys.type === 'string' && keys.enum !== undefined) {
+            const properties = keys.enum.reduce((acc, key) => {
+              return { ...acc, [key]: additionalProperties };
+            }, {});
+
+            return {
+              type: 'object',
+              properties,
+              ...defaultOpenAPIObject,
+              required: keys.enum,
+            };
+          }
         }
+
         return {
           type: 'object',
           additionalProperties,

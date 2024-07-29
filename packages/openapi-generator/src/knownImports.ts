@@ -94,11 +94,11 @@ export const KNOWN_IMPORTS: KnownImports = {
         required: Object.keys(props),
       });
     },
-    record: (_, _domain, codomain) => {
+    record: (_, domain, codomain) => {
       if (!codomain) {
         return E.left('Codomain of record must be specified');
       } else {
-        return E.right({ type: 'record', codomain });
+        return E.right({ type: 'record', domain, codomain });
       }
     },
     union: (_, schema) => {
