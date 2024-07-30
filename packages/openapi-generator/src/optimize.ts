@@ -1,3 +1,4 @@
+import { combineComments } from './comments';
 import { isPrimitive, type Primitive, type Schema } from './ir';
 
 export type OptimizeFn = (schema: Schema) => Schema;
@@ -173,6 +174,15 @@ export function filterUndefinedUnion(schema: Schema): [boolean, Schema] {
   }
 }
 
+// This function is a helper that adds back any comments that were removed during optimization
+function withComment(newSchema: Schema, oldSchema: Schema): Schema {
+  if (oldSchema.comment) {
+    newSchema.comment = combineComments(oldSchema);
+  }
+
+  return newSchema;
+}
+
 export function optimize(schema: Schema): Schema {
   if (schema.type === 'object') {
     const properties: Record<string, Schema> = {};
@@ -184,8 +194,8 @@ export function optimize(schema: Schema): Schema {
       }
       const [isOptional, filteredSchema] = filterUndefinedUnion(optimized);
 
-      if (prop.comment) {
-        filteredSchema.comment = prop.comment;
+      if (optimized.comment) {
+        filteredSchema.comment = optimized.comment;
       }
 
       properties[key] = filteredSchema;
@@ -197,48 +207,31 @@ export function optimize(schema: Schema): Schema {
 
     const schemaObject: Schema = { type: 'object', properties, required };
 
-    // only add comment field if there is a comment
-    if (schema.comment) {
-      return { ...schemaObject, comment: schema.comment };
-    }
-
-    return schemaObject;
+    return withComment(schemaObject, schema);
   } else if (schema.type === 'intersection') {
     const newSchema = foldIntersection(schema, optimize);
-    if (schema.comment) {
-      return { ...newSchema, comment: schema.comment };
-    }
-    return newSchema;
+
+    return withComment(newSchema, schema);
   } else if (schema.type === 'union') {
     const consolidated = consolidateUnion(schema);
     const simplified = simplifyUnion(consolidated, optimize);
     const merged = mergeUnions(simplified);
 
-    if (schema.comment) {
-      return { ...merged, comment: schema.comment };
-    }
-
-    return merged;
+    return withComment(merged, schema);
   } else if (schema.type === 'array') {
     const optimized = optimize(schema.items);
-    if (schema.comment) {
-      return { type: 'array', items: optimized, comment: schema.comment };
-    }
-    return { type: 'array', items: optimized };
+
+    return withComment({ type: 'array', items: optimized }, schema);
   } else if (schema.type === 'record') {
-    return {
+    return withComment({
       type: 'record',
       ...(schema.domain ? { domain: optimize(schema.domain) } : {}),
       codomain: optimize(schema.codomain),
-      ...(schema.comment ? { comment: schema.comment } : {}),
-    };
+    }, schema)
   } else if (schema.type === 'tuple') {
     const schemas = schema.schemas.map(optimize);
-    return { type: 'tuple', schemas };
+    return withComment({ type: 'tuple', schemas }, schema);
   } else if (schema.type === 'ref') {
-    if (schema.comment) {
-      return { ...schema, comment: schema.comment };
-    }
     return schema;
   } else {
     return schema;
