@@ -2,6 +2,7 @@ import * as E from 'fp-ts/lib/Either';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { OpenAPIV3_1 } from 'openapi-types';
+import * as fs from 'fs';
 
 import {
   convertRoutesToOpenAPI,
@@ -59,6 +60,8 @@ async function testCase(
       routes,
       schemas,
     );
+
+    fs.writeFileSync("actual.json", JSON.stringify(actual, null, 2));
 
     assert.deepEqual(errors, expectedErrors);
     assert.deepEqual(actual, expected);
@@ -3805,5 +3808,143 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
   },
   components: {
     schemas: {}
+  }
+});
+
+const ROUTE_WITH_RECORD_TYPES = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+const ValidKeys = t.keyof({ name: "name", age: "age", address: "address" });
+const PersonObject = t.type({ bigName: t.string, bigAge: t.number });
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      name: t.string,
+    },
+  }),
+  response: {
+    200: {
+      person: t.record(ValidKeys, t.string),
+      anotherPerson: t.record(ValidKeys, PersonObject),
+      bigPerson: t.record(t.string, t.string),
+      anotherBigPerson: t.record(t.string, PersonObject),
+    }
+  },
+});
+`;
+
+testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [
+          {
+            name: 'name',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    // becomes t.type()
+                    person: {
+                      type: 'object',
+                      properties: {
+                        name: { type: 'string' },
+                        age: { type: 'string' },
+                        address: { type: 'string' }
+                      },
+                      required: [ 'name', 'age', 'address' ]
+                    },
+                    // becomes t.type()
+                    anotherPerson: {
+                      type: 'object',
+                      properties: {
+                        name: {
+                          type: 'object',
+                          properties: {
+                            bigName: { type: 'string' },
+                            bigAge: { type: 'number' }
+                          },
+                          required: [ 'bigName', 'bigAge' ]
+                        },
+                        age: {
+                          type: 'object',
+                          properties: {
+                            bigName: { type: 'string' },
+                            bigAge: { type: 'number' }
+                          },
+                          required: [ 'bigName', 'bigAge' ]
+                        },
+                        address: {
+                          type: 'object',
+                          properties: {
+                            bigName: { type: 'string' },
+                            bigAge: { type: 'number' }
+                          },
+                          required: [ 'bigName', 'bigAge' ]
+                        }
+                      },
+                      required: [ 'name', 'age', 'address' ]
+                    },
+                    bigPerson: {
+                      // stays as t.record()
+                      type: 'object',
+                      additionalProperties: { type: 'string' }
+                    },
+                    anotherBigPerson: {
+                      // stays as t.record()
+                      type: 'object',
+                      additionalProperties: {
+                        type: 'object',
+                        properties: {
+                          bigName: { type: 'string' },
+                          bigAge: { type: 'number' }
+                        },
+                        required: [ 'bigName', 'bigAge' ]
+                      }
+                    }
+                  },
+                  required: [ 'person', 'anotherPerson', 'bigPerson', 'anotherBigPerson' ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {
+      ValidKeys: {
+        title: 'ValidKeys',
+        type: 'string',
+        enum: [ 'name', 'age', 'address' ]
+      },
+      PersonObject: {
+        title: 'PersonObject',
+        type: 'object',
+        properties: { bigName: { type: 'string' }, bigAge: { type: 'number' } },
+        required: [ 'bigName', 'bigAge' ]
+      }
+    }
   }
 });
