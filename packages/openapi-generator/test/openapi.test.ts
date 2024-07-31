@@ -2,7 +2,6 @@ import * as E from 'fp-ts/lib/Either';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { OpenAPIV3_1 } from 'openapi-types';
-import * as fs from 'fs';
 
 import {
   convertRoutesToOpenAPI,
@@ -60,8 +59,6 @@ async function testCase(
       routes,
       schemas,
     );
-
-    fs.writeFileSync("actual.json", JSON.stringify(actual, null, 2));
 
     assert.deepEqual(errors, expectedErrors);
     assert.deepEqual(actual, expected);
