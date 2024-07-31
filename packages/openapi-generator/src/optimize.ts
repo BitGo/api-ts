@@ -168,9 +168,9 @@ export function filterUndefinedUnion(schema: Schema): [boolean, Schema] {
   if (schemas.length === 0) {
     return [true, { type: 'undefined' }];
   } else if (schemas.length === 1) {
-    return [true, schemas[0]!];
+    return [true, withComment(schemas[0]!, schema)];
   } else {
-    return [true, { type: 'union', schemas }];
+    return [true, withComment({ type: 'union', schemas }, schema)];
   }
 }
 
@@ -193,11 +193,6 @@ export function optimize(schema: Schema): Schema {
         continue;
       }
       const [isOptional, filteredSchema] = filterUndefinedUnion(optimized);
-
-      if (optimized.comment) {
-        filteredSchema.comment = optimized.comment;
-      }
-
       properties[key] = filteredSchema;
 
       if (schema.required.indexOf(key) >= 0 && !isOptional) {
