@@ -218,11 +218,14 @@ export function optimize(schema: Schema): Schema {
 
     return withComment({ type: 'array', items: optimized }, schema);
   } else if (schema.type === 'record') {
-    return withComment({
-      type: 'record',
-      ...(schema.domain ? { domain: optimize(schema.domain) } : {}),
-      codomain: optimize(schema.codomain),
-    }, schema)
+    return withComment(
+      {
+        type: 'record',
+        ...(schema.domain ? { domain: optimize(schema.domain) } : {}),
+        codomain: optimize(schema.codomain),
+      },
+      schema,
+    );
   } else if (schema.type === 'tuple') {
     const schemas = schema.schemas.map(optimize);
     return withComment({ type: 'tuple', schemas }, schema);

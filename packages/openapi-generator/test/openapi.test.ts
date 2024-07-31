@@ -3961,7 +3961,7 @@ export const route = h.httpRoute({
     200: t.literal('OK'),
   },
 });
-`
+`;
 
 testCase("route with overriding comments", ROUTE_WITH_OVERRIDING_COMMENTS, {
   openapi: "3.0.3",
@@ -4059,7 +4059,7 @@ export const route = h.httpRoute({
     200: t.literal('OK'),
   },
 });
-`
+`;
 
 
 testCase("route with nested overriding comments", ROUTE_WITH_NESTED_OVERRIDEN_COMMENTS, {
@@ -4194,7 +4194,7 @@ export const route = h.httpRoute({
     200: t.literal('OK'),
   },
 });
-`
+`;
 
 testCase("route with overriden comments in union", ROUTE_WITH_OVERRIDEN_COMMENTS_IN_UNION, {
   openapi: "3.0.3",
