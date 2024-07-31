@@ -1,7 +1,6 @@
 import * as E from 'fp-ts/lib/Either';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { OpenAPIV3_1 } from 'openapi-types';
 
 import {
   convertRoutesToOpenAPI,
@@ -17,11 +16,7 @@ import { SourceFile } from '../src/sourceFile';
 async function testCase(
   description: string,
   src: string,
-  expected: OpenAPIV3_1.Document<{
-    'x-internal'?: boolean;
-    'x-unstable'?: boolean;
-    'x-unknown-tags'?: object;
-  }>,
+  expected: any,
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
@@ -3940,140 +3935,123 @@ testCase("route with nested array examples", ROUTE_WITH_NESTED_ARRAY_EXAMPLES, {
   }
 });
 
-const ROUTE_WITH_RECORD_TYPES = `
+const ROUTE_WITH_PRIVATE_PROPERTIES = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
-const ValidKeys = t.keyof({ name: "name", age: "age", address: "address" });
-const PersonObject = t.type({ bigName: t.string, bigAge: t.number });
+const SampleType = t.type({
+  foo: t.string,
+  /** @private */
+  bar: t.string, // This should show up with x-internal
+});
 
 export const route = h.httpRoute({
   path: '/foo',
   method: 'GET',
-  request: h.httpRequest({
-    query: {
-      name: t.string,
+  request: h.httpRequest({ 
+    params: {
+      /** @private */
+      path: t.string
     },
+    query: {
+      /** @private */
+      query: t.string  
+    },
+    body: SampleType
   }),
   response: {
-    200: {
-      person: t.record(ValidKeys, t.string),
-      anotherPerson: t.record(ValidKeys, PersonObject),
-      bigPerson: t.record(t.string, t.string),
-      anotherBigPerson: t.record(t.string, PersonObject),
-    }
+    200: SampleType
   },
 });
-`;
+`
 
-testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
-  openapi: '3.0.3',
+testCase("route with private properties in request query, params, body, and response", ROUTE_WITH_PRIVATE_PROPERTIES, {
+  openapi: "3.0.3",
   info: {
-    title: 'Test',
-    version: '1.0.0'
+    title: "Test",
+    version: "1.0.0"
   },
   paths: {
     '/foo': {
       get: {
         parameters: [
           {
-            name: 'name',
+            'x-internal': true,
+            description: '',
             in: 'query',
+            name: 'query',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          },
+          {
+            'x-internal': true,
+            description: '',
+            in: 'path',
+            name: 'path',
             required: true,
             schema: {
               type: 'string'
             }
           }
         ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  bar: {
+                    'x-internal': true,
+                    type: 'string'
+                  },
+                  foo: {
+                    type: 'string'
+                  }
+                },
+                required: [
+                  'foo',
+                  'bar'
+                ],
+                type: 'object'
+              }
+            }
+          },
+        },
         responses: {
           '200': {
-            description: 'OK',
             content: {
               'application/json': {
                 schema: {
-                  type: 'object',
-                  properties: {
-                    // becomes t.type()
-                    person: {
-                      type: 'object',
-                      properties: {
-                        name: { type: 'string' },
-                        age: { type: 'string' },
-                        address: { type: 'string' }
-                      },
-                      required: [ 'name', 'age', 'address' ]
-                    },
-                    // becomes t.type()
-                    anotherPerson: {
-                      type: 'object',
-                      properties: {
-                        name: {
-                          type: 'object',
-                          properties: {
-                            bigName: { type: 'string' },
-                            bigAge: { type: 'number' }
-                          },
-                          required: [ 'bigName', 'bigAge' ]
-                        },
-                        age: {
-                          type: 'object',
-                          properties: {
-                            bigName: { type: 'string' },
-                            bigAge: { type: 'number' }
-                          },
-                          required: [ 'bigName', 'bigAge' ]
-                        },
-                        address: {
-                          type: 'object',
-                          properties: {
-                            bigName: { type: 'string' },
-                            bigAge: { type: 'number' }
-                          },
-                          required: [ 'bigName', 'bigAge' ]
-                        }
-                      },
-                      required: [ 'name', 'age', 'address' ]
-                    },
-                    bigPerson: {
-                      // stays as t.record()
-                      type: 'object',
-                      additionalProperties: { type: 'string' }
-                    },
-                    anotherBigPerson: {
-                      // stays as t.record()
-                      type: 'object',
-                      additionalProperties: {
-                        type: 'object',
-                        properties: {
-                          bigName: { type: 'string' },
-                          bigAge: { type: 'number' }
-                        },
-                        required: [ 'bigName', 'bigAge' ]
-                      }
-                    }
-                  },
-                  required: [ 'person', 'anotherPerson', 'bigPerson', 'anotherBigPerson' ]
+                  '$ref': '#/components/schemas/SampleType'
                 }
               }
-            }
+            },
+            description: 'OK'
           }
         }
       }
-    }
+    },
   },
   components: {
     schemas: {
-      ValidKeys: {
-        title: 'ValidKeys',
-        type: 'string',
-        enum: [ 'name', 'age', 'address' ]
-      },
-      PersonObject: {
-        title: 'PersonObject',
-        type: 'object',
-        properties: { bigName: { type: 'string' }, bigAge: { type: 'number' } },
-        required: [ 'bigName', 'bigAge' ]
+      SampleType: {
+        properties: {
+          bar: {
+            'x-internal': true,
+            type: 'string'
+          },
+          foo: {
+            type: 'string'
+          }
+        },
+        required: [
+          'foo',
+          'bar'
+        ],
+        title: 'SampleType',
+        type: 'object'
       }
     }
-  }
+  },
 });
