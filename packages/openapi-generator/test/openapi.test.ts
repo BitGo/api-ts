@@ -3942,7 +3942,11 @@ import * as h from '@api-ts/io-ts-http';
 const SampleType = t.type({
   foo: t.string,
   /** @private */
-  bar: t.string, // This should show up with x-internal
+  bar: t.string, // This should show up with x-internal,
+  /** @private */
+  privateObject: t.type({
+    privateFieldInObject: t.boolean
+  })
 });
 
 export const route = h.httpRoute({
@@ -3963,7 +3967,7 @@ export const route = h.httpRoute({
     200: SampleType
   },
 });
-`
+`;
 
 testCase("route with private properties in request query, params, body, and response", ROUTE_WITH_PRIVATE_PROPERTIES, {
   openapi: "3.0.3",
@@ -4007,11 +4011,24 @@ testCase("route with private properties in request query, params, body, and resp
                   },
                   foo: {
                     type: 'string'
+                  },
+                  privateObject: {
+                    'x-internal': true,
+                    properties: {
+                      privateFieldInObject: {
+                        type: 'boolean'
+                      }
+                    },
+                    required: [
+                      'privateFieldInObject'
+                    ],
+                    type: 'object'
                   }
                 },
                 required: [
                   'foo',
-                  'bar'
+                  'bar',
+                  'privateObject'
                 ],
                 type: 'object'
               }
@@ -4043,11 +4060,24 @@ testCase("route with private properties in request query, params, body, and resp
           },
           foo: {
             type: 'string'
+          },
+          privateObject: {
+            'x-internal': true,
+            properties: {
+              privateFieldInObject: {
+                type: 'boolean'
+              }
+            },
+            required: [
+              'privateFieldInObject'
+            ],
+            type: 'object'
           }
         },
         required: [
           'foo',
-          'bar'
+          'bar',
+          'privateObject'
         ],
         title: 'SampleType',
         type: 'object'
