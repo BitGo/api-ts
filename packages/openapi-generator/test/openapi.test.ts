@@ -55,6 +55,7 @@ async function testCase(
       schemas,
     );
 
+
     assert.deepEqual(errors, expectedErrors);
     assert.deepEqual(actual, expected);
   });
@@ -3935,6 +3936,385 @@ testCase("route with nested array examples", ROUTE_WITH_NESTED_ARRAY_EXAMPLES, {
   }
 });
 
+const ROUTE_WITH_OVERRIDING_COMMENTS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/** 
+ * @example "abc"
+ */
+const TargetSchema = t.string;
+
+const ParentSchema = t.type({
+  /** This description should show with the example */
+  target: h.optional(TargetSchema)
+})
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'POST',
+  request: h.httpRequest({ 
+    params: {}, 
+    body: ParentSchema
+  }),
+  response: {
+    200: t.literal('OK'),
+  },
+});
+`;
+
+testCase("route with overriding comments", ROUTE_WITH_OVERRIDING_COMMENTS, {
+  openapi: "3.0.3",
+  info: {
+    title: "Test",
+    version: "1.0.0"
+  },
+  paths: {
+    "/foo": {
+      post: {
+        parameters: [],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  target: {
+                    type: "string",
+                    description: "This description should show with the example",
+                    example: "abc"
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "string",
+                  enum: [
+                    "OK"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {
+      TargetSchema: {
+        title: "TargetSchema",
+        type: "string",
+        example: "abc"
+      },
+      ParentSchema: {
+        title: "ParentSchema",
+        type: "object",
+        properties: {
+          target: {
+            type: "string",
+            description: "This description should show with the example",
+            example: "abc"
+          }
+        }
+      }
+    }
+  }
+});
+
+const ROUTE_WITH_NESTED_OVERRIDEN_COMMENTS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/** 
+ * @example "abc"
+ */
+const TargetSchema = t.string;
+
+const ParentSchema = t.type({
+  /** This description should show with the example */
+  target: h.optional(TargetSchema)
+})
+
+const GrandParentSchema = t.type({
+  /** This description should override the previous description */
+  parent: ParentSchema
+})
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'POST',
+  request: h.httpRequest({ 
+    params: {}, 
+    body: GrandParentSchema
+  }),
+  response: {
+    200: t.literal('OK'),
+  },
+});
+`;
+
+
+testCase("route with nested overriding comments", ROUTE_WITH_NESTED_OVERRIDEN_COMMENTS, {
+  openapi: "3.0.3",
+  info: {
+    title: "Test",
+    version: "1.0.0"
+  },
+  paths: {
+    "/foo": {
+      post: {
+        parameters: [],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  parent: {
+                    allOf: [
+                      {
+                        '$ref': '#/components/schemas/ParentSchema'
+                      }
+                    ],
+                    description: 'This description should override the previous description',
+                  },
+                },
+                required: ['parent']
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "string",
+                  enum: [
+                    "OK"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {
+      TargetSchema: {
+        title: "TargetSchema",
+        type: "string",
+        example: "abc"
+      },
+      ParentSchema: {
+        title: "ParentSchema",
+        type: "object",
+        properties: {
+          target: {
+            type: "string",
+            description: "This description should show with the example",
+            example: "abc"
+          }
+        }
+      },
+      GrandParentSchema: {
+        title: "GrandParentSchema",
+        type: "object",
+        properties: {
+          parent: {
+            allOf: [
+              {
+                '$ref': '#/components/schemas/ParentSchema'
+              }
+            ],
+            description: 'This description should override the previous description'
+          }
+        },
+        required: ['parent']
+      }
+    }
+  }
+});
+
+const ROUTE_WITH_OVERRIDEN_COMMENTS_IN_UNION = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/** 
+ * @example "abc"
+ */
+const TargetSchema = t.string;
+
+/**
+ * @example "def"
+ */
+const TargetSchema2 = t.string;
+
+const ParentSchema = t.type({
+  /** This description should show with the example */
+  target: h.optional(t.union([TargetSchema, TargetSchema2]))
+})
+
+const SecondaryParentSchema = t.type({
+  /** 
+   * This description should show with the overriden example
+   * @example "overridden example"
+   */
+  target: h.optional(t.union([TargetSchema, TargetSchema2]))
+})
+
+/**
+ * This is grandparent schema description
+ * @title Grand Parent Schema
+ */
+const GrandParentSchema = t.type({
+  parent: ParentSchema,
+  secondaryParent: SecondaryParentSchema
+});
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'POST',
+  request: h.httpRequest({ 
+    params: {}, 
+    body: GrandParentSchema
+  }),
+  response: {
+    200: t.literal('OK'),
+  },
+});
+`;
+
+testCase("route with overriden comments in union", ROUTE_WITH_OVERRIDEN_COMMENTS_IN_UNION, {
+  openapi: "3.0.3",
+  info: {
+    title: "Test",
+    version: "1.0.0"
+  },
+  paths: {
+    "/foo": {
+      post: {
+        parameters: [],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                title: "Grand Parent Schema",
+                description: 'This is grandparent schema description',
+                type: "object",
+                properties: {
+                  parent: {
+                    "$ref": "#/components/schemas/ParentSchema"
+                  },
+                  secondaryParent: {
+                    "$ref": "#/components/schemas/SecondaryParentSchema"
+                  }
+                },
+                required: [
+                  "parent",
+                  "secondaryParent"
+                ]
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "string",
+                  enum: [
+                    "OK"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {
+      TargetSchema: {
+        title: "TargetSchema",
+        type: "string",
+        example: "abc"
+      },
+      TargetSchema2: {
+        title: "TargetSchema2",
+        type: "string",
+        example: "def"
+      },
+      ParentSchema: {
+        title: "ParentSchema",
+        type: "object",
+        properties: {
+          target: {
+            oneOf: [
+              {
+                "$ref": "#/components/schemas/TargetSchema"
+              },
+              {
+                "$ref": "#/components/schemas/TargetSchema2"
+              }
+            ],
+            description: "This description should show with the example"
+          }
+        }
+      },
+      SecondaryParentSchema: {
+        title: "SecondaryParentSchema",
+        type: "object",
+        properties: {
+          target: {
+            oneOf: [
+              {
+                "$ref": "#/components/schemas/TargetSchema"
+              },
+              {
+                "$ref": "#/components/schemas/TargetSchema2"
+              }
+            ],
+            description: "This description should show with the overriden example",
+            example: "\"overridden example\""
+          }
+        }
+      },
+      GrandParentSchema: {
+        title: "Grand Parent Schema",
+        description: 'This is grandparent schema description',
+        type: "object",
+        properties: {
+          parent: {
+            "$ref": "#/components/schemas/ParentSchema"
+          },
+          secondaryParent: {
+            "$ref": "#/components/schemas/SecondaryParentSchema"
+          }
+        },
+        required: [
+          "parent",
+          "secondaryParent"
+        ]
+      }
+    }
+  }
+});
+
 const ROUTE_WITH_PRIVATE_PROPERTIES = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
@@ -4221,3 +4601,4 @@ testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
     }
   }
 });
+
