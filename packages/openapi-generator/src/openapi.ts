@@ -7,7 +7,7 @@ import type { Route } from './route';
 import type { Schema } from './ir';
 import { Block } from 'comment-parser';
 
-function schemaToOpenAPI(
+export function schemaToOpenAPI(
   schema: Schema,
 ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined {
   schema = optimize(schema);
@@ -226,8 +226,10 @@ function schemaToOpenAPI(
     const format = jsdoc?.tags?.format ?? schema.format ?? schema.format;
     const title = jsdoc?.tags?.title ?? schema.title;
 
-    const deprecated =
-      Object.keys(jsdoc?.tags || {}).includes('deprecated') || !!schema.deprecated;
+    const keys = Object.keys(jsdoc?.tags || {});
+
+    const deprecated = keys.includes('deprecated') || !!schema.deprecated;
+    const isPrivate = keys.includes('private');
     const description = schema.comment?.description ?? schema.description;
 
     const defaultOpenAPIObject = {
@@ -252,6 +254,7 @@ function schemaToOpenAPI(
       ...(writeOnly ? { writeOnly: true } : {}),
       ...(format ? { format } : {}),
       ...(title ? { title } : {}),
+      ...(isPrivate ? { 'x-internal': true } : {}),
     };
 
     return defaultOpenAPIObject;
@@ -322,12 +325,18 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
           delete schema.description;
         }
 
+        const isPrivate = schema && 'x-internal' in schema;
+        if (isPrivate) {
+          delete schema['x-internal'];
+        }
+
         return {
           name: p.name,
           ...(p.schema?.comment?.description !== undefined
             ? { description: p.schema.comment.description }
             : {}),
           in: p.type,
+          ...(isPrivate ? { 'x-internal': true } : {}),
           ...(p.required ? { required: true } : {}),
           ...(p.explode ? { style: 'form', explode: true } : {}),
           schema: schema as any, // TODO: Something to disallow arrays

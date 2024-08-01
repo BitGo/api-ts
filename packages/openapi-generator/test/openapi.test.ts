@@ -1,7 +1,6 @@
 import * as E from 'fp-ts/lib/Either';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { OpenAPIV3_1 } from 'openapi-types';
 
 import {
   convertRoutesToOpenAPI,
@@ -17,11 +16,7 @@ import { SourceFile } from '../src/sourceFile';
 async function testCase(
   description: string,
   src: string,
-  expected: OpenAPIV3_1.Document<{
-    'x-internal'?: boolean;
-    'x-unstable'?: boolean;
-    'x-unknown-tags'?: object;
-  }>,
+  expected: any,
   expectedErrors: string[] = [],
 ) {
   test(description, async () => {
@@ -3940,13 +3935,162 @@ testCase("route with nested array examples", ROUTE_WITH_NESTED_ARRAY_EXAMPLES, {
   }
 });
 
-const ROUTE_WITH_RECORD_TYPES = `
+const ROUTE_WITH_PRIVATE_PROPERTIES = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
+const SampleType = t.type({
+  foo: t.string,
+  /** @private */
+  bar: t.string, // This should show up with x-internal,
+  /** @private */
+  privateObject: t.type({
+    privateFieldInObject: t.boolean
+  })
+});
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({ 
+    params: {
+      /** @private */
+      path: t.string
+    },
+    query: {
+      /** @private */
+      query: t.string  
+    },
+    body: SampleType
+  }),
+  response: {
+    200: SampleType
+  },
+});
+`;
+
+testCase("route with private properties in request query, params, body, and response", ROUTE_WITH_PRIVATE_PROPERTIES, {
+  openapi: "3.0.3",
+  info: {
+    title: "Test",
+    version: "1.0.0"
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [
+          {
+            'x-internal': true,
+            description: '',
+            in: 'query',
+            name: 'query',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          },
+          {
+            'x-internal': true,
+            description: '',
+            in: 'path',
+            name: 'path',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          }
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  bar: {
+                    'x-internal': true,
+                    type: 'string'
+                  },
+                  foo: {
+                    type: 'string'
+                  },
+                  privateObject: {
+                    'x-internal': true,
+                    properties: {
+                      privateFieldInObject: {
+                        type: 'boolean'
+                      }
+                    },
+                    required: [
+                      'privateFieldInObject'
+                    ],
+                    type: 'object'
+                  }
+                },
+                required: [
+                  'foo',
+                  'bar',
+                  'privateObject'
+                ],
+                type: 'object'
+              }
+            }
+          },
+        },
+        responses: {
+          '200': {
+            content: {
+              'application/json': {
+                schema: {
+                  '$ref': '#/components/schemas/SampleType'
+                }
+              }
+            },
+            description: 'OK'
+          }
+        }
+      }
+    },
+  },
+  components: {
+    schemas: {
+      SampleType: {
+        properties: {
+          bar: {
+            'x-internal': true,
+            type: 'string'
+          },
+          foo: {
+            type: 'string'
+          },
+          privateObject: {
+            'x-internal': true,
+            properties: {
+              privateFieldInObject: {
+                type: 'boolean'
+              }
+            },
+            required: [
+              'privateFieldInObject'
+            ],
+            type: 'object'
+          }
+        },
+        required: [
+          'foo',
+          'bar',
+          'privateObject'
+        ],
+        title: 'SampleType',
+        type: 'object'
+      }
+    }
+  },
+});
+
+const ROUTE_WITH_RECORD_TYPES = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
 const ValidKeys = t.keyof({ name: "name", age: "age", address: "address" });
 const PersonObject = t.type({ bigName: t.string, bigAge: t.number });
-
 export const route = h.httpRoute({
   path: '/foo',
   method: 'GET',
