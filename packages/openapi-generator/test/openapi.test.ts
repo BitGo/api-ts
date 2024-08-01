@@ -4623,7 +4623,7 @@ export const route = h.httpRoute({
     }
   },
 });
-`
+`;
 
 testCase("route with unknown unions", ROUTE_WITH_UNKNOWN_UNIONS, {
   info: {
@@ -4699,5 +4699,4 @@ testCase("route with unknown unions", ROUTE_WITH_UNKNOWN_UNIONS, {
       }
     }
   },
- 
-})
+});
