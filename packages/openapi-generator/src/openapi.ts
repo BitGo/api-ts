@@ -102,6 +102,10 @@ export function schemaToOpenAPI(
         const nonUndefinedSchema = schema.schemas.find((s) => s.type !== 'undefined');
         // If nullSchema exists, that means that the union is also nullable
         const nullSchema = schema.schemas.find((s) => s.type === 'null');
+
+        // If any schema exists and it is in union with another schema - we can remove the any schema as an optimization
+        const unknownSchema = schema.schemas.find((s) => s.type === 'any');
+
         // and we can just return the other schema (while attaching the comment to that schema)
         const isOptional =
           schema.schemas.length >= 2 && undefinedSchema && nonUndefinedSchema;
@@ -111,6 +115,29 @@ export function schemaToOpenAPI(
             comment: schema.comment,
             ...(nullSchema ? { nullable: true } : {}),
           });
+        }
+
+        // This is an edge case for something like this -> t.union([WellDefinedCodec, t.unknown])
+        // It doesn't make sense to display the unknown codec in the OpenAPI spec so this essentially strips it out of the generation
+        // so that we don't present useless information to the user
+        const isUnionWithUnknown = schema.schemas.length >= 2 && unknownSchema;
+        if (isUnionWithUnknown) {
+          const nonUnknownSchemas = schema.schemas.filter((s) => s.type !== 'any');
+
+          if (nonUnknownSchemas.length === 1 && nonUnknownSchemas[0] !== undefined) {
+            return schemaToOpenAPI({
+              ...nonUnknownSchemas[0],
+              comment: schema.comment,
+              ...(nullSchema ? { nullable: true } : {}),
+            });
+          } else if (nonUnknownSchemas.length > 1) {
+            return schemaToOpenAPI({
+              type: 'union',
+              schemas: nonUnknownSchemas,
+              comment: schema.comment,
+              ...(nullSchema ? { nullable: true } : {}),
+            });
+          }
         }
 
         for (const s of schema.schemas) {
