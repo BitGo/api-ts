@@ -4602,3 +4602,101 @@ testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
   }
 });
 
+const ROUTE_WITH_UNKNOWN_UNIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+const UnknownUnion = t.union([t.string, t.number, t.boolean, t.unknown]);
+const SingleUnknownUnion = t.union([t.unknown, t.string]);
+
+const NestedUnknownUnion = t.union([t.union([t.string, t.unknown]), t.union([t.boolean, t.unknown])]);
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: {
+      single: SingleUnknownUnion,
+      unknown: UnknownUnion,
+      nested: NestedUnknownUnion,
+    }
+  },
+});
+`;
+
+testCase("route with unknown unions", ROUTE_WITH_UNKNOWN_UNIONS, {
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  openapi: '3.0.3',
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [],
+        responses: {
+          '200': {
+            content: {
+              'application/json': {
+                schema: {
+                  properties: {
+                    nested: {
+                      '$ref': '#/components/schemas/NestedUnknownUnion'
+                    },
+                    single: {
+                      '$ref': '#/components/schemas/SingleUnknownUnion'
+                    },
+                    unknown: {
+                      '$ref': '#/components/schemas/UnknownUnion'
+                    }
+                  },
+                  required: [
+                    'single',
+                    'unknown',
+                    'nested'
+                  ],
+                  type: 'object'
+                }
+              }
+            },
+            description: 'OK'
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {
+      NestedUnknownUnion: {
+        oneOf: [
+          {
+            type: 'string'
+          },
+          {
+            type: 'boolean'
+          }
+        ],
+        title: 'NestedUnknownUnion'
+      },
+      SingleUnknownUnion: {
+        title: 'SingleUnknownUnion',
+        type: 'string'
+      },
+      UnknownUnion: {
+        oneOf: [
+          {
+            type: 'string'
+          },
+          {
+            type: 'number'
+          },
+          {
+            type: 'boolean'
+          }
+        ],
+        title: 'UnknownUnion'
+      }
+    }
+  },
+});
