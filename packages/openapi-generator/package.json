@@ -17,7 +17,7 @@
     "clean": "rm -rf -- dist",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "test": "c8 --all --src src node --require @swc-node/register --test test/*.test.ts",
+    "test": "c8 --all --src src node --require @swc-node/register --test 'test/**/*.test.ts'",
     "test:target": "c8 --all --src src node --require @swc-node/register"
   },
   "dependencies": {
