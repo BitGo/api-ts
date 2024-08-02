@@ -1,10 +1,11 @@
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
-
+import * as PathReporter from 'io-ts/lib/PathReporter';
 import * as NEA from 'fp-ts/NonEmptyArray';
 import * as t from 'io-ts';
 import { nonEmptyArray, JsonFromString, NumberFromString } from 'io-ts-types';
-import { assertRight } from './utils';
+
+import { assertLeft, assertRight } from './utils';
 
 import { optional } from '../src/combinators';
 import * as h from '../src/httpRequest';
@@ -137,5 +138,39 @@ describe('httpRequest', () => {
     });
     // tslint:disable-next-line: no-unused-expression
     void _codec;
+  });
+
+  it('Displays error with codec name on decode', () => {
+    const request = h.httpRequest(
+      {
+        params: {},
+        query: {
+          foo: t.string,
+        },
+        body: {
+          bar: t.number,
+        },
+      },
+      'TestRequestWithCodecName',
+    );
+
+    const test = {
+      params: {},
+      query: {
+        foo: 'hello',
+      },
+      body: {
+        bar: 'world',
+      },
+    };
+
+    const errors = assertLeft(request.decode(test));
+    const validationErrors = PathReporter.failure(errors);
+    const validationMessage = validationErrors.join('\n');
+
+    assert(
+      validationMessage.includes('TestRequestWithCodecName'),
+      'Expected error to include codec name',
+    );
   });
 });

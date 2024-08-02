@@ -1,4 +1,4 @@
-import { pipe } from 'fp-ts/pipeable';
+import { pipe } from 'fp-ts/function';
 import * as E from 'fp-ts/Either';
 import * as R from 'fp-ts/Record';
 import * as t from 'io-ts';
@@ -101,12 +101,12 @@ export const flattened = <Props extends NestedProps>(
     const innerProps = props[key];
     flatProps = { ...flatProps, ...innerProps };
   }
-  const flatCodec = t.exact(optionalized(flatProps));
+  const flatCodec = t.exact(optionalized(flatProps), name);
 
   const nestedProps = R.map((innerProps: t.Props) => t.exact(optionalized(innerProps)))(
     props,
   );
-  const nestedCodec = t.strict(nestedProps);
+  const nestedCodec = t.strict(nestedProps, name);
 
   return new t.Type(
     name,
