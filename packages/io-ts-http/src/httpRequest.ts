@@ -52,8 +52,8 @@ type EmitPropsErrors<P extends HttpRequestCombinatorProps> = {
 
 export function httpRequest<
   Props extends HttpRequestCombinatorProps & EmitPropsErrors<Props>,
->(props: Props) {
-  return flattened('httpRequest', {
+>(props: Props, name?: string) {
+  return flattened(name ?? 'httpRequest', {
     query: {},
     params: {},
     ...(props as Omit<Props, 'query' | 'params'>),
