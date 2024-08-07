@@ -9,5 +9,5 @@ export function errorLeft(message: string): E.Either<string, never> {
   const stacktrace = new Error().stack!.split('\n').slice(2).join('\n');
   const messageWithStacktrace = message + '\n' + stacktrace;
 
-  return errorLeft(messageWithStacktrace);
+  return E.left(messageWithStacktrace);
 }
