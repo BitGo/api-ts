@@ -11,3 +11,12 @@ export function errorLeft(message: string): E.Either<string, never> {
 
   return E.left(messageWithStacktrace);
 }
+
+/**
+ * Testing utility to strip the stacktrace from errors.
+ * @param errors the list of errors to strip
+ * @returns the errors without the stacktrace
+ */
+export function stripStacktraceOfErrors(errors: string[]) {
+  return errors.map((e) => e!.split('\n')[0]);
+}
