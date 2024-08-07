@@ -5,6 +5,7 @@ import { parseCodecInitializer } from './codec';
 import type { CombinedType, Schema } from './ir';
 import type { Project } from './project';
 import { findSymbolInitializer } from './resolveInit';
+import { errorLeft } from './error';
 
 export type Parameter = {
   type: 'path' | 'query';
@@ -35,7 +36,7 @@ function derefRequestSchema(
   if (schema.type === 'ref') {
     const sourceFile = project.get(schema.location);
     if (sourceFile === undefined) {
-      return E.left(`Could not find '${schema.name}' from '${schema.location}'`);
+      return errorLeft(`Could not find '${schema.name}' from '${schema.location}'`);
     }
     const initE = findSymbolInitializer(project, sourceFile, schema.name);
     if (E.isLeft(initE)) {
@@ -50,13 +51,13 @@ function derefRequestSchema(
 
 function parseRequestObject(schema: Schema): E.Either<string, Request> {
   if (schema.type !== 'object') {
-    return E.left('request must be an object');
+    return errorLeft('request must be an object');
   }
   const parameters: Parameter[] = [];
   const querySchema = schema.properties['query'];
   if (querySchema !== undefined) {
     if (querySchema.type !== 'object') {
-      return E.left('Route query must be an object');
+      return errorLeft('Route query must be an object');
     } else {
       for (const [name, prop] of Object.entries(querySchema.properties)) {
         parameters.push({
@@ -71,7 +72,7 @@ function parseRequestObject(schema: Schema): E.Either<string, Request> {
   const pathSchema = schema.properties['params'];
   if (pathSchema !== undefined) {
     if (pathSchema.type !== 'object') {
-      return E.left('Route path must be an object');
+      return errorLeft('Route path must be an object');
     }
     for (const [name, prop] of Object.entries(pathSchema.properties)) {
       parameters.push({
@@ -94,7 +95,7 @@ function parseRequestUnion(
   schema: Schema,
 ): E.Either<string, Request> {
   if (schema.type !== 'union') {
-    return E.left('request must be a union');
+    return errorLeft('request must be a union');
   }
 
   // For query params and body, construct a union of the related sub-schemas
@@ -114,7 +115,7 @@ function parseRequestUnion(
     }
 
     if (subSchema.type !== 'object') {
-      return E.left('Route request union must be all objects');
+      return errorLeft('Route request union must be all objects');
     }
     if (subSchema.properties['query'] !== undefined) {
       querySchema.schemas.push(subSchema.properties['query']);
@@ -159,7 +160,7 @@ function parseRequestIntersection(
   schema: Schema,
 ): E.Either<string, Request> {
   if (schema.type !== 'intersection') {
-    return E.left('request must be an intersection');
+    return errorLeft('request must be an intersection');
   }
   const result: Request = {
     parameters: [],
@@ -198,36 +199,36 @@ function parseRequestSchema(
   } else if (schema.type === 'intersection') {
     return parseRequestIntersection(project, schema);
   } else {
-    return E.left(`Unsupported request type ${schema.type}`);
+    return errorLeft(`Unsupported request type ${schema.type}`);
   }
 }
 
 export function parseRoute(project: Project, schema: Schema): E.Either<string, Route> {
   if (schema.type !== 'object') {
-    return E.left('Route must be an object');
+    return errorLeft('Route must be an object');
   }
 
   if (schema.properties['path'] === undefined) {
-    return E.left('Route must have a path');
+    return errorLeft('Route must have a path');
   } else if (
     schema.properties['path'].type !== 'string' ||
     schema.properties['path'].enum?.length !== 1
   ) {
-    return E.left('Route path must be a string literal');
+    return errorLeft('Route path must be a string literal');
   }
 
   if (schema.properties['method'] === undefined) {
-    return E.left('Route must have a method');
+    return errorLeft('Route must have a method');
   } else if (
     schema.properties['method'].type !== 'string' ||
     schema.properties['method'].enum?.length !== 1
   ) {
-    return E.left('Route method must be a string literal');
+    return errorLeft('Route method must be a string literal');
   }
 
   const requestSchema = schema.properties['request'];
   if (requestSchema === undefined) {
-    return E.left('Route must have a request');
+    return errorLeft('Route must have a request');
   }
   const requestPropertiesE = parseRequestSchema(project, requestSchema);
   if (E.isLeft(requestPropertiesE)) {
@@ -236,9 +237,9 @@ export function parseRoute(project: Project, schema: Schema): E.Either<string, R
   const { parameters, body } = requestPropertiesE.right;
 
   if (schema.properties['response'] === undefined) {
-    return E.left('Route must have responses');
+    return errorLeft('Route must have responses');
   } else if (schema.properties['response'].type !== 'object') {
-    return E.left('Route responses must be an object');
+    return errorLeft('Route responses must be an object');
   }
 
   return E.right({

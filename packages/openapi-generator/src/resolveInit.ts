@@ -5,6 +5,7 @@ import { dirname } from 'path';
 
 import type { Project } from './project';
 import type { SourceFile } from './sourceFile';
+import { errorLeft } from './error';
 
 type ResolvedInitializer = [SourceFile, swc.Expression, Block | undefined];
 
@@ -25,7 +26,7 @@ function resolveImportPath(
   }
   const importSourceFile = project.get(importPathE.right);
   if (importSourceFile === undefined) {
-    return E.left(importPathE.right);
+    return errorLeft(importPathE.right);
   }
   return E.right(importSourceFile);
 }
@@ -43,14 +44,14 @@ function findExportedDeclaration(
   for (const starExport of sourceFile.symbols.exportStarFiles) {
     const starSourceFile = resolveImportPath(project, sourceFile, starExport);
     if (E.isLeft(starSourceFile)) {
-      return E.left(`Cannot resolve * export from '${starExport}'`);
+      return errorLeft(`Cannot resolve * export from '${starExport}'`);
     }
     const starExportE = findExportedDeclaration(project, starSourceFile.right, name);
     if (E.isRight(starExportE)) {
       return starExportE;
     }
   }
-  return E.left(`Unknown identifier ${name}`);
+  return errorLeft(`Unknown identifier ${name}`);
 }
 
 export function findSymbolInitializer(
@@ -83,12 +84,12 @@ export function findSymbolInitializer(
     if (imp.localName === name) {
       const impSourceFile = resolveImportPath(project, sourceFile, imp.from);
       if (E.isLeft(impSourceFile)) {
-        return E.left(`Cannot resolve import '${imp.localName}' from '${imp.from}'`);
+        return errorLeft(`Cannot resolve import '${imp.localName}' from '${imp.from}'`);
       }
       return findExportedDeclaration(project, impSourceFile.right, imp.importedName);
     }
   }
-  return E.left(`Unknown identifier ${name}`);
+  return errorLeft(`Unknown identifier ${name}`);
 }
 
 export function resolveLiteralOrIdentifier(
@@ -103,9 +104,9 @@ export function resolveLiteralOrIdentifier(
       name = expr.value;
     } else {
       if (expr.object.type !== 'Identifier') {
-        return E.left(`Unimplemented object type ${expr.object.type}`);
+        return errorLeft(`Unimplemented object type ${expr.object.type}`);
       } else if (expr.property.type !== 'Identifier') {
-        return E.left(`Unimplemented property type ${expr.property.type}`);
+        return errorLeft(`Unimplemented property type ${expr.property.type}`);
       }
       name = [expr.object.value, expr.property.value];
     }

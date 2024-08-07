@@ -10,6 +10,7 @@ import { findSymbolInitializer } from './resolveInit';
 import type { SourceFile } from './sourceFile';
 
 import type { KnownCodec } from './knownImports';
+import { errorLeft } from './error';
 
 type ResolvedIdentifier = Schema | { type: 'codec'; schema: KnownCodec };
 
@@ -26,9 +27,9 @@ function codecIdentifier(
 
     const imp = source.symbols.imports.find((s) => s.localName === id.value);
     if (imp === undefined) {
-      return E.left(`Unknown identifier ${id.value}`);
+      return errorLeft(`Unknown identifier ${id.value}`);
     } else if (imp.type === 'star') {
-      return E.left(`Tried to use star import as codec ${id.value}`);
+      return errorLeft(`Tried to use star import as codec ${id.value}`);
     }
     const knownImport = project.resolveKnownImport(imp.from, imp.importedName);
     if (knownImport !== undefined) {
@@ -54,10 +55,12 @@ function codecIdentifier(
     const object = id.object;
     if (object.type !== 'Identifier') {
       if (object.type === 'MemberExpression')
-        return E.left(
-          `Object ${((object as swc.MemberExpression) && { value: String }).value} is deeply nested, which is unsupported`,
+        return errorLeft(
+          `Object ${
+            ((object as swc.MemberExpression) && { value: String }).value
+          } is deeply nested, which is unsupported`,
         );
-      return E.left(`Unimplemented object type ${object.type}`);
+      return errorLeft(`Unimplemented object type ${object.type}`);
     }
 
     // Parse member expressions that come from `* as foo` imports
@@ -66,7 +69,7 @@ function codecIdentifier(
     );
     if (starImportSym !== undefined) {
       if (id.property.type !== 'Identifier') {
-        return E.left(`Unimplemented property type ${id.property.type}`);
+        return errorLeft(`Unimplemented property type ${id.property.type}`);
       }
 
       const name = id.property.value;
@@ -96,7 +99,7 @@ function codecIdentifier(
     );
     if (objectImportSym !== undefined) {
       if (id.property.type !== 'Identifier') {
-        return E.left(`Unimplemented property type ${id.property.type}`);
+        return errorLeft(`Unimplemented property type ${id.property.type}`);
       }
       const name = id.property.value;
 
@@ -113,9 +116,9 @@ function codecIdentifier(
       if (E.isLeft(objectSchemaE)) {
         return objectSchemaE;
       } else if (objectSchemaE.right.type !== 'object') {
-        return E.left(`Expected object, got '${objectSchemaE.right.type}'`);
+        return errorLeft(`Expected object, got '${objectSchemaE.right.type}'`);
       } else if (objectSchemaE.right.properties[name] === undefined) {
-        return E.left(
+        return errorLeft(
           `Unknown property '${name}' in '${objectImportSym.localName}' from '${objectImportSym.from}'`,
         );
       } else {
@@ -124,7 +127,7 @@ function codecIdentifier(
     }
 
     if (id.property.type !== 'Identifier') {
-      return E.left(`Unimplemented property type ${id.property.type}`);
+      return errorLeft(`Unimplemented property type ${id.property.type}`);
     }
 
     // Parse locally declared member expressions
@@ -136,11 +139,11 @@ function codecIdentifier(
       if (E.isLeft(schemaE)) {
         return schemaE;
       } else if (schemaE.right.type !== 'object') {
-        return E.left(
+        return errorLeft(
           `Expected object, got '${schemaE.right.type}' for '${declarationSym.name}'`,
         );
       } else if (schemaE.right.properties[id.property.value] === undefined) {
-        return E.left(
+        return errorLeft(
           `Unknown property '${id.property.value}' in '${declarationSym.name}'`,
         );
       } else {
@@ -158,7 +161,7 @@ function codecIdentifier(
     }
   }
 
-  return E.left(`Unimplemented identifier type ${id.type}`);
+  return errorLeft(`Unimplemented identifier type ${id.type}`);
 }
 
 function parseObjectExpression(
@@ -210,19 +213,19 @@ function parseObjectExpression(
         schema = schemaE.right;
       }
       if (schema.type !== 'object') {
-        return E.left(`Spread element must be object`);
+        return errorLeft(`Spread element must be object`);
       }
       Object.assign(result.properties, schema.properties);
       result.required.push(...schema.required);
       continue;
     } else if (property.type !== 'KeyValueProperty') {
-      return E.left(`Unimplemented property type ${property.type}`);
+      return errorLeft(`Unimplemented property type ${property.type}`);
     } else if (
       property.key.type !== 'Identifier' &&
       property.key.type !== 'StringLiteral' &&
       property.key.type !== 'NumericLiteral'
     ) {
-      return E.left(`Unimplemented property key type ${property.key.type}`);
+      return errorLeft(`Unimplemented property key type ${property.key.type}`);
     }
     const commentEndIdx = property.key.span.start;
     const comments = leadingComment(
@@ -254,7 +257,7 @@ function parseArrayExpression(
   const result: Schema[] = [];
   for (const element of array.elements) {
     if (element === undefined) {
-      return E.left('Undefined array element');
+      return errorLeft('Undefined array element');
     }
     const valueE = parsePlainInitializer(project, source, element.expression);
     if (E.isLeft(valueE)) {
@@ -279,7 +282,7 @@ function parseArrayExpression(
         init = schemaE.right;
       }
       if (init.type !== 'tuple') {
-        return E.left('Spread element must be array literal');
+        return errorLeft('Spread element must be array literal');
       }
       result.push(...init.schemas);
     } else {
@@ -342,7 +345,7 @@ export function parseCodecInitializer(
   } else if (init.type === 'CallExpression') {
     const callee = init.callee;
     if (callee.type !== 'Identifier' && callee.type !== 'MemberExpression') {
-      return E.left(`Unimplemented callee type ${init.callee.type}`);
+      return errorLeft(`Unimplemented callee type ${init.callee.type}`);
     }
     const identifierE = codecIdentifier(project, source, callee);
     if (E.isLeft(identifierE)) {
@@ -364,10 +367,10 @@ export function parseCodecInitializer(
           // schema.location might be a package name -> need to resolve the path from the project types
           const path = project.getTypes()[schema.name];
           if (path === undefined)
-            return E.left(`Cannot find module '${schema.location}' in the project`);
+            return errorLeft(`Cannot find module '${schema.location}' in the project`);
           refSource = project.get(path);
           if (refSource === undefined) {
-            return E.left(`Cannot find '${schema.name}' from '${schema.location}'`);
+            return errorLeft(`Cannot find '${schema.name}' from '${schema.location}'`);
           }
         }
         const initE = findSymbolInitializer(project, refSource, schema.name);
@@ -394,6 +397,6 @@ export function parseCodecInitializer(
       E.chain((args) => identifier.schema(deref, ...args)),
     );
   } else {
-    return E.left(`Unimplemented initializer type ${init.type}`);
+    return errorLeft(`Unimplemented initializer type ${init.type}`);
   }
 }
