@@ -20,3 +20,16 @@ export function errorLeft(message: string): E.Either<string, never> {
 export function stripStacktraceOfErrors(errors: string[]) {
   return errors.map((e) => e!.split('\n')[0]);
 }
+
+// helper functions for logging
+export function logError(message: string): void {
+  console.error(`[ERROR] ${message}`);
+}
+
+export function logWarn(message: string): void {
+  console.error(`[WARN] ${message}`);
+}
+
+export function logInfo(message: string): void {
+  console.error(`[INFO] ${message}`);
+}

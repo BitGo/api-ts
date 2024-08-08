@@ -18,6 +18,7 @@ import { KNOWN_IMPORTS } from './knownImports';
 import { findSymbolInitializer } from './resolveInit';
 import { parseCodecInitializer } from './codec';
 import { SourceFile } from './sourceFile';
+import { logError, logInfo, logWarn } from './error';
 
 const app = command({
   name: 'api-ts',
@@ -87,7 +88,7 @@ const app = command({
       const codecFilePath = p.resolve(codecFile);
       const codecModule = await import(codecFilePath);
       if (codecModule.default === undefined) {
-        console.error(`[ERROR] Could not find default export in ${codecFilePath}`);
+        logError(`Could not find default export in ${codecFilePath}`);
         process.exit(1);
       }
       const customCodecs = codecModule.default(E);
@@ -96,13 +97,13 @@ const app = command({
 
     const project = await new Project({}, knownImports).parseEntryPoint(filePath);
     if (E.isLeft(project)) {
-      console.error(`[ERROR] ${project.left}`);
+      logError(`${project.left}`);
       process.exit(1);
     }
 
     const entryPoint = project.right.get(filePath);
     if (entryPoint === undefined) {
-      console.error(`[ERROR] Could not find entry point ${filePath}`);
+      logError(`Could not find entry point ${filePath}`);
       process.exit(1);
     }
 
@@ -119,14 +120,12 @@ const app = command({
         symbol.init.callee.type === 'Super' ||
         symbol.init.callee.type === 'Import'
       ) {
-        console.error(
-          `[WARN] Skipping ${symbol.name} because it is a ${symbol.init.callee.type}`,
-        );
+        logWarn(`Skipping ${symbol.name} because it is a ${symbol.init.callee.type}`);
         continue;
       } else if (!isApiSpec(entryPoint, symbol.init.callee)) {
         continue;
       }
-      console.error(`[INFO] Found API spec in ${symbol.name}`);
+      logInfo(`[INFO] Found API spec in ${symbol.name}`);
 
       const result = parseApiSpec(
         project.right,
@@ -134,7 +133,7 @@ const app = command({
         symbol.init.arguments[0]!.expression,
       );
       if (E.isLeft(result)) {
-        console.error(`[ERROR] Error when parsing ${symbol.name}: ${result.left}`);
+        logError(`Error when parsing ${symbol.name}: ${result.left}`);
         process.exit(1);
       }
 
@@ -145,7 +144,7 @@ const app = command({
       apiSpec.push(...result.right);
     }
     if (apiSpec.length === 0) {
-      console.error(`[ERROR] Could not find API spec in ${filePath}`);
+      logError(`Could not find API spec in ${filePath}`);
       process.exit(1);
     }
 
@@ -166,7 +165,7 @@ const app = command({
         }
         const sourceFile = project.right.get(ref.location);
         if (sourceFile === undefined) {
-          console.error(`[ERROR] Could not find '${ref.name}' from '${ref.location}'`);
+          logError(`Could not find '${ref.name}' from '${ref.location}'`);
           process.exit(1);
         }
 
