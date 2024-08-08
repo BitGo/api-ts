@@ -6,7 +6,7 @@ import resolve from 'resolve';
 
 import { KNOWN_IMPORTS, type KnownCodec } from './knownImports';
 import { parseSource, type SourceFile } from './sourceFile';
-import { errorLeft } from './error';
+import { errorLeft, logError, logInfo } from './error';
 
 const readFile = promisify(fs.readFile);
 
@@ -177,7 +177,7 @@ export class Project {
         );
         const module = await import(customCodecPath);
         if (module.default === undefined) {
-          console.error(`Could not find default export in ${customCodecPath}`);
+          logError(`Could not find default export in ${customCodecPath}`);
           return;
         }
 
@@ -187,7 +187,7 @@ export class Project {
           ...customCodecs,
         };
 
-        console.error(`Loaded custom codecs for ${packageName}`);
+        logInfo(`Loaded custom codecs for ${packageName}`);
       }
     } catch (e) {
       return;

@@ -1,6 +1,7 @@
 import * as swc from '@swc/core';
 
 import { parseTopLevelSymbols, type SymbolTable } from './symbol';
+import { logError } from './error';
 
 export type SourceFile = {
   path: string;
@@ -41,7 +42,7 @@ export async function parseSource(
       span: module.span,
     };
   } catch (e: unknown) {
-    console.error(`Error parsing source file: ${path}`, e);
+    logError(`Error parsing source file: ${path}, ${e}`);
     return undefined;
   }
 }
