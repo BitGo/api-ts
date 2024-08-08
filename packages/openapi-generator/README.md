@@ -106,6 +106,9 @@ the upstream repository:
    "customCodecFile": "openapi-gen.config.js"
    ```
 
+   You must also add `"openapi-gen.config.js"` to the files field in the package.json,
+   so that it is included in the final bundle.
+
 3. In the `openapi-gen.config.js` file, define your custom codecs:
 
    ```javascript
