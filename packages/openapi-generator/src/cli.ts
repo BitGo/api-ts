@@ -125,7 +125,7 @@ const app = command({
       } else if (!isApiSpec(entryPoint, symbol.init.callee)) {
         continue;
       }
-      logInfo(`[INFO] Found API spec in ${symbol.name}`);
+      logInfo(`Found API spec in ${symbol.name}`);
 
       const result = parseApiSpec(
         project.right,
