@@ -102,7 +102,7 @@ containing AST definitions for external libraries. For more details, see
 ### Solution 2: Using a Custom Codec Configuration File
 
 `openapi-generator` supports importing codecs from other packages in `node_modules`, but
-it struggles with `io-ts`primitives that need JavaScript interpretation, such as
+it struggles with `io-ts` primitives that need JavaScript interpretation, such as
 `new t.Type(...)`. To work around this, you can define schemas for these codecs in a
 configuration file within your downstream types package (where you generate the API
 docs). This allows the generator to understand and use these schemas where necessary.
