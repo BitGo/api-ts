@@ -125,7 +125,7 @@ const app = command({
       } else if (!isApiSpec(entryPoint, symbol.init.callee)) {
         continue;
       }
-      logInfo(`[INFO] Found API spec in ${symbol.name}`);
+      logInfo(`Found API spec in ${symbol.name}`);
 
       const result = parseApiSpec(
         project.right,
@@ -171,8 +171,8 @@ const app = command({
 
         const initE = findSymbolInitializer(project.right, sourceFile, ref.name);
         if (E.isLeft(initE)) {
-          console.error(
-            `[ERROR] Could not find symbol '${ref.name}' in '${ref.location}': ${initE.left}`,
+          logError(
+            `Could not find symbol '${ref.name}' in '${ref.location}': ${initE.left}`,
           );
           process.exit(1);
         }
@@ -180,8 +180,8 @@ const app = command({
 
         const codecE = parseCodecInitializer(project.right, newSourceFile, init);
         if (E.isLeft(codecE)) {
-          console.error(
-            `[ERROR] Could not parse codec '${ref.name}' in '${ref.location}': ${codecE.left}`,
+          logError(
+            `Could not parse codec '${ref.name}' in '${ref.location}': ${codecE.left}`,
           );
           process.exit(1);
         }

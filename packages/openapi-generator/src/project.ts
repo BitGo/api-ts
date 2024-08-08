@@ -6,7 +6,7 @@ import resolve from 'resolve';
 
 import { KNOWN_IMPORTS, type KnownCodec } from './knownImports';
 import { parseSource, type SourceFile } from './sourceFile';
-import { errorLeft } from './error';
+import { errorLeft, logInfo } from './error';
 
 const readFile = promisify(fs.readFile);
 
@@ -37,6 +37,7 @@ export class Project {
   async parseEntryPoint(entryPoint: string): Promise<E.Either<string, Project>> {
     const queue: string[] = [entryPoint];
     let path: string | undefined;
+    const visitedPackages = new Set<string>();
     while (((path = queue.pop()), path !== undefined)) {
       if (!['.ts', '.js'].includes(p.extname(path))) {
         continue;
@@ -59,6 +60,26 @@ export class Project {
           // If we are not resolving a relative path, we need to resolve the entry point
           const baseDir = p.dirname(sourceFile.path);
           let entryPoint = this.resolveEntryPoint(baseDir, sym.from);
+
+          if (!visitedPackages.has(sym.from)) {
+            // This is a step that checks if this import has custom codecs, and loads them into known imports
+            const codecs = await this.getCustomCodecs(baseDir, sym.from);
+            if (E.isLeft(codecs)) {
+              return codecs;
+            }
+
+            if (Object.keys(codecs.right).length > 0) {
+              this.knownImports[sym.from] = {
+                ...codecs.right,
+                ...this.knownImports[sym.from],
+              };
+
+              logInfo(`Loaded custom codecs for ${sym.from}`);
+            }
+          }
+
+          visitedPackages.add(sym.from);
+
           if (E.isLeft(entryPoint)) {
             continue;
           } else if (!this.has(entryPoint.right)) {
@@ -147,5 +168,46 @@ export class Project {
 
   getTypes() {
     return this.types;
+  }
+
+  private async getCustomCodecs(
+    basedir: string,
+    packageName: string,
+  ): Promise<E.Either<string, Record<string, KnownCodec>>> {
+    let packageJsonPath = '';
+
+    try {
+      packageJsonPath = resolve.sync(`${packageName}/package.json`, {
+        basedir,
+        extensions: ['.json'],
+      });
+    } catch (e) {
+      // This should not lead to the failure of the entire project, so return an empty record
+      return E.right({});
+    }
+
+    const packageInfo = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+
+    if (packageInfo['customCodecFile']) {
+      // The package defines their own custom codecs
+      const customCodecPath = resolve.sync(
+        `${packageName}/${packageInfo['customCodecFile']}`,
+        {
+          basedir,
+          extensions: ['.ts', '.js'],
+        },
+      );
+
+      const module = await import(customCodecPath);
+      if (module.default === undefined) {
+        // Package does not have a default export so we can't use it. Format of the custom codec file is incorrect
+        return errorLeft(`Could not find default export in ${customCodecPath}`);
+      }
+
+      const customCodecs = module.default(E);
+      return E.right(customCodecs);
+    }
+
+    return E.right({});
   }
 }

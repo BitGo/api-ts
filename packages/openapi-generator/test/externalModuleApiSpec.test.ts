@@ -126,8 +126,8 @@ async function testCase(
       components,
     );
 
-    assert.deepEqual(errors, expectedErrors);
-    assert.deepEqual(openapi, expected);
+    assert.deepStrictEqual(errors, expectedErrors); 
+    assert.deepStrictEqual(openapi, expected);
   });
 }
 
@@ -319,3 +319,48 @@ testCase(
   },
   []
 )
+
+testCase("simple api spec with custom codec", "test/sample-types/apiSpecWithCustomCodec.ts", {
+  openapi: "3.0.3",
+  info: {
+    title: "simple api spec with custom codec",
+    version: "4.7.4",
+    description: "simple api spec with custom codec"
+  },
+  paths: {
+    "/test": {
+      get: {
+        parameters: [],
+        responses: {
+          200: {
+            description: "OK",
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                  description: 'Sample custom codec',
+                  example: 'sample',
+                  format: 'sample'
+                }
+              }
+            }
+          },
+          201: {
+            description: 'Created',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'number',
+                  description: 'Another sample codec',
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+}, []);
