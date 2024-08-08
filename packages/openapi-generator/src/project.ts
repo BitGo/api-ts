@@ -183,8 +183,8 @@ export class Project {
 
         const customCodecs = module.default(E);
         this.knownImports[packageName] = {
-          ...this.knownImports[packageName],
           ...customCodecs,
+          ...this.knownImports[packageName],
         };
 
         logInfo(`Loaded custom codecs for ${packageName}`);
