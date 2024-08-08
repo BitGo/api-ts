@@ -1,6 +1,7 @@
 import * as E from 'fp-ts/Either';
 
 import { isPrimitive, type Schema } from './ir';
+import { errorLeft } from './error';
 
 export type DerefFn = (ref: Schema) => E.Either<string, Schema>;
 export type KnownCodec = (
@@ -28,13 +29,13 @@ export const KNOWN_IMPORTS: KnownImports = {
   global: {
     'Object.assign': (_, ...schemas) => {
       if (schemas.length < 2) {
-        return E.left('assign must have at least 2 arguments');
+        return errorLeft('assign must have at least 2 arguments');
       }
       const [target, ...sources] = schemas;
       if (target === undefined) {
-        return E.left('assign target must be object');
+        return errorLeft('assign target must be object');
       } else if (target.type !== 'object') {
-        return E.left('assign target must be object');
+        return errorLeft('assign target must be object');
       }
       const properties = sources.reduce((acc, source) => {
         if (source.type !== 'object') {
@@ -60,7 +61,7 @@ export const KNOWN_IMPORTS: KnownImports = {
     object: () => E.right({ type: 'object', properties: {}, required: [] }),
     type: (_, schema) => {
       if (schema.type !== 'object') {
-        return E.left('typeC parameter must be object');
+        return errorLeft('typeC parameter must be object');
       }
       const props = Object.entries(schema.properties).reduce((acc, [key, prop]) => {
         return { ...acc, [key]: prop };
@@ -73,7 +74,7 @@ export const KNOWN_IMPORTS: KnownImports = {
     },
     partial: (_, schema) => {
       if (schema.type !== 'object') {
-        return E.left('typeC parameter must be object');
+        return errorLeft('typeC parameter must be object');
       }
       const props = Object.entries(schema.properties).reduce((acc, [key, prop]) => {
         return { ...acc, [key]: prop };
@@ -83,7 +84,7 @@ export const KNOWN_IMPORTS: KnownImports = {
     exact: (_, schema) => E.right(schema),
     strict: (_, schema) => {
       if (schema.type !== 'object') {
-        return E.left('exactC parameter must be object');
+        return errorLeft('exactC parameter must be object');
       }
       const props = Object.entries(schema.properties).reduce((acc, [key, prop]) => {
         return { ...acc, [key]: prop };
@@ -96,33 +97,33 @@ export const KNOWN_IMPORTS: KnownImports = {
     },
     record: (_, domain, codomain) => {
       if (!codomain) {
-        return E.left('Codomain of record must be specified');
+        return errorLeft('Codomain of record must be specified');
       } else {
         return E.right({ type: 'record', domain, codomain });
       }
     },
     union: (_, schema) => {
       if (schema.type !== 'tuple') {
-        return E.left('unionC parameter must be array');
+        return errorLeft('unionC parameter must be array');
       }
       return E.right({ type: 'union', schemas: schema.schemas });
     },
     intersection: (_, schema) => {
       if (schema.type !== 'tuple') {
-        return E.left('unionC parameter must be array');
+        return errorLeft('unionC parameter must be array');
       }
       return E.right({ type: 'intersection', schemas: schema.schemas });
     },
     literal: (_, arg) => {
       if (!isPrimitive(arg) || arg.enum === undefined) {
-        return E.left(`Unimplemented literal type ${arg.type}`);
+        return errorLeft(`Unimplemented literal type ${arg.type}`);
       } else {
         return E.right(arg);
       }
     },
     keyof: (_, arg) => {
       if (arg.type !== 'object') {
-        return E.left(`Unimplemented keyof type ${arg.type}`);
+        return errorLeft(`Unimplemented keyof type ${arg.type}`);
       }
       const schemas: Schema[] = Object.keys(arg.properties).map((prop) => ({
         type: 'string',
@@ -377,7 +378,7 @@ export const KNOWN_IMPORTS: KnownImports = {
       E.right({ type: 'union', schemas: [innerSchema, { type: 'undefined' }] }),
     optionalized: (_, props) => {
       if (props.type !== 'object') {
-        return E.left('optionalized parameter must be object');
+        return errorLeft('optionalized parameter must be object');
       }
       const required = Object.keys(props.properties).filter(
         (key) => !isOptional(props.properties[key]!),
@@ -386,7 +387,7 @@ export const KNOWN_IMPORTS: KnownImports = {
     },
     httpRequest: (deref, arg) => {
       if (arg.type !== 'object') {
-        return E.left(`Unimplemented httpRequest type ${arg.type}`);
+        return errorLeft(`Unimplemented httpRequest type ${arg.type}`);
       }
       const properties: Record<string, Schema> = {};
       for (const [outerKey, outerValue] of Object.entries(arg.properties)) {
@@ -397,7 +398,7 @@ export const KNOWN_IMPORTS: KnownImports = {
         }
         const innerProps = innerPropsE.right;
         if (innerProps.type !== 'object') {
-          return E.left(`Unimplemented httpRequest type ${innerProps.type}`);
+          return errorLeft(`Unimplemented httpRequest type ${innerProps.type}`);
         }
 
         innerProps.required = innerProps.required.filter(
@@ -416,7 +417,7 @@ export const KNOWN_IMPORTS: KnownImports = {
     },
     httpRoute: (deref, schema) => {
       if (schema.type !== 'object') {
-        return E.left('httpRoute parameter must be object');
+        return errorLeft('httpRoute parameter must be object');
       }
       const props: Record<string, Schema> = {};
       for (const [key, value] of Object.entries(schema.properties)) {

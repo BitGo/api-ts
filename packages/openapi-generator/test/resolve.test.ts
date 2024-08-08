@@ -6,6 +6,7 @@ import test from 'node:test';
 import { TestProject } from './testProject';
 import { parseCodecInitializer, Project, type Schema } from '../src';
 import { MOCK_NODE_MODULES_DIR } from './externalModules';
+import { stripStacktraceOfErrors } from '../src/error';
 
 async function testCase(
   description: string,
@@ -43,7 +44,7 @@ async function testCase(
       }
     }
 
-    assert.deepEqual(errors, expectedErrors);
+    assert.deepEqual(stripStacktraceOfErrors(errors), expectedErrors);
     assert.deepEqual(actual, expected);
   });
 }

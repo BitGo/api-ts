@@ -6,6 +6,7 @@ import resolve from 'resolve';
 
 import { KNOWN_IMPORTS, type KnownCodec } from './knownImports';
 import { parseSource, type SourceFile } from './sourceFile';
+import { errorLeft } from './error';
 
 const readFile = promisify(fs.readFile);
 
@@ -110,7 +111,7 @@ export class Project {
       }
 
       if (!typesEntryPoint) {
-        return E.left(`Could not find types entry point for ${library}`);
+        return errorLeft(`Could not find types entry point for ${library}`);
       }
 
       const entryPoint = resolve.sync(`${library}/${typesEntryPoint}`, {
@@ -119,7 +120,7 @@ export class Project {
       });
       return E.right(entryPoint);
     } catch (err) {
-      return E.left(`Could not resolve entry point for ${library}: ${err}`);
+      return errorLeft(`Could not resolve entry point for ${library}: ${err}`);
     }
   }
 
@@ -132,10 +133,10 @@ export class Project {
       return E.right(result);
     } catch (e: unknown) {
       if (e instanceof Error && e.message) {
-        return E.left(e.message);
+        return errorLeft(e.message);
       }
 
-      return E.left(JSON.stringify(e));
+      return errorLeft(JSON.stringify(e));
     }
   }
 

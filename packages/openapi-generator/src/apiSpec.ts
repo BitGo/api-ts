@@ -8,6 +8,7 @@ import { resolveLiteralOrIdentifier } from './resolveInit';
 import { parseRoute, type Route } from './route';
 import { SourceFile } from './sourceFile';
 import { OpenAPIV3 } from 'openapi-types';
+import { errorLeft } from './error';
 
 export function parseApiSpec(
   project: Project,
@@ -15,7 +16,7 @@ export function parseApiSpec(
   expr: swc.Expression,
 ): E.Either<string, Route[]> {
   if (expr.type !== 'ObjectExpression') {
-    return E.left(`unimplemented route expression type ${expr.type}`);
+    return errorLeft(`unimplemented route expression type ${expr.type}`);
   }
 
   const result: Route[] = [];
@@ -34,7 +35,7 @@ export function parseApiSpec(
       if (spreadExpr.type === 'CallExpression') {
         const arg = spreadExpr.arguments[0];
         if (arg === undefined) {
-          return E.left(`unimplemented spread argument type ${arg}`);
+          return errorLeft(`unimplemented spread argument type ${arg}`);
         }
         spreadExpr = arg.expression;
       }
@@ -47,7 +48,7 @@ export function parseApiSpec(
     }
 
     if (apiAction.type !== 'KeyValueProperty') {
-      return E.left(`unimplemented route property type ${apiAction.type}`);
+      return errorLeft(`unimplemented route property type ${apiAction.type}`);
     }
     const routes = apiAction.value;
     const routesInitE = resolveLiteralOrIdentifier(project, sourceFile, routes);
@@ -56,11 +57,11 @@ export function parseApiSpec(
     }
     const [routesSource, routesInit] = routesInitE.right;
     if (routesInit.type !== 'ObjectExpression') {
-      return E.left(`unimplemented routes type ${routes.type}`);
+      return errorLeft(`unimplemented routes type ${routes.type}`);
     }
     for (const route of Object.values(routesInit.properties)) {
       if (route.type !== 'KeyValueProperty') {
-        return E.left(`unimplemented route type ${route.type}`);
+        return errorLeft(`unimplemented route type ${route.type}`);
       }
       const routeExpr = route.value;
       const routeInitE = resolveLiteralOrIdentifier(project, routesSource, routeExpr);

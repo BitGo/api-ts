@@ -5,6 +5,7 @@ import * as p from 'path';
 
 import { parsePlainInitializer, Project, type Schema } from '../src';
 import { KNOWN_IMPORTS } from '../src/knownImports';
+import { stripStacktraceOfErrors } from '../src/error';
 
 /** External library parsing test case
  *
@@ -49,7 +50,7 @@ async function testCase(
       }
 
       assert.deepEqual(actual, expected[path]);
-      assert.deepEqual(errors, expectedErrors[path] ?? []);
+      assert.deepEqual(stripStacktraceOfErrors(errors), expectedErrors[path] ?? []);
     }
 
     // If we are expecting errors in a file that wasn't parsed, raise that here
