@@ -58,39 +58,7 @@ primitives that aren't directly supported. However, there are two solutions to a
 these challenges effectively. Click [here](#list-of-supported-io-ts-primitives) for the
 list of supported primitives.
 
-### Solution 1: Using a Custom Codec Configuration File
-
-`openapi-generator` supports importing codecs from other packages in `node_modules`, but
-it struggles with primitives that need JavaScript interpretation, such as
-`new t.Type(...)`. To work around this, you can define schemas for these codecs in a
-configuration file within your downstream types package (where you generate the API
-docs). This allows the generator to understand and use these schemas where necessary.
-Follow these steps to create and use a custom codec configuration file:
-
-1. Create a JavaScript file with the following format:
-
-   ```javascript
-   module.exports = (E) => {
-     return {
-       'io-ts-bigint': {
-         BigIntFromString: () => E.right({ type: 'string' }),
-         NonZeroBigInt: () => E.right({ type: 'number' }),
-         NonZeroBigIntFromString: () => E.right({ type: 'string' }),
-         NegativeBigIntFromString: () => E.right({ type: 'string' }),
-         NonNegativeBigIntFromString: () => E.right({ type: 'string' }),
-         PositiveBigIntFromString: () => E.right({ type: 'string' }),
-       },
-       // ... and so on for other packages
-     };
-   };
-   ```
-
-2. The input parameter `E` is the namespace import of `fp-ts/Either`, which avoids
-   issues with `require`. The return type should be a `Record` containing AST
-   definitions for external libraries. For more information on the structure, refer to
-   [KNOWN_IMPORTS](./src/knownImports.ts).
-
-### Solution 2: Defining Custom Codec Schemas in the Types Package (recommended)
+### Solution 1: Defining Custom Codec Schemas in the Types Package (recommended)
 
 `openapi-generator` now offers the ability to define the schema of custom codecs
 directly within the types package that defines them, rather than the downstream package
@@ -130,6 +98,38 @@ generated API docs for any endpoints that use the respective codecs. The input p
 `E` is the namespace import of `fp-ts/Either`, and the return type should be a `Record`
 containing AST definitions for external libraries. For more details, see
 [KNOWN_IMPORTS](./src/knownImports.ts).
+
+### Solution 2: Using a Custom Codec Configuration File
+
+`openapi-generator` supports importing codecs from other packages in `node_modules`, but
+it struggles with `io-ts` primitives that need JavaScript interpretation, such as
+`new t.Type(...)`. To work around this, you can define schemas for these codecs in a
+configuration file within your downstream types package (where you generate the API
+docs). This allows the generator to understand and use these schemas where necessary.
+Follow these steps to create and use a custom codec configuration file:
+
+1. Create a JavaScript file with the following format:
+
+   ```javascript
+   module.exports = (E) => {
+     return {
+       'io-ts-bigint': {
+         BigIntFromString: () => E.right({ type: 'string' }),
+         NonZeroBigInt: () => E.right({ type: 'number' }),
+         NonZeroBigIntFromString: () => E.right({ type: 'string' }),
+         NegativeBigIntFromString: () => E.right({ type: 'string' }),
+         NonNegativeBigIntFromString: () => E.right({ type: 'string' }),
+         PositiveBigIntFromString: () => E.right({ type: 'string' }),
+       },
+       // ... and so on for other packages
+     };
+   };
+   ```
+
+2. The input parameter `E` is the namespace import of `fp-ts/Either`, which avoids
+   issues with `require`. The return type should be a `Record` containing AST
+   definitions for external libraries. For more information on the structure, refer to
+   [KNOWN_IMPORTS](./src/knownImports.ts).
 
 ## List of supported io-ts primitives
 
