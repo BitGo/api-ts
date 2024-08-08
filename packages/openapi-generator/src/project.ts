@@ -37,6 +37,7 @@ export class Project {
   async parseEntryPoint(entryPoint: string): Promise<E.Either<string, Project>> {
     const queue: string[] = [entryPoint];
     let path: string | undefined;
+    const visitedPackages = new Set<string>();
     while (((path = queue.pop()), path !== undefined)) {
       if (!['.ts', '.js'].includes(p.extname(path))) {
         continue;
@@ -59,6 +60,14 @@ export class Project {
           // If we are not resolving a relative path, we need to resolve the entry point
           const baseDir = p.dirname(sourceFile.path);
           let entryPoint = this.resolveEntryPoint(baseDir, sym.from);
+
+          if (!visitedPackages.has(sym.from)) {
+            // This is a step that checks if this import has custom codecs, and loads them into known imports
+            await this.populateCustomCodecs(baseDir, sym.from);
+          }
+
+          visitedPackages.add(sym.from);
+
           if (E.isLeft(entryPoint)) {
             continue;
           } else if (!this.has(entryPoint.right)) {
@@ -147,5 +156,41 @@ export class Project {
 
   getTypes() {
     return this.types;
+  }
+
+  private async populateCustomCodecs(basedir: string, packageName: string) {
+    try {
+      const packageJson = resolve.sync(`${packageName}/package.json`, {
+        basedir,
+        extensions: ['.json'],
+      });
+      const packageInfo = JSON.parse(fs.readFileSync(packageJson, 'utf8'));
+
+      if (packageInfo['customCodecFile']) {
+        // The package defines their own custom codecs
+        const customCodecPath = resolve.sync(
+          `${packageName}/${packageInfo['customCodecFile']}`,
+          {
+            basedir,
+            extensions: ['.ts', '.js'],
+          },
+        );
+        const module = await import(customCodecPath);
+        if (module.default === undefined) {
+          console.error(`Could not find default export in ${customCodecPath}`);
+          return;
+        }
+
+        const customCodecs = module.default(E);
+        this.knownImports[packageName] = {
+          ...this.knownImports[packageName],
+          ...customCodecs,
+        };
+
+        console.error(`Loaded custom codecs for ${packageName}`);
+      }
+    } catch (e) {
+      return;
+    }
   }
 }
