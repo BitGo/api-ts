@@ -157,3 +157,194 @@ Follow these steps to create and use a custom codec configuration file:
 - brand
 - UnknownRecord
 - void
+
+## Generator Reference
+
+This section will highlight all the features that this generator supports, with examples
+to help you add meaningful documentation to your code that will allow clients to use our
+APIs with ease.
+
+### 1. Endpoint documentation
+
+Given an endpoint defined using `h.httpRoute`, you can add documentation and metadata to
+this endpoint through the use of jsdocs. Here are the following list of attributes that
+are supported.
+
+#### 1.1 Summary
+
+The summary is the first line of the jsdoc. This will be added to the OpenAPI
+specification as the endpoints' summary
+
+```javascript
+/**
+ * This is the summary
+ */
+const route = h.httpRoute({ ... })
+```
+
+#### 1.2 Description
+
+The description is the next `x` untagged lines of the jsdoc. This will be added to the
+OpenAPI specification as the endpoints' description
+
+```javascript
+/**
+ * This is the summary
+ * This is description line 1
+ * This is description line 2
+ */
+const route = h.httpRoute({ ... })
+```
+
+#### 1.3 Operation IDs
+
+All endpoints must have an `operationId` to be identifiable. You can add an operation ID
+to the specification using the `@operationId` tag in jsdocs. This will add it to the
+OpenAPI specification for this route.
+
+```javascript
+/**
+ * This is the summary
+ * This is description line 1
+ * This is description line 2
+ *
+ * @operationId v2.sample.route
+ */
+const route = h.httpRoute({ ... })
+```
+
+#### 1.4 Tags
+
+Tags are how we organize endpoints into different groups on `dev-portal`. There are many
+different tags and tag groups, such as `Wallet`, `Address`, etc.
+[Click here](https://github.com/BitGo/dev-portal/blob/master/app/lib/apiDocs/apiNavGroups.ts)
+for a full list of tags. You can add a tag to your endpoint using the `@tag` jsdoc tag.
+
+```javascript
+/**
+ * This is the summary
+ * This is description line 1
+ * This is description line 2
+ *
+ * @operationId v2.sample.route
+ * @tag Wallet
+ */
+const route = h.httpRoute({ ... })
+```
+
+#### 1.5 Private Routes
+
+There are many instances where you'd want an endpoint to be private, such as `admin` or
+`internal` routes. You can make an endpoint private in documentation by simply adding a
+`@private` tag to the jsdoc. In the specification, this will add an `x-internal: true`
+field, which marks the field to be stripped out in a preprocessing
+[step](https://github.com/BitGo/dev-portal/blob/master/scripts/filterSpec.js) on
+dev-portal.
+
+```javascript
+/**
+ * This is the summary
+ * This is description line 1
+ * This is description line 2
+ *
+ * @private
+ * @operationId v2.sample.route
+ * @tag Wallet
+ */
+const route = h.httpRoute({ ... })
+```
+
+#### 1.6 Unstable Routes
+
+If you are working on an endpoint that is unstable, or not completely implemented yet,
+you can add the `@unstable` tag to ensure that documentation is not generated for it (in
+public or internal documentation).
+
+```javascript
+/**
+ * This is the summary
+ * This is description line 1
+ * This is description line 2
+ *
+ * @unstable
+ * @operationId v2.sample.route
+ * @tag Wallet
+ */
+const route = h.httpRoute({ ... })
+```
+
+#### 1.7 Examples
+
+You can also add example responses to the top level jsdocs of your endpoint, but as
+you'll see in later sections, there are other ways to do this.
+
+```javascript
+/**
+ * This is the summary
+ * This is description line 1
+ * This is description line 2
+ *
+ * @unstable
+ * @operationId v2.sample.route
+ * @tag Wallet
+ * @example { example: { object: { key: value }}}
+ */
+const route = h.httpRoute({ ... })
+```
+
+#### 1.8 Unknown tags
+
+Any other tags that are added to this top-level will be classified as an uknown tag, and
+will be placed inside the `x-unknown-tags` field in the OpenAPI specification. You can
+use this feature to write custom workflows and filtering logic for you full
+specification. For example, you could add a `@version` tag and have a workflow that
+filters endpoints based on the version field in the `x-unknown-tags` field.
+
+```javascript
+/**
+ * This is the summary
+ * This is description line 1
+ * This is description line 2
+ *
+ * @unstable
+ * @operationId v2.sample.route
+ * @tag Wallet
+ * @example { example: { object: { key: value }}}
+ * @version 3
+ */
+const route = h.httpRoute({ ... })
+```
+
+#### 1.9 Sample output
+
+This is what the OpenAPI specification will look like for the route we have built.
+
+```json
+{
+  openapi: 3.03
+  ...,
+  paths: {
+    "/api/v2/sample/route": {
+      get: {
+        summary: "This is the summary",
+        description: "This is description line 1\nThis is description line 2",
+        operationId: "v2.sample.route",
+        example: {
+          object: {
+            key: "value"
+          }
+        },
+        tag: Wallet,
+        "x-internal": true, // @private
+        "x-unstable": true, // @unstable
+        "x-unknown-tags": {
+          verion: 3
+        },
+        ...parameters,
+        ...requestBody,
+        ...responses
+      }
+    }
+  }
+}
+```
