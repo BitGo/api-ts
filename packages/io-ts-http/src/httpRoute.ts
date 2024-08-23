@@ -13,8 +13,10 @@ export const Method = t.keyof({
 
 export type Method = t.TypeOf<typeof Method>;
 
+export type PathString = `/${string}`;
+
 export type HttpRoute<M extends Method = Method> = {
-  readonly path: string;
+  readonly path: PathString;
   readonly method: Uppercase<M>;
   readonly request: HttpRequestCodec<any>;
   readonly response: HttpResponse;
