@@ -30,7 +30,7 @@
     "@types/supertest": "6.0.2",
     "@types/whatwg-url": "11.0.5",
     "c8": "10.1.2",
-    "express": "4.19.2",
+    "express": "4.20.0",
     "io-ts-types": "0.5.19",
     "superagent": "10.1.0",
     "supertest": "7.0.0",
