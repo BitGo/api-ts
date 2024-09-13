@@ -201,7 +201,7 @@ export const requestForRoute =
     let path = route.path;
     for (const key in reqProps.params) {
       if (reqProps.params.hasOwnProperty(key)) {
-        path = path.replace(`{${key}}`, reqProps.params[key]) as h.PathString;
+        path = path.replace(`{${key}}`, reqProps.params[key]);
       }
     }
 
