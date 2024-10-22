@@ -431,11 +431,21 @@ export function convertRoutesToOpenAPI(
     {} as Record<string, OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject>,
   );
 
+  const sortedPaths = Object.keys(paths)
+    .sort((a, b) => a.localeCompare(b))
+    .reduce(
+      (acc, key) => {
+        acc[key] = paths[key]!;
+        return acc;
+      },
+      {} as Record<string, OpenAPIV3.PathItemObject>,
+    );
+
   return {
     openapi: '3.0.3',
     info,
     ...(servers.length > 0 ? { servers } : {}),
-    paths,
+    paths: sortedPaths,
     components: {
       schemas: openapiSchemas,
     },
