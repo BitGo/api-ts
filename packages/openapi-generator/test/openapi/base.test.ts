@@ -552,8 +552,8 @@ export const route = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({
     query: {
-      /** 
-       * This is a foo description. 
+      /**
+       * This is a foo description.
        * @example abc
        * @pattern ^[a-z]+$
       */
@@ -642,8 +642,8 @@ export const route = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({
     query: {
-      /** 
-       * This is a foo description. 
+      /**
+       * This is a foo description.
        * @example abc
        * @pattern ^[a-z]+$
        */
@@ -714,4 +714,140 @@ testCase('route with array union of null and undefined', ROUTE_WITH_ARRAY_UNION_
   components: {
     schemas: {}
   }
+});
+
+const MULTIPLE_ROUTES = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+// Purposefully out of order to test sorting
+export const route1 = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      foo: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+
+export const route2 = h.httpRoute({
+  path: '/bar',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      bar: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+
+export const route3 = h.httpRoute({
+  path: '/baz',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      baz: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+testCase('multiple routes', MULTIPLE_ROUTES, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/bar': {
+      get: {
+        parameters: [
+          {
+            in: 'query',
+            name: 'bar',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/baz': {
+      get: {
+        parameters: [
+          {
+            in: 'query',
+            name: 'baz',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/foo': {
+      get: {
+        parameters: [
+          {
+            in: 'query',
+            name: 'foo',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
 });
