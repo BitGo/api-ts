@@ -435,7 +435,17 @@ export function convertRoutesToOpenAPI(
     .sort((a, b) => a.localeCompare(b))
     .reduce(
       (acc, key) => {
-        acc[key] = paths[key]!;
+        const sortedMethods = Object.keys(paths[key]!)
+          .sort((a, b) => a.localeCompare(b))
+          .reduce(
+            (methodAcc, methodKey) => {
+              methodAcc[methodKey] = paths[key]![methodKey]!;
+              return methodAcc;
+            },
+            {} as Record<string, OpenAPIV3.PathItemObject>,
+          );
+
+        acc[key] = sortedMethods;
         return acc;
       },
       {} as Record<string, OpenAPIV3.PathItemObject>,

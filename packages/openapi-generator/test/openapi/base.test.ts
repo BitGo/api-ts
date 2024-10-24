@@ -851,3 +851,135 @@ testCase('multiple routes', MULTIPLE_ROUTES, {
     schemas: {},
   },
 });
+
+const MULTIPLE_ROUTES_WITH_METHODS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+// Purposefully out of order to test sorting
+export const route1 = h.httpRoute({
+  path: '/foo',
+  method: 'POST',
+  request: h.httpRequest({
+    query: {
+      foo: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+
+export const route2 = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      foo: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+
+export const route3 = h.httpRoute({
+  path: '/foo',
+  method: 'DELETE',
+  request: h.httpRequest({
+    query: {
+      foo: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+testCase('multiple routes with methods', MULTIPLE_ROUTES_WITH_METHODS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      delete: {
+        parameters: [
+          {
+            in: 'query',
+            name: 'foo',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+      get: {
+        parameters: [
+          {
+            in: 'query',
+            name: 'foo',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        parameters: [
+          {
+            in: 'query',
+            name: 'foo',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
