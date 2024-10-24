@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
-    "@types/express": "4.17.21",
+    "@types/express": "5.0.0",
     "express": "4.21.1",
     "fp-ts": "^2.0.0",
     "io-ts": "2.1.3"
