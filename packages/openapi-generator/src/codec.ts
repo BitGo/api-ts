@@ -223,7 +223,8 @@ function parseObjectExpression(
     } else if (
       property.key.type !== 'Identifier' &&
       property.key.type !== 'StringLiteral' &&
-      property.key.type !== 'NumericLiteral'
+      property.key.type !== 'NumericLiteral' &&
+      property.key.type !== 'Computed'
     ) {
       return errorLeft(`Unimplemented property key type ${property.key.type}`);
     }
@@ -235,7 +236,41 @@ function parseObjectExpression(
       commentEndIdx,
     );
     commentStartIdx = (property.value as swc.HasSpan).span.end;
-    const name = property.key.value;
+
+    let name: string = '';
+    if (property.key.type === 'Computed') {
+      if (property.key.expression.type !== 'Identifier') {
+        return errorLeft(
+          `Unimplemented computed property value type ${property.value.type}`,
+        );
+      }
+
+      const initE = findSymbolInitializer(
+        project,
+        source,
+        property.key.expression.value,
+      );
+      if (E.isLeft(initE)) {
+        return initE;
+      }
+      const [newSourceFile, init] = initE.right;
+      const valueE = parsePlainInitializer(project, newSourceFile, init);
+      if (E.isLeft(valueE)) {
+        return valueE;
+      }
+      const schema = valueE.right;
+      if (
+        (schema.type === 'string' || schema.type === 'number') &&
+        schema.enum !== undefined
+      ) {
+        name = String(schema.enum[0]);
+      } else {
+        return errorLeft('Computed property must be string or number literal');
+      }
+    } else {
+      name = String(property.key.value);
+    }
+
     const valueE = parsePlainInitializer(project, source, property.value);
     if (E.isLeft(valueE)) {
       return valueE;

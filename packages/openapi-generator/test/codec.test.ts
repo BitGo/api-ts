@@ -554,7 +554,7 @@ testCase(
   DECLARATION_COMMENT_WITHOUT_LINE_BREAK,
   {
     FOO: {
-      type: 'number', 
+      type: 'number',
       primitive: true,
       comment: {
         description: 'Test codec',
@@ -682,7 +682,7 @@ testCase('second property comment is parsed', SECOND_PROPERTY_COMMENT, {
     properties: {
       foo: { type: 'number', primitive: true },
       bar: {
-        type: 'string', 
+        type: 'string',
         primitive: true,
         comment: {
           description: 'this is a comment',
@@ -847,4 +847,26 @@ testCase('object assign is parsed', OBJECT_ASSIGN, {
     },
     required: ['foo', 'bar'],
   },
+});
+
+const COMPUTED_PROPERTY = `
+import * as t from 'io-ts';
+const key = 'foo';
+export const FOO = t.type({
+  [key]: t.number,
+});
+`;
+
+testCase('computed property is parsed', COMPUTED_PROPERTY, {
+  FOO: {
+    type: 'object',
+    properties: {
+      foo: { type: 'number', primitive: true },
+    },
+    required: ['foo'],
+  },
+  key: {
+    type: 'string',
+    enum: ['foo'],
+  }
 });
