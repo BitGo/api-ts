@@ -27,6 +27,7 @@ export async function parseSource(
       syntax: 'typescript',
       target: 'esnext',
       comments: true,
+      decorators: true,
     });
 
     // Set the start of the module to the end of the last span, so that we don't have any
