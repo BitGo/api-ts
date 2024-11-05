@@ -718,3 +718,44 @@ testCase('route with operationId', WITH_OPERATION_ID, {
     },
   },
 });
+
+const HEADER_PARAM = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    headers: {
+      'x-foo': t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+testCase('header param route', HEADER_PARAM, {
+  route: {
+    path: '/foo',
+    method: 'GET',
+    parameters: [
+      {
+        type: 'header',
+        name: 'x-foo',
+        required: true,
+        schema: {
+          type: 'string',
+          primitive: true,
+        },
+      },
+    ],
+    response: {
+      200: {
+        type: 'string',
+        primitive: true,
+      },
+    },
+  },
+});

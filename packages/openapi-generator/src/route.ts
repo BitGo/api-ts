@@ -8,7 +8,7 @@ import { findSymbolInitializer } from './resolveInit';
 import { errorLeft } from './error';
 
 export type Parameter = {
-  type: 'path' | 'query';
+  type: 'path' | 'query' | 'header';
   name: string;
   schema: Schema;
   explode?: boolean;
@@ -84,6 +84,22 @@ function parseRequestObject(schema: Schema): E.Either<string, Request> {
     }
   }
 
+  const headerSchema = schema.properties['headers'];
+  if (headerSchema !== undefined) {
+    if (headerSchema.type !== 'object') {
+      return errorLeft('Route headers must be an object');
+    } else {
+      for (const [name, prop] of Object.entries(headerSchema.properties)) {
+        parameters.push({
+          type: 'header',
+          name,
+          schema: prop,
+          required: headerSchema.required.includes(name),
+        });
+      }
+    }
+  }
+
   return E.right({
     parameters,
     body: schema.properties['body'],
@@ -103,6 +119,7 @@ function parseRequestUnion(
   // This isn't perfect but it's about as good as we can do in openapi
   const parameters: Parameter[] = [];
   const querySchema: Schema = { type: 'union', schemas: [] };
+  const headerSchema: Schema = { type: 'union', schemas: [] };
   let body: Schema | undefined;
 
   for (let subSchema of schema.schemas) {
@@ -126,6 +143,9 @@ function parseRequestUnion(
       }
       (body as CombinedType).schemas.push(subSchema.properties['body']);
     }
+    if (subSchema.properties['headers'] !== undefined) {
+      headerSchema.schemas.push(subSchema.properties['headers']);
+    }
   }
   if (querySchema.schemas.length > 0) {
     parameters.push({
@@ -134,6 +154,15 @@ function parseRequestUnion(
       explode: true,
       required: true,
       schema: querySchema,
+    });
+  }
+  if (headerSchema.schemas.length > 0) {
+    parameters.push({
+      type: 'header',
+      name: 'union',
+      explode: true,
+      required: true,
+      schema: headerSchema,
     });
   }
 
@@ -203,28 +232,42 @@ function parseRequestSchema(
   }
 }
 
+export function resolveStringProperty(
+  project: Project,
+  schema: Schema | undefined,
+  name: string,
+): E.Either<string, string> {
+  if (schema === undefined) {
+    return errorLeft(`Route ${name} is missing`);
+  } else if (schema.type === 'ref') {
+    const derefE = derefRequestSchema(project, schema);
+    if (E.isLeft(derefE)) {
+      return derefE;
+    }
+    return resolveStringProperty(project, derefE.right, name);
+  } else if (schema.type === 'string' && schema.enum?.length === 1) {
+    return E.right(schema.enum[0]! as string);
+  } else {
+    return errorLeft(`Route ${name} must be a string literal`);
+  }
+}
+
 export function parseRoute(project: Project, schema: Schema): E.Either<string, Route> {
   if (schema.type !== 'object') {
     return errorLeft('Route must be an object');
   }
 
-  if (schema.properties['path'] === undefined) {
-    return errorLeft('Route must have a path');
-  } else if (
-    schema.properties['path'].type !== 'string' ||
-    schema.properties['path'].enum?.length !== 1
-  ) {
-    return errorLeft('Route path must be a string literal');
+  const pathE = resolveStringProperty(project, schema.properties['path'], 'path');
+  if (E.isLeft(pathE)) {
+    return pathE;
   }
+  const path = pathE.right;
 
-  if (schema.properties['method'] === undefined) {
-    return errorLeft('Route must have a method');
-  } else if (
-    schema.properties['method'].type !== 'string' ||
-    schema.properties['method'].enum?.length !== 1
-  ) {
-    return errorLeft('Route method must be a string literal');
+  const methodE = resolveStringProperty(project, schema.properties['method'], 'method');
+  if (E.isLeft(methodE)) {
+    return methodE;
   }
+  const method = methodE.right;
 
   const requestSchema = schema.properties['request'];
   if (requestSchema === undefined) {
@@ -243,8 +286,8 @@ export function parseRoute(project: Project, schema: Schema): E.Either<string, R
   }
 
   return E.right({
-    path: schema.properties['path'].enum![0] as string,
-    method: schema.properties['method'].enum![0] as string,
+    path,
+    method,
     parameters,
     response: schema.properties['response'].properties,
     ...(body !== undefined ? { body } : {}),
