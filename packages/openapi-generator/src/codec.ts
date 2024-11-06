@@ -327,6 +327,70 @@ function parseArrayExpression(
   return E.right({ type: 'tuple', schemas: result });
 }
 
+function parseTemplateLiteral(
+  project: Project,
+  source: SourceFile,
+  template: swc.TemplateLiteral,
+): E.Either<string, Schema> {
+  const expressions: E.Either<string, string>[] = template.expressions.map((expr) => {
+    const schemaE = parsePlainInitializer(project, source, expr);
+    if (E.isLeft(schemaE)) {
+      return schemaE;
+    }
+    const schema = schemaE.right;
+    if (
+      schema.type === 'string' &&
+      schema.enum !== undefined &&
+      schema.enum.length === 1
+    ) {
+      return E.right(String(schema.enum[0]));
+    } else if (schema.type === 'ref') {
+      const realInitE = findSymbolInitializer(project, source, schema.name);
+      if (E.isLeft(realInitE)) {
+        return realInitE;
+      }
+      const schemaE = parsePlainInitializer(
+        project,
+        realInitE.right[0],
+        realInitE.right[1],
+      );
+      if (E.isLeft(schemaE)) {
+        return schemaE;
+      }
+      if (schemaE.right.type !== 'string' || schemaE.right.enum === undefined) {
+        return errorLeft('Template element must be string literal');
+      }
+      return E.right(String(schemaE.right.enum[0]));
+    } else {
+      return errorLeft('Template element must be string literal');
+    }
+  });
+
+  return pipe(
+    expressions,
+    E.sequenceArray,
+    E.flatMap((literals) => {
+      const quasis = template.quasis.map((quasi) => quasi.cooked);
+      const result = quasis.reduce(
+        (acc, quasi, index) => {
+          if (index < literals.length) {
+            acc.push(quasi ?? '', literals[index]!);
+          } else {
+            acc.push(quasi ?? '');
+          }
+          return acc;
+        },
+        [] as (string | Schema)[],
+      );
+
+      return E.right({
+        type: 'string',
+        enum: [result.join('')],
+      });
+    }),
+  );
+}
+
 export function parsePlainInitializer(
   project: Project,
   source: SourceFile,
@@ -348,6 +412,8 @@ export function parsePlainInitializer(
     return E.right({ type: 'undefined' });
   } else if (init.type === 'TsConstAssertion' || init.type === 'TsAsExpression') {
     return parsePlainInitializer(project, source, init.expression);
+  } else if (init.type === 'TemplateLiteral') {
+    return parseTemplateLiteral(project, source, init);
   } else if (
     init.type === 'Identifier' ||
     init.type === 'MemberExpression' ||
