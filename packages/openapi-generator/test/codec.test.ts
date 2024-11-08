@@ -852,8 +852,12 @@ testCase('object assign is parsed', OBJECT_ASSIGN, {
 const COMPUTED_PROPERTY = `
 import * as t from 'io-ts';
 const key = 'foo';
+const obj = {
+  bar: 'bar',
+}
 export const FOO = t.type({
   [key]: t.number,
+  [obj.bar]: t.string,
 });
 `;
 
@@ -862,11 +866,19 @@ testCase('computed property is parsed', COMPUTED_PROPERTY, {
     type: 'object',
     properties: {
       foo: { type: 'number', primitive: true },
+      bar: { type: 'string', primitive: true },
     },
-    required: ['foo'],
+    required: ['foo', 'bar'],
   },
   key: {
     type: 'string',
     enum: ['foo'],
-  }
+  },
+  obj: {
+    type: 'object',
+    properties: {
+      bar: { type: 'string', enum: ['bar'] },
+    },
+    required: ['bar'],
+  },
 });

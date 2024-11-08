@@ -239,26 +239,26 @@ function parseObjectExpression(
 
     let name: string = '';
     if (property.key.type === 'Computed') {
-      if (property.key.expression.type !== 'Identifier') {
-        return errorLeft(
-          `Unimplemented computed property value type ${property.value.type}`,
-        );
-      }
-
-      const initE = findSymbolInitializer(
-        project,
-        source,
-        property.key.expression.value,
-      );
-      if (E.isLeft(initE)) {
-        return initE;
-      }
-      const [newSourceFile, init] = initE.right;
-      const valueE = parsePlainInitializer(project, newSourceFile, init);
+      const valueE = parseCodecInitializer(project, source, property.key.expression);
       if (E.isLeft(valueE)) {
         return valueE;
       }
-      const schema = valueE.right;
+      let schema = valueE.right;
+      if (schema.type === 'ref') {
+        const realInitE = findSymbolInitializer(project, source, schema.name);
+        if (E.isLeft(realInitE)) {
+          return realInitE;
+        }
+        const schemaE = parsePlainInitializer(
+          project,
+          realInitE.right[0],
+          realInitE.right[1],
+        );
+        if (E.isLeft(schemaE)) {
+          return schemaE;
+        }
+        schema = schemaE.right;
+      }
       if (
         (schema.type === 'string' || schema.type === 'number') &&
         schema.enum !== undefined
