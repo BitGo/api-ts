@@ -882,3 +882,42 @@ testCase('computed property is parsed', COMPUTED_PROPERTY, {
     required: ['bar'],
   },
 });
+
+const TEMPLATE_LITERAL = `
+import * as t from 'io-ts';
+const test = 'foo';
+export const FOO = \`\${test}bar\`;
+`;
+
+testCase('basic template literal is parsed', TEMPLATE_LITERAL, {
+  FOO: {
+    type: 'string',
+    enum: ['foobar'],
+  },
+  test: {
+    type: 'string',
+    enum: ['foo'],
+  },
+});
+
+const MULTI_TEMPLATE_LITERAL = `
+import * as t from 'io-ts';
+const test = 'foo';
+const test2 = 'baz';
+export const FOO = \`aaa\${test}bar\${test2}bat\`;
+`;
+
+testCase('compound template literal is parsed', MULTI_TEMPLATE_LITERAL, {
+  FOO: {
+    type: 'string',
+    enum: ['aaafoobarbazbat'],
+  },
+  test: {
+    type: 'string',
+    enum: ['foo'],
+  },
+  test2: {
+    type: 'string',
+    enum: ['baz'],
+  },
+});
