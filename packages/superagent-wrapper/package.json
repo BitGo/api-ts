@@ -28,7 +28,7 @@
     "@types/node": "22.5.0",
     "@types/superagent": "8.1.9",
     "@types/supertest": "6.0.2",
-    "@types/whatwg-url": "11.0.5",
+    "@types/whatwg-url": "13.0.0",
     "c8": "10.1.2",
     "express": "4.21.1",
     "io-ts-types": "0.5.19",
