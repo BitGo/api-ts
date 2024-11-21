@@ -983,3 +983,207 @@ testCase('multiple routes with methods', MULTIPLE_ROUTES_WITH_METHODS, {
     schemas: {},
   },
 });
+
+// A request that does not use io-ts-http's httpRequest
+const NONSTANDARD = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route
+ *
+ * ## How to call the route
+ *
+ * \`\`\`
+ * curl -X GET http://localhost:3000/foo?foo=bar
+ * \`\`\`
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo/{bar}',
+  method: 'GET',
+  request: t.type({
+    query: t.type({
+      /** foo param */
+      foo: t.string,
+    }),
+    params: t.type({
+      bar: t.string,
+    }),
+  }),
+  response: {
+    /** foo response */
+    200: t.string
+  },
+});
+`;
+
+testCase('nonstandard route', NONSTANDARD, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo/{bar}': {
+      get: {
+        summary: 'A simple route',
+        description:
+          '## How to call the route\n' +
+          '\n' +
+          '```\n' +
+          'curl -X GET http://localhost:3000/foo?foo=bar\n' +
+          '```',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        parameters: [
+          {
+            in: 'query',
+            name: 'foo',
+            description: 'foo param',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+          {
+            in: 'path',
+            name: 'bar',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  description: 'foo response',
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
+
+const UNION_QUERY_PARAMS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route
+ *
+ * ## How to call the route
+ *
+ * \`\`\`
+ * curl -X GET http://localhost:3000/foo?foo=bar
+ * \`\`\`
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo/{baz}',
+  method: 'GET',
+  request: t.type({
+    query: t.union([
+      t.type({
+        /** foo param */
+        foo: t.string,
+      }),
+      t.type({
+        /** bar param */
+        bar: t.string,
+      }),
+    ]),
+    params: t.type({
+      /** baz param */
+      baz: t.string,
+    }),
+  }),
+  response: {
+    /** foo response */
+    200: t.string
+  },
+});
+`;
+
+testCase('query param union route', UNION_QUERY_PARAMS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo/{baz}': {
+      get: {
+        summary: 'A simple route',
+        description:
+          '## How to call the route\n' +
+          '\n' +
+          '```\n' +
+          'curl -X GET http://localhost:3000/foo?foo=bar\n' +
+          '```',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        parameters: [
+          {
+            in: 'query',
+            name: 'foo',
+            description: 'foo param',
+            required: false,
+            schema: {
+              type: 'string',
+            },
+          },
+          {
+            in: 'query',
+            name: 'bar',
+            description: 'bar param',
+            required: false,
+            schema: {
+              type: 'string',
+            },
+          },
+          {
+            in: 'path',
+            name: 'baz',
+            description: 'baz param',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  description: 'foo response',
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
