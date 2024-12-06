@@ -19,7 +19,7 @@
   "dependencies": {
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
     "@api-ts/typed-express-router": "0.0.0-semantically-released",
-    "express": "4.21.1",
+    "express": "4.21.2",
     "fp-ts": "^2.0.0",
     "io-ts": "2.1.3"
   },
