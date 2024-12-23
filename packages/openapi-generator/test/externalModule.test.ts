@@ -1,7 +1,7 @@
 import * as E from 'fp-ts/lib/Either';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import * as p from 'path';
+import * as p from 'node:path';
 
 import { parsePlainInitializer, Project, type Schema } from '../src';
 import { KNOWN_IMPORTS } from '../src/knownImports';
