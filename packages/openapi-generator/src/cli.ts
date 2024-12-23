@@ -95,13 +95,14 @@ const app = command({
       knownImports = { ...knownImports, ...customCodecs };
     }
 
-    const project = await new Project({}, knownImports).parseEntryPoint(filePath);
-    if (E.isLeft(project)) {
-      logError(`${project.left}`);
+    const projectE = await new Project({}, knownImports).parseEntryPoint(filePath);
+    if (E.isLeft(projectE)) {
+      logError(`${projectE.left}`);
       process.exit(1);
     }
+    const project = projectE.right;
 
-    const entryPoint = project.right.get(filePath);
+    const entryPoint = project.get(filePath);
     if (entryPoint === undefined) {
       logError(`Could not find entry point ${filePath}`);
       process.exit(1);
@@ -128,7 +129,7 @@ const app = command({
       logInfo(`Found API spec in ${symbol.name}`);
 
       const result = parseApiSpec(
-        project.right,
+        project,
         entryPoint,
         symbol.init.arguments[0]!.expression,
       );
@@ -158,18 +159,18 @@ const app = command({
     });
     let schema: Schema | undefined;
     while (((schema = queue.pop()), schema !== undefined)) {
-      const refs = getRefs(schema, project.right.getTypes());
+      const refs = getRefs(schema, project.getTypes());
       for (const ref of refs) {
         if (components[ref.name] !== undefined) {
           continue;
         }
-        const sourceFile = project.right.get(ref.location);
+        const sourceFile = project.get(ref.location);
         if (sourceFile === undefined) {
           logError(`Could not find '${ref.name}' from '${ref.location}'`);
           process.exit(1);
         }
 
-        const initE = findSymbolInitializer(project.right, sourceFile, ref.name);
+        const initE = findSymbolInitializer(project, sourceFile, ref.name);
         if (E.isLeft(initE)) {
           logError(
             `Could not find symbol '${ref.name}' in '${ref.location}': ${initE.left}`,
@@ -178,7 +179,7 @@ const app = command({
         }
         const [newSourceFile, init, comment] = initE.right;
 
-        const codecE = parseCodecInitializer(project.right, newSourceFile, init);
+        const codecE = parseCodecInitializer(project, newSourceFile, init);
         if (E.isLeft(codecE)) {
           logError(
             `Could not parse codec '${ref.name}' in '${ref.location}': ${codecE.left}`,
