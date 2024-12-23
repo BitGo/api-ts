@@ -12,7 +12,7 @@ import {
 } from '../src';
 import { KNOWN_IMPORTS } from '../src/knownImports';
 import { findSymbolInitializer } from '../src/resolveInit';
-import * as p from 'path';
+import * as p from 'node:path';
 import * as E from 'fp-ts/Either';
 
 /** External library parsing and api spec generation test case

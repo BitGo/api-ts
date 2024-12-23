@@ -3,7 +3,7 @@
 import { command, run, option, string, optional, positional } from 'cmd-ts';
 import * as E from 'fp-ts/Either';
 import * as fs from 'fs';
-import * as p from 'path';
+import * as p from 'node:path';
 import type { Expression } from '@swc/core';
 import type { OpenAPIV3 } from 'openapi-types';
 

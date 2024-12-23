@@ -1,7 +1,7 @@
 import * as swc from '@swc/core';
 import type { Block } from 'comment-parser';
 import * as E from 'fp-ts/Either';
-import { dirname } from 'path';
+import { dirname } from 'node:path';
 
 import type { Project } from './project';
 import type { SourceFile } from './sourceFile';

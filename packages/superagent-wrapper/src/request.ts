@@ -3,7 +3,7 @@ import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/pipeable';
 import * as t from 'io-ts';
 import * as PathReporter from 'io-ts/lib/PathReporter';
-import { posix } from 'path';
+import { posix } from 'node:path';
 import { URL } from 'whatwg-url';
 
 type SuccessfulResponses<Route extends h.HttpRoute> = {

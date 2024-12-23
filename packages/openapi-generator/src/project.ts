@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import * as p from 'path';
+import * as p from 'node:path';
 import { promisify } from 'util';
 import * as E from 'fp-ts/Either';
 import resolve from 'resolve';
