@@ -1,4 +1,4 @@
-import * as swc from '@swc/core';
+import type * as swc from '@swc/core';
 import type { Block } from 'comment-parser';
 import * as E from 'fp-ts/Either';
 import { dirname } from 'path';
