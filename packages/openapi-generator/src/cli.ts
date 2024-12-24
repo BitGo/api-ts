@@ -179,6 +179,33 @@ const app = command({
         }
         const [newSourceFile, init, comment] = initE.right;
 
+        if (init === null) {
+          console.log({ ref });
+          let errorMessage = `Could not determine encode/decode types for codec '${ref.name}' in '${ref.location}'`;
+          if (ref.location.includes('/node_modules/io-ts-types/')) {
+            errorMessage += `
+              It looks like this codec comes from io-ts-types. Try importing directly from io-ts-types instead:
+
+              \`\`\`
+              import { ${ref.name} } from 'io-ts-types';
+              \`\`\`
+            `;
+          } else {
+            errorMessage += `
+              Consider defining a custom codec for this type.
+
+              https://github.com/BitGo/api-ts/tree/master/packages/openapi-generator#4-defining-custom-codecs
+            `;
+          }
+          logError(
+            errorMessage
+              .split('\n')
+              .map((line) => line.trimStart())
+              .join('\n'),
+          );
+          process.exit(1);
+        }
+
         const codecE = parseCodecInitializer(project, newSourceFile, init);
         if (E.isLeft(codecE)) {
           logError(
