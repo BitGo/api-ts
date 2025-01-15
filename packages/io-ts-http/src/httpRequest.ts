@@ -6,7 +6,9 @@ export const GenericHttpRequest = optionalized({
   // DISCUSS: renaming this to something more specific, e.g. route, or path, or routeParams, or pathParams
   params: t.record(t.string, t.string),
   query: t.record(t.string, t.union([t.string, t.array(t.string)])),
-  headers: optional(t.record(t.string, t.string)),
+  headers: optional(
+    t.record(t.string, t.union([t.string, t.boolean, t.array(t.string)])),
+  ),
   body: optional(Json),
 });
 
@@ -42,7 +44,7 @@ type EmitOutputTypeErrors<
 
 type QueryValue = string | string[] | undefined;
 type ParamValue = string | undefined;
-type HeaderValue = string | undefined;
+type HeaderValue = string | string[] | boolean | undefined;
 
 type EmitPropsErrors<P extends HttpRequestCombinatorProps> = {
   params?: EmitOutputTypeErrors<P['params'], ParamValue, 'string | undefined'>;
