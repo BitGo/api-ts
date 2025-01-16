@@ -123,12 +123,12 @@ export class Project {
 
       let typesEntryPoint = '';
 
-      if (packageInfo['types']) {
-        typesEntryPoint = packageInfo['types'];
-      }
-
-      if (packageInfo['typings']) {
+      if (packageInfo['source']) {
+        typesEntryPoint = packageInfo['source'];
+      } else if (packageInfo['typings']) {
         typesEntryPoint = packageInfo['typings'];
+      } else if (packageInfo['types']) {
+        typesEntryPoint = packageInfo['types'];
       }
 
       if (!typesEntryPoint) {
