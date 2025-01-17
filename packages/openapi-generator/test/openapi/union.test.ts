@@ -374,3 +374,57 @@ testCase("route with unknown unions", ROUTE_WITH_UNKNOWN_UNIONS, {
     }
   },
 });
+
+const ROUTE_WITH_REQUEST_UNION = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+import { BooleanFromString, BooleanFromNumber, NumberFromString } from 'io-ts-types';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: t.union([
+    h.httpRequest({
+      headers: {
+        foo: t.string,
+      },
+    }),
+    h.httpRequest({}),
+  ]),
+  response: {
+    200: t.string,
+  },
+});
+`;
+
+testCase("route with request union", ROUTE_WITH_REQUEST_UNION, {
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  openapi: '3.0.3',
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [
+          { in: 'header', name: 'foo', required: true, schema: { type: 'string' } },
+        ],
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string'
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
