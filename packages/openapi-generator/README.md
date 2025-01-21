@@ -56,9 +56,9 @@ are done.
    transpiled js code. You can do this by modifying your `package.json` to include your
    source code in the bundle. For example, if the source code is present in the `src/`
    directory, then add `src/` to the files array in the `package.json` of your project.
-2. After Step 1, change the `types` field in the `package.json` to be the entry point of
-   the types in the source code. For example, if the entrypoint is `src/index.ts`, then
-   set `"types": "src/index.ts"` in the `package.json`
+2. After Step 1, change the `source` field in the `package.json` to be the entry point
+   of the types in the source code. For example, if the entrypoint is `src/index.ts`,
+   then set `"source": "src/index.ts"` in the `package.json`
 
 ## 4. Defining Custom Codecs
 
