@@ -38,3 +38,8 @@ updates:
         versions: ['>4.8']
       - dependency-name: '@semantic-release-extras/github-comment-specific'
         versions: ['>1.0.7']
+      # Ignore @swc/* dependencies due to upstream issues
+      # Specifically, tsc does *not* like this line:
+      # https://github.com/swc-project/swc/blob/main/packages/core/src/index.ts#L12
+      - dependency-name: '@swc/*'
+        versions: ['>1.5.7']
