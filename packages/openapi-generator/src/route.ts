@@ -157,25 +157,30 @@ function parseRequestUnion(
     });
   }
   if (headerSchema.schemas.length > 0) {
-    // For headers in unions, take properties from first schema that has headers
-    // Also not perfect but we cannot use the `explode: true` trick for headers
-    const firstHeaderSchema = schema.schemas.find(
-      (s) => s.type === 'object' && s.properties['headers']?.type === 'object',
-    );
-    if (
-      firstHeaderSchema?.type === 'object' &&
-      firstHeaderSchema.properties['headers']?.type === 'object'
-    ) {
-      const headers = firstHeaderSchema.properties['headers'];
-      for (const [name, prop] of Object.entries(headers.properties)) {
-        parameters.push({
-          type: 'header',
-          name,
-          schema: prop,
-          required: headers.required.includes(name),
-        });
+    // For headers in unions, deduplicate and merge properties from all schemas
+    const headerParams = new Map<string, Parameter>();
+
+    for (const subSchema of schema.schemas) {
+      if (
+        subSchema.type === 'object' &&
+        subSchema.properties['headers']?.type === 'object'
+      ) {
+        const headers = subSchema.properties['headers'];
+        for (const [name, prop] of Object.entries(headers.properties)) {
+          // Only add if not already present
+          if (!headerParams.has(name)) {
+            headerParams.set(name, {
+              type: 'header',
+              name,
+              schema: prop,
+              required: headers.required.includes(name),
+            });
+          }
+        }
       }
     }
+
+    parameters.push(...headerParams.values());
   }
 
   const firstSubSchema = schema.schemas[0];

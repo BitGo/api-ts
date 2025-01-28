@@ -375,6 +375,67 @@ testCase("route with unknown unions", ROUTE_WITH_UNKNOWN_UNIONS, {
   },
 });
 
+const ROUTE_WITH_DUPLICATE_HEADERS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: t.union([
+    h.httpRequest({
+      headers: {
+        'x-foo': t.string,
+        'x-common': t.string,
+      },
+    }),
+    h.httpRequest({
+      headers: {
+        'x-bar': t.number,
+        'x-common': t.string,
+      },
+    }),
+  ]),
+  response: {
+    200: t.string,
+  },
+});
+`;
+
+testCase("route with duplicate headers in request union", ROUTE_WITH_DUPLICATE_HEADERS, {
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  openapi: '3.0.3',
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [
+          { in: 'header', name: 'x-foo', required: true, schema: { type: 'string' } },
+          { in: 'header', name: 'x-common', required: true, schema: { type: 'string' } },
+          { in: 'header', name: 'x-bar', required: true, schema: { type: 'number' } },
+        ],
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string'
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
+
 const ROUTE_WITH_REQUEST_UNION = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
