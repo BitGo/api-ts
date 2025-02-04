@@ -26,7 +26,7 @@
   "devDependencies": {
     "@semantic-release-extras/github-comment-specific": "1.0.7",
     "@semantic-release/npm": "12.0.1",
-    "@types/node": "22.5.0",
+    "@types/node": "22.13.1",
     "multi-semantic-release": "3.0.2",
     "patch-package": "8.0.0",
     "typescript": "4.6.4"
