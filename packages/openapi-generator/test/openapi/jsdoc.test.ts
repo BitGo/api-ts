@@ -139,6 +139,78 @@ testCase('schema parameter with title tag', TITLE_TAG, {
   },
 });
 
+const ROUTE_WITH_PRIVATE_HEADERS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    headers: {
+      /**
+       * A private header
+       * @private
+       */
+      'x-private-header': t.string,
+      'public-header': t.string
+    }
+  }),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+testCase("route with private headers", ROUTE_WITH_PRIVATE_HEADERS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0'
+  },
+  paths: {
+    '/foo': {
+      get: {
+        parameters: [
+          {
+            'x-internal': true,
+            description: 'A private header',
+            in: 'header',
+            name: 'x-private-header',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          },
+          {
+            in: 'header',
+            name: 'public-header',
+            required: true,
+            schema: {
+              type: 'string'
+            }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string'
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  components: {
+    schemas: {}
+  }
+});
+
 
 const ROUTE_WITH_RESPONSE_EXAMPLE_STRING = `
 import * as t from 'io-ts';
