@@ -13,96 +13,107 @@ const readFile = promisify(fs.readFile);
 export class Project {
   private readonly knownImports: Record<string, Record<string, KnownCodec>>;
 
-  private files: Record<string, SourceFile>;
+  private processedFiles: Record<string, SourceFile>;
+  private pendingFiles: Set<string>;
   private types: Record<string, string>;
+  private visitedPackages: Set<string>;
 
   constructor(files: Record<string, SourceFile> = {}, knownImports = KNOWN_IMPORTS) {
-    this.files = files;
+    this.processedFiles = files;
+    this.pendingFiles = new Set();
     this.knownImports = knownImports;
     this.types = {};
+    this.visitedPackages = new Set();
   }
 
   add(path: string, sourceFile: SourceFile): void {
-    this.files[path] = sourceFile;
+    this.processedFiles[path] = sourceFile;
+    this.pendingFiles.delete(path);
+
+    // Update types mapping
+    for (const exp of sourceFile.symbols.exports) {
+      this.types[exp.exportedName] = path;
+    }
   }
 
   get(path: string): SourceFile | undefined {
-    return this.files[path];
+    return this.processedFiles[path];
   }
 
   has(path: string): boolean {
-    return this.files.hasOwnProperty(path);
+    return this.processedFiles.hasOwnProperty(path);
   }
 
   async parseEntryPoint(entryPoint: string): Promise<E.Either<string, Project>> {
     const queue: string[] = [entryPoint];
     let path: string | undefined;
-    const visitedPackages = new Set<string>();
+
     while (((path = queue.pop()), path !== undefined)) {
       if (!['.ts', '.js'].includes(p.extname(path))) {
         continue;
       }
 
-      const src = await this.readFile(path);
-      const sourceFile = await parseSource(path, src);
+      try {
+        const src = await this.readFile(path);
+        const sourceFile = await parseSource(path, src);
 
-      if (sourceFile === undefined) continue;
+        if (!sourceFile) {
+          console.error(`Error parsing source file: ${path}`);
+          continue;
+        }
 
-      // map types to their file path
-      for (const exp of sourceFile.symbols.exports) {
-        this.types[exp.exportedName] = path;
-      }
+        // map types to their file path
+        for (const exp of sourceFile.symbols.exports) {
+          this.types[exp.exportedName] = path;
+        }
 
-      this.add(path, sourceFile);
+        this.add(path, sourceFile);
 
-      for (const sym of Object.values(sourceFile.symbols.imports)) {
-        if (!sym.from.startsWith('.')) {
-          // If we are not resolving a relative path, we need to resolve the entry point
-          const baseDir = p.dirname(sourceFile.path);
-          let entryPoint = this.resolveEntryPoint(baseDir, sym.from);
+        // Process imports
+        const baseDir = p.dirname(path);
+        for (const sym of Object.values(sourceFile.symbols.imports)) {
+          if (!sym.from.startsWith('.')) {
+            if (!this.visitedPackages.has(sym.from)) {
+              const codecs = await this.getCustomCodecs(baseDir, sym.from);
+              if (E.isLeft(codecs)) {
+                return codecs;
+              }
 
-          if (!visitedPackages.has(sym.from)) {
-            // This is a step that checks if this import has custom codecs, and loads them into known imports
-            const codecs = await this.getCustomCodecs(baseDir, sym.from);
-            if (E.isLeft(codecs)) {
-              return codecs;
+              if (Object.keys(codecs.right).length > 0) {
+                this.knownImports[sym.from] = {
+                  ...codecs.right,
+                  ...this.knownImports[sym.from],
+                };
+                logInfo(`Loaded custom codecs for ${sym.from}`);
+              }
+
+              this.visitedPackages.add(sym.from);
             }
 
-            if (Object.keys(codecs.right).length > 0) {
-              this.knownImports[sym.from] = {
-                ...codecs.right,
-                ...this.knownImports[sym.from],
-              };
-
-              logInfo(`Loaded custom codecs for ${sym.from}`);
+            const entryPoint = this.resolveEntryPoint(baseDir, sym.from);
+            if (E.isRight(entryPoint) && !this.has(entryPoint.right)) {
+              queue.push(entryPoint.right);
+            }
+          } else {
+            const absImportPathE = this.resolve(baseDir, sym.from);
+            if (E.isRight(absImportPathE) && !this.has(absImportPathE.right)) {
+              queue.push(absImportPathE.right);
             }
           }
+        }
 
-          visitedPackages.add(sym.from);
-
-          if (E.isLeft(entryPoint)) {
-            continue;
-          } else if (!this.has(entryPoint.right)) {
-            queue.push(entryPoint.right);
-          }
-        } else {
-          const filePath = p.dirname(path);
-          const absImportPathE = this.resolve(filePath, sym.from);
-          if (E.isLeft(absImportPathE)) {
-            return absImportPathE;
-          } else if (!this.has(absImportPathE.right)) {
+        // Process star exports
+        for (const starExport of sourceFile.symbols.exportStarFiles) {
+          const absImportPathE = this.resolve(baseDir, starExport);
+          if (E.isRight(absImportPathE) && !this.has(absImportPathE.right)) {
             queue.push(absImportPathE.right);
           }
         }
-      }
-      for (const starExport of sourceFile.symbols.exportStarFiles) {
-        const filePath = p.dirname(path);
-        const absImportPathE = this.resolve(filePath, starExport);
-        if (E.isLeft(absImportPathE)) {
-          return absImportPathE;
-        } else if (!this.has(absImportPathE.right)) {
-          queue.push(absImportPathE.right);
+      } catch (err) {
+        if (err instanceof Error) {
+          return E.left(err.message);
         }
+        return E.left('Unknown error occurred while processing files');
       }
     }
 
