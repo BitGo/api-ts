@@ -1,10 +1,11 @@
 # JSON Parsing with api-ts
 
-Learn how to define and validate API endpoints using api-ts codecs.
+Learn how to define and validate API endpoints using api-ts codecs. These examples are based on real-world usage patterns from the compliance-tx-monitoring project.
 
 ## Common Patterns
 
 ### Basic Route Definition
+Similar patterns found in `src/routes/list-transactions.ts` and `src/routes/search-addresses.ts`:
 
 ```typescript
 import * as t from 'io-ts'
@@ -49,6 +50,7 @@ ListTransactions.request.decode({ query: validQuery })
 ```
 
 ### Request Body Validation
+Similar patterns found in `src/types/common.ts` and `src/routes/create-transaction.ts`:
 
 ```typescript
 // Define reusable types
@@ -101,6 +103,7 @@ CreateTransaction.request.decode({
 ```
 
 ### Response Handling
+Similar patterns found in `src/types/errors.ts` and `src/routes/get-transaction.ts`:
 
 ```typescript
 // Define error responses
@@ -156,6 +159,7 @@ GetTransaction.response[response.status].decode(response.body)
 ```
 
 ## Best Practices
+Found throughout the codebase in `src/types/common.ts`, `src/routes/*`, and `src/middleware/*`:
 
 1. **Reusable Types**: Define common structures like pagination, date ranges, and money amounts as reusable types
 2. **Required vs Optional**: Use `t.intersection` with `t.partial` to clearly separate required and optional fields
