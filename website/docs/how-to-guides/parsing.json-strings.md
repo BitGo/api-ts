@@ -9,19 +9,19 @@ import { JSONFromString } from 'io-ts-types'
 const UserCodec = t.type({
   name: t.string,
   age: t.number,
-  email: t.string
-})
+  email: t.string,
+});
 
-const Data = '{"name": "Alice", "age": 30, "email": "alice@example.com"}'
+const Data = '{"name": "Alice", "age": 30, "email": "alice@example.com"}';
 
 // Combine parsing and validation declaratively
-const decoded = JSONFromString(UserCodec).decode(Data)
+const decoded = JSONFromString(UserCodec).decode(Data);
 
 if (decoded._tag === 'Right') {
   // Success: Valid data
-  console.log(decoded.right) // Parsed and validated data
+  console.log(decoded.right); // Parsed and validated data
 } else {
   // Error: Invalid data
-  console.error(decoded.left) // Validation error details
+  console.error(decoded.left); // Validation error details
 }
 ```
