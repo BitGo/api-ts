@@ -1,8 +1,9 @@
-# How To Parse JSON Strings 
+# How To Parse JSON Strings Declaratively
 
-## Basic JSON String Parsing
+## Declarative JSON Parsing and Validation
 ```typescript
 import * as t from 'io-ts'
+import { JSONFromString } from 'io-ts-types'
 
 // Define the expected structure
 const UserCodec = t.type({
@@ -11,59 +12,16 @@ const UserCodec = t.type({
   email: t.string
 })
 
-// Parse JSON string and validate structure
-const jsonString = '{"name": "Alice", "age": 30, "email": "alice@example.com"}'
+const Data = '{"name": "Alice", "age": 30, "email": "alice@example.com"}'
 
-// First parse the JSON string
-const parsed = JSON.parse(jsonString)
+// Combine parsing and validation declaratively
+const decoded = JSONFromString(UserCodec).decode(Data)
 
-// Then validate the parsed data
-const result = UserCodec.decode(parsed)
-// Success: { name: "Alice", age: 30, email: "alice@example.com" }
-
-// Example with invalid data
-const invalidJson = '{"name": "Bob", "age": "30"}' // age should be number
-const invalidParsed = JSON.parse(invalidJson)
-const invalidResult = UserCodec.decode(invalidParsed)
-// Error: Invalid value "30" supplied to : { name: string, age: number, email: string }/age: number
-```
-
-## Nested JSON String Parsing
-
-```typescript
-import * as t from 'io-ts'
-import { DateFromISOString } from 'io-ts-types'
-
-// Define a codec that handles nested structures and dates
-const EventCodec = t.type({
-  id: t.string,
-  timestamp: DateFromISOString,
-  data: t.type({
-    title: t.string,
-    participants: t.array(t.type({
-      id: t.string,
-      role: t.union([
-        t.literal('organizer'),
-        t.literal('attendee')
-      ])
-    }))
-  })
-})
-
-// Example JSON string with nested structure
-const jsonString = `{
-  "id": "evt_123",
-  "timestamp": "2024-01-15T10:30:00Z",
-  "data": {
-    "title": "Team Meeting",
-    "participants": [
-      {"id": "user_1", "role": "organizer"},
-      {"id": "user_2", "role": "attendee"}
-    ]
-  }
-}`
-
-// Parse and validate in one step
-const result = EventCodec.decode(JSON.parse(jsonString))
-// Success: Parsed with proper Date object and validated structure
+if (decoded._tag === 'Right') {
+  // Success: Valid data
+  console.log(decoded.right) // Parsed and validated data
+} else {
+  // Error: Invalid data
+  console.error(decoded.left) // Validation error details
+}
 ```
