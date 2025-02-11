@@ -1,6 +1,7 @@
 # How To Parse JSON Strings Declaratively
 
 ## Declarative JSON Parsing and Validation
+
 ```typescript
 import * as t from 'io-ts';
 import { JSONFromString } from 'io-ts-types';
