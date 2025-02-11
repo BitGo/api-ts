@@ -4,7 +4,7 @@ Learn how to parse and validate JSON data using api-ts codecs.
 
 ## Basic Example
 
-Here's how to parse and validate JSON using api-ts:
+Parse and validate JSON using api-ts:
 
 ```typescript
 import * as t from 'io-ts'
