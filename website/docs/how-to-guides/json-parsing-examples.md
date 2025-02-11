@@ -2,49 +2,91 @@
 
 Learn how to parse and validate JSON data using api-ts codecs.
 
-## Basic Example
-
-Parse and validate JSON using api-ts:
+## Basic Request Validation
 
 ```typescript
 import * as t from 'io-ts'
 import { httpRequest } from '@api-ts/io-ts-http'
 
-// Define the request structure
-const UserRequest = httpRequest({
+// Define a request with query parameters and body
+const SearchRequest = httpRequest({
+  query: t.type({
+    limit: t.number,
+    offset: t.number
+  }),
   body: t.type({
-    name: t.string,
-    age: t.number
+    searchTerm: t.string,
+    filters: t.array(t.string)
   })
 })
 
-// Parse and validate JSON
-const validJson = '{"name": "Alice", "age": 30}'
-const result = UserRequest.request.decode(validJson)
-// Success: { name: "Alice", age: 30 }
-
-const invalidJson = '{"name": "Bob"}' // Missing age
-UserRequest.request.decode(invalidJson)
-// Error: required property 'age'
+// Validate complete request
+const validRequest = {
+  query: { limit: 10, offset: 0 },
+  body: { 
+    searchTerm: "api", 
+    filters: ["active", "published"] 
+  }
+}
+SearchRequest.request.decode(validRequest)
+// Success: { query: { limit: 10, offset: 0 }, body: { searchTerm: "api", filters: ["active", "published"] } }
 ```
 
-## Working with Dates
-
-For handling dates in JSON:
+## Edge Cases and Complex Types
 
 ```typescript
-import { DateFromISOString } from 'io-ts-types'
+import { Method } from '@api-ts/io-ts-http'
 
-const UserWithDate = httpRequest({
-  body: t.type({
-    name: t.string,
-    birthDate: DateFromISOString
-  })
+// Union types for status codes
+const StatusResponse = t.union([
+  t.type({ status: t.literal(200), data: t.string }),
+  t.type({ status: t.literal(404), error: t.string }),
+  t.type({ status: t.literal(500), code: t.number, message: t.string })
+])
+
+// Request with optional fields and specific HTTP method
+const ApiRequest = httpRequest({
+  method: Method.enum.POST,
+  headers: t.partial({
+    'x-api-version': t.string,
+    'x-client-id': t.string
+  }),
+  query: t.partial({
+    debug: t.boolean
+  }),
+  body: t.intersection([
+    t.type({ required: t.string }),
+    t.partial({ optional: t.array(t.number) })
+  ])
 })
 
-const input = '{"name": "Alice", "birthDate": "1990-01-01T00:00:00.000Z"}'
-UserWithDate.request.decode(input)
-// Success: { name: "Alice", birthDate: Date(1990-01-01) }
+// Examples of edge cases
+const partialRequest = {
+  headers: { 'x-api-version': '2.0' },
+  body: { required: 'test' }
+}
+ApiRequest.request.decode(partialRequest)
+// Success: Accepts partial headers and query
+
+const invalidMethod = {
+  method: 'GET',  // Wrong method
+  body: { required: 'test' }
+}
+ApiRequest.request.decode(invalidMethod)
+// Error: Invalid method, expected POST
+
+const complexResponse = {
+  status: 500,
+  code: 5001,
+  message: 'Internal server error'
+}
+StatusResponse.decode(complexResponse)
+// Success: Matches 500 status union case
 ```
 
-The library handles JSON parsing and validation in one step, providing type-safe results.
+The library provides powerful type validation with:
+- Union and intersection types
+- Optional fields with `t.partial`
+- Literal types for exact matches
+- Method constraints
+- Nested object validation
