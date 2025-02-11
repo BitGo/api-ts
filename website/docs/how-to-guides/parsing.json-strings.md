@@ -2,8 +2,8 @@
 
 ## Declarative JSON Parsing and Validation
 ```typescript
-import * as t from 'io-ts'
-import { JSONFromString } from 'io-ts-types'
+import * as t from 'io-ts';
+import { JSONFromString } from 'io-ts-types';
 
 // Define the expected structure
 const UserCodec = t.type({
