@@ -1,6 +1,4 @@
-# JSON Parsing with api-ts
-
-Learn how to parse and validate JSON data using api-ts codecs.
+# How to Parse JSON Data
 
 ## Basic Request Validation
 
@@ -83,10 +81,3 @@ const complexResponse = {
 StatusResponse.decode(complexResponse)
 // Success: Matches 500 status union case
 ```
-
-The library provides powerful type validation with:
-- Union and intersection types
-- Optional fields with `t.partial`
-- Literal types for exact matches
-- Method constraints
-- Nested object validation
