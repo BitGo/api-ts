@@ -1,39 +1,8 @@
-# JSON Parsing with api-ts
+# Common API Patterns with api-ts
 
 Learn how to define and validate API endpoints using api-ts codecs. These examples are based on real-world usage patterns from the compliance-tx-monitoring project.
 
-## Parsing Raw JSON Strings
-
-The most basic use case is parsing a JSON string and validating its structure:
-
-```typescript
-import * as t from 'io-ts'
-
-// Define the expected structure
-const UserCodec = t.type({
-  name: t.string,
-  age: t.number,
-  email: t.string
-})
-
-// Parse JSON string and validate structure
-const jsonString = '{"name": "Alice", "age": 30, "email": "alice@example.com"}'
-
-// First parse the JSON string
-const parsed = JSON.parse(jsonString)
-
-// Then validate the parsed data
-const result = UserCodec.decode(parsed)
-// Success: { name: "Alice", age: 30, email: "alice@example.com" }
-
-// Example with invalid data
-const invalidJson = '{"name": "Bob", "age": "30"}' // age should be number
-const invalidParsed = JSON.parse(invalidJson)
-const invalidResult = UserCodec.decode(invalidParsed)
-// Error: Invalid value "30" supplied to : { name: string, age: number, email: string }/age: number
-```
-
-## Common Patterns
+## Route Definitions
 
 ### Basic Route Definition
 Similar patterns found in `src/routes/list-transactions.ts` and `src/routes/search-addresses.ts`:
