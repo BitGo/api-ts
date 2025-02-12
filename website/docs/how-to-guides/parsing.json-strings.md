@@ -26,5 +26,4 @@ if (decoded._tag === 'Right') {
 } else {
   console.error('Decoding failed:', decoded.left);
 }
-
 ```
