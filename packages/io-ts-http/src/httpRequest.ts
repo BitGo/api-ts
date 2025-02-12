@@ -20,7 +20,7 @@ export type HttpRequestCombinatorProps = {
   params?: NonNullable<t.Props>;
   query?: NonNullable<t.Props>;
   headers?: NonNullable<t.Props>;
-  body?: t.Mixed;
+  body?: NonNullable<t.Props>;
 };
 
 /**
@@ -35,7 +35,7 @@ type EmitOutputTypeErrors<
 > = P extends undefined
   ? P
   : {
-      [K in keyof P & string]: P[K] extends t.Type<infer A, any, any>
+      [K in keyof P & string]: P[K] extends t.Type<any, O, any>
         ? P[K]
         : `Codec's output type is not assignable to \`${OName}\`. Try using one like \`NumberFromString\``;
     };
