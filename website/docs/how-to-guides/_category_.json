@@ -1,7 +1,8 @@
 {
-  "label": "How-To Guide",
+  "label": "How - To Guides",
   "position": 3,
   "link": {
-    "type": "generated-index"
+    "type": "generated-index",
+    "description": "5 minutes to practice the most important api-ts concepts."
   }
 }
