@@ -4,7 +4,7 @@
 
 ```typescript
 import * as t from 'io-ts';
-import { JSONFromString } from 'io-ts-types';
+import { JsonFromString } from 'io-ts-types';
 
 // Define the expected structure
 const UserCodec = t.type({
@@ -16,13 +16,15 @@ const UserCodec = t.type({
 const Data = '{"name": "Alice", "age": 30, "email": "alice@example.com"}';
 
 // Combine parsing and validation declaratively
-const decoded = JSONFromString(UserCodec).decode(Data);
+const decoded = JsonFromString.decode(Data);
 
+// Check if the decoding was successful
 if (decoded._tag === 'Right') {
-  // Success: Valid data
-  console.log(decoded.right); // Parsed and validated data
+  // Validate the decoded data using the UserCodec
+  const validated = UserCodec.decode(decoded.right);
+  console.log(validated); // Right { name: 'Alice', age: 30, email: '
 } else {
-  // Error: Invalid data
-  console.error(decoded.left); // Validation error details
+  console.error('Decoding failed:', decoded.left);
 }
+
 ```
