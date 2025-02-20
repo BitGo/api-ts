@@ -10,4 +10,5 @@ philosophy. Rather than simply checking if incoming HTTP data is valid, it also
 transforms raw, less-structured data (like strings or JSON) into strongly typed, precise 
 objects using the io-ts library. This parsing happens at the system boundary, ensuring 
 all types have use cases in your code. Once parsed, you can trust that the data 
-satisfies both [type and semantic analysis](https://bitgo.github.io/api-ts/docs/tutorial-basics/create-an-api-spec/#what-problem-does-io-ts-http-solve). 
+satisfies both 
+[type and semantic analysis](https://bitgo.github.io/api-ts/docs/tutorial-basics/create-an-api-spec/#what-problem-does-io-ts-http-solve). 
