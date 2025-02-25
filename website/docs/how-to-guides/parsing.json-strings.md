@@ -1,12 +1,13 @@
 # Unpacking a Subtle Quirk in JsonFromString Codec
 
-There's a small detail in `JsonFromString` from the `io-ts-types` that is worth noting.
-There are three type parameters to a codec `t.Type<I, O, A>`. The third parameter
-determines the type that the `decode` function receives. Most other codecs have the
-third parameter set to `unknown`. But `JsonFromString`'s type is
-`t.Type<Json, string, string>`. As a result, `JsonFromString` expects a string type
-before passing it to `decode`. You can easily convert `JsonFromString` to
-`t.Type<Json, string, unknown>` using `t.string`. See the example below:
+There are three type parameters to a codec: `t.Type<I, O, A>`. The third parameter
+determines the type that the `decode` function receives. Most codecs have the third
+parameter set to `unknown`. However, the type for `JsonFromString` in `io-ts-types` is
+`t.Type<Json, string, string>`. Therefore, `JsonFromString` expects a string type before
+passing it to `decode`. You can easily convert `JsonFromString` to
+`t.Type<Json, string, unknown>` using `t.string`.
+
+For example:
 
 ```typescript
 import * as t from 'io-ts';
