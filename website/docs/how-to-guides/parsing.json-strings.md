@@ -1,4 +1,4 @@
-# Unpacking a Subtle Quirk in JsonFromString Codec
+# Understanding Atypical Type Behavior from JsonFromString in io-ts-types
 
 There are three type parameters to a codec: `t.Type<I, O, A>`. The third parameter
 determines the type that the `decode` function receives. Most codecs have the third
