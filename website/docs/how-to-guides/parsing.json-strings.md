@@ -1,28 +1,80 @@
-# How To Parse JSON Strings Declaratively
+# Unpacking a Subtle Quirk in JsonFromString Codec
 
-## Declarative JSON Parsing and Validation
+There's a small detail in `JsonFromString` from the `io-ts-types` that is worth noting.
+There are three type parameters to a codec `t.Type<I, O, A>`. The third parameter
+determines the type that the `decode` function receives. Most other codecs have the
+third parameter set to `unknown`. But `JsonFromString`'s type is
+`t.Type<Json, string, string>`. As a result, `JsonFromString` expects a string type
+before passing it to `decode`. You can easily convert `JsonFromString` to
+`t.Type<Json, string, unknown>` using `t.string`. See the example below:
 
 ```typescript
 import * as t from 'io-ts';
-import { JsonFromString } from 'io-ts-types';
+import { nonEmptyArray, JsonFromString, NumberFromString } from 'io-ts-types';
+import { httpRequest, optional } from '@api-ts/io-ts-http';
 
-// Define the expected structure
-const UserCodec = t.type({
-  name: t.string,
-  age: t.number,
-  email: t.string,
+// Define the Filter type for the JSON string
+const Filter = t.type({
+  category: t.string,
+  tags: t.array(t.string),
+  price: t.type({
+    min: t.number,
+    max: t.number,
+  }),
 });
 
-const Data = '{"name": "Alice", "age": 30, "email": "alice@example.com"}';
+// Define the SearchRequest codec
+const SearchRequest = httpRequest({
+  params: {
+    userId: NumberFromString,
+  },
+  query: {
+    q: t.string,
+    filter: t.string.pipe(JsonFromString).pipe(Filter),
+    tags: nonEmptyArray(t.string),
+    sort: optional(t.string),
+  },
+  headers: {
+    authorization: t.string,
+  },
+});
 
-// Combine parsing and validation declaratively
-const decoded = JsonFromString.decode(Data);
+// Example request object
+const example = {
+  params: {
+    userId: '84938492',
+  },
+  query: {
+    q: 'test',
+    filter:
+      '{"category":"books","tags":["crypto","trading"],"price":{"min":10,"max":50}}',
+    tags: ['tag1', 'tag2', 'tag3'],
+    sort: 'price',
+  },
+  headers: {
+    authorization: 'Bearer token',
+  },
+};
 
-// Check if the decoding was successful
+// Decode the example
+const decoded = SearchRequest.decode(example);
 if (decoded._tag === 'Right') {
-  // Validate the decoded data using the UserCodec
-  const validated = UserCodec.decode(decoded.right);
-  console.log(validated); // Right { name: 'Alice', age: 30, email: '
+  console.log(decoded);
+  /* 
+    Expected decoded output
+    {
+        userId: 84938492,
+        q: 'test',
+        filter: {
+        category: 'books',
+        tags: ['crypto', 'trading'],
+        price: { min: 10, max: 50 },
+        },
+        tags: ['tag1', 'tag2', 'tag3'],
+        sort: 'price',
+        authorization: 'Bearer token',
+    };
+    */
 } else {
   console.error('Decoding failed:', decoded.left);
 }
