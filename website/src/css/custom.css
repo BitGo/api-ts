@@ -6,25 +6,116 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-color-primary: #0052ff;
+  --ifm-color-primary-dark: #0049e6;
+  --ifm-color-primary-darker: #0044d9;
+  --ifm-color-primary-darkest: #0038b3;
+  --ifm-color-primary-light: #1a65ff;
+  --ifm-color-primary-lighter: #266bff;
+  --ifm-color-primary-lightest: #4d85ff;
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --docusaurus-highlighted-code-line-bg: rgba(14, 15, 15, 0.1);
+  --ifm-font-family-base: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --ifm-heading-font-weight: 600;
+  --ifm-navbar-background-color: #ffffff;
+  --ifm-navbar-height: 80px;
+  --bitgo-gray-100: #f8f9fa;
+  --bitgo-gray-200: #e9ecef;
+  --bitgo-gray-300: #dee2e6;
+  --bitgo-gray-400: #ced4da;
+  --bitgo-gray-500: #adb5bd;
+  --bitgo-gray-600: #6c757d;
+  --bitgo-gray-700: #495057;
+  --bitgo-gray-800: #343a40;
+  --bitgo-gray-900: #0e0f0f;
+  --bitgo-footer-light: #f0f2f5;
+  --bitgo-footer-dark: #0a0f23;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-color-primary: #4d85ff;
+  --ifm-color-primary-dark: #2f70ff;
+  --ifm-color-primary-darker: #1f66ff;
+  --ifm-color-primary-darkest: #0049e6;
+  --ifm-color-primary-light: #6b9aff;
+  --ifm-color-primary-lighter: #7ba4ff;
+  --ifm-color-primary-lightest: #a8c3ff;
+  --docusaurus-highlighted-code-line-bg: rgba(14, 15, 15, 0.3);
+  --ifm-navbar-background-color: #1a1a1a;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+.navbar {
+  box-shadow: 0 2px 4px rgba(14, 15, 15, 0.05);
+}
+
+.navbar__logo {
+  height: 40px;
+}
+
+.navbar__brand {
+  font-weight: 600;
+}
+
+.footer {
+  background-color: var(--bitgo-footer-dark);
+}
+
+[data-theme='light'] .footer {
+  background-color: var(--bitgo-footer-light);
+  color: var(--bitgo-gray-900);
+}
+
+[data-theme='dark'] .footer {
+  background-color: var(--bitgo-footer-dark);
+}
+
+[data-theme='light'] .footer .footer__link-item {
+  color: var(--bitgo-gray-800);
+}
+
+[data-theme='light'] .footer .footer__title {
+  color: var(--bitgo-gray-900);
+}
+
+.button {
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.button--primary {
+  background-color: var(--ifm-color-primary);
+  color: white;
+  border: none;
+}
+
+.button--primary:hover {
+  background-color: var(--ifm-color-primary-dark);
+  color: white;
+}
+
+.button--outline {
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+[data-theme='light'] .hero .button--outline {
+  color: var(--bitgo-gray-900);
+  border: 1px solid var(--bitgo-gray-900);
+}
+
+[data-theme='light'] .hero .button--outline:hover {
+  background-color: rgba(14, 15, 15, 0.05);
+  border-color: var(--bitgo-gray-900);
+  color: var(--bitgo-gray-900);
+}
+
+.button--outline:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: white;
+  color: white;
 }

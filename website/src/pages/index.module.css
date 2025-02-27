@@ -4,20 +4,73 @@
  */
 
 .heroBanner {
-  padding: 4rem 0;
-  text-align: center;
+  padding: 8rem 0;
+  text-align: left;
   position: relative;
   overflow: hidden;
+  background: linear-gradient(135deg, #0e0f0f 0%, #1a1a1a 100%);
+  color: white;
+}
+
+.heroBanner h1 {
+  font-size: 4rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(90deg, #0052ff 0%, #4d85ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.heroBanner p {
+  font-size: 1.5rem;
+  margin-bottom: 2.5rem;
+  opacity: 0.9;
+  max-width: 600px;
+}
+
+[data-theme='light'] .heroBanner {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #0e0f0f;
+}
+
+[data-theme='dark'] .heroBanner {
+  background: linear-gradient(135deg, #0e0f0f 0%, #1a1a1a 100%);
+  color: white;
 }
 
 @media screen and (max-width: 996px) {
   .heroBanner {
-    padding: 2rem;
+    padding: 4rem 2rem;
+    text-align: center;
+  }
+
+  .heroBanner h1 {
+    font-size: 2.5rem;
+  }
+
+  .heroBanner p {
+    font-size: 1.25rem;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
 .buttons {
   display: flex;
   align-items: center;
-  justify-content: center;
+}
+
+.button {
+  margin: 0 1rem 0 0;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+@media screen and (max-width: 996px) {
+  .buttons {
+    justify-content: center;
+  }
 }

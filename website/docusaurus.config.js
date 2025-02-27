@@ -9,13 +9,13 @@ const { remarkCodeHike } = require('@code-hike/mdx');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'api-ts home',
+  title: 'api-ts',
   tagline: 'Type- and runtime- safe TypeScript APIs',
   url: 'https://bitgo.github.io/api-ts/',
   baseUrl: '/api-ts/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/Shield_Logo_Blue-Dark.svg',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -64,15 +64,21 @@ const config = {
       navbar: {
         title: 'api-ts',
         logo: {
-          alt: 'api-ts Logo',
-          src: 'img/logo.svg',
+          alt: 'BitGo Logo',
+          src: 'img/Shield_Logo_Blue-Dark.svg',
+          srcDark: 'img/Shield_Logo_Blue-Dark.svg',
         },
         items: [
           {
             type: 'doc',
             docId: 'intro',
             position: 'left',
-            label: 'Tutorial',
+            label: 'Documentation',
+          },
+          {
+            to: '/docs/how-to-guides/parsing.json-strings',
+            label: 'How-to Guides',
+            position: 'left',
           },
           {
             href: 'https://github.com/BitGo/api-ts',
@@ -88,8 +94,16 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Tutorial',
+                label: 'Documentation',
                 to: '/docs/intro',
+              },
+              {
+                label: 'Tutorials',
+                to: '/docs/tutorial-basics/render-an-open-api-spec',
+              },
+              {
+                label: 'How-to Guides',
+                to: '/docs/how-to-guides/parsing.json-strings',
               },
             ],
           },
@@ -100,6 +114,10 @@ const config = {
                 label: 'Stack Overflow',
                 href: 'https://stackoverflow.com/questions/tagged/api-ts',
               },
+              {
+                label: 'Twitter',
+                href: 'https://twitter.com/BitGo',
+              },
             ],
           },
           {
@@ -109,14 +127,23 @@ const config = {
                 label: 'GitHub',
                 href: 'https://github.com/BitGo/api-ts',
               },
+              {
+                label: 'BitGo',
+                href: 'https://www.bitgo.com/',
+              },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} BitGo, Inc.`,
+        copyright: `Copyright © ${new Date().getFullYear()} BitGo, Inc. All rights reserved.`,
       },
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
+      },
+      colorMode: {
+        defaultMode: 'light',
+        disableSwitch: false,
+        respectPrefersColorScheme: true,
       },
     }),
 };
