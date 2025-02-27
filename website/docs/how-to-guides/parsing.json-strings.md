@@ -1,9 +1,9 @@
 # Decoding JSON from Headers, Query Parameters, and URL Parameters
 
-Though we know headers, url parameters, and query parameters will be received as a
+Though we know headers, URL parameters, and query parameters will be received as a
 `string` or `string[]` value, due to a limitation in api-ts, `httpRequest` only accepts
 codecs that decode values starting from the `unknown` type. Consequently, decoding a
-header, url parameter, or query parameter with a codec like `JsonFromString`, which can
+header, URL parameter, or query parameter with a codec like `JsonFromString`, which can
 only decode values typed as `string`, will produce a error like:
 
 ```
