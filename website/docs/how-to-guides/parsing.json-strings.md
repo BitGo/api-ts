@@ -1,11 +1,31 @@
 # Decoding JSON from Headers, Query Parameters, and URL Parameters
 
-There are three type parameters to a codec: `t.Type<I, O, A>`. The third parameter
-determines the type that the `decode` function receives. Most codecs have the third
-parameter set to `unknown`. However, the type for `JsonFromString` in `io-ts-types` is
-`t.Type<Json, string, string>`. Therefore, `JsonFromString` expects a string type before
-passing it to `decode`. You can easily convert `JsonFromString` to
-`t.Type<Json, string, unknown>` using `t.string`.
+Though we know headers, url parameters, and query parameters will be received as a
+`string` or `string[]` value, due to a limitation in api-ts, `httpRequest` only accepts
+codecs that decode values starting from the `unknown` type. Consequently, decoding a
+header, url parameter, or query parameter with a codec like `JsonFromString`, which can
+only decode values typed as `string`, will produce a error like:
+
+```
+Type 'Type<Json, string, string>' is not assignable to type 'Mixed'.
+  Types of property 'validate' are incompatible.
+    Type 'Validate<string, Json>' is not assignable to type 'Validate<unknown, any>'.
+      Type 'unknown' is not assignable to type 'string'.
+```
+
+There's a straightforward pattern you can use when you have a value typed as `unknown`
+but need to decode it with a codec that can only decode a narrower type. This pattern is
+called <em>codec chaining</em>:
+
+```typescript
+declare const JsonFromString: t.Type<Json, string, string>;
+declare const t.string: t.Type<string, string, unknown>;
+
+const myCodec: t.Type<Json, string, unknown> = t.string.pipe(JsonFromString);
+```
+
+Here, `t.string` decodes a value from `unknown` to `string`, and then `JsonFromString`
+decodes the same value from `string` to `Json`.
 
 For example:
 
