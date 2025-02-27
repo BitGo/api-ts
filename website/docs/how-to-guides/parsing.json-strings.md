@@ -1,4 +1,4 @@
-# Understanding Atypical Type Behavior from JsonFromString in io-ts-types
+# Decoding JSON from Headers, Query Parameters, and URL Parameters
 
 There are three type parameters to a codec: `t.Type<I, O, A>`. The third parameter
 determines the type that the `decode` function receives. Most codecs have the third
