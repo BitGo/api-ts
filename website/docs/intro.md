@@ -4,12 +4,12 @@ sidebar_position: 1
 
 # Introduction
 
-`io-ts-http` brings type safety to HTTP data handling in TypeScript by embracing the
-"[parse, don't validate]" philosophy. Rather than simply checking if incoming HTTP data
-is valid, it also parses raw, less-structured data (like strings or JSON) into strongly
-typed, precise objects using the `io-ts` library. This parsing happens at the system
-boundary, ensuring all types have use cases in your code. Once parsed, you can trust the
-data satisfies both [type and semantic analysis].
+`api-ts` brings type safety to TypeScript HTTP servers by embracing the "[parse, don't
+validate]" philosophy. In addition to validating incoming HTTP requests against your API
+specification, `api-ts` also parses raw, less-structured data (like strings or JSON)
+into strongly-typed domain objects using the `io-ts` library. Once parsed, you can trust
+the HTTP request has passed both [type and semantic validation], ensuring your business
+logic is never called with data it can't handle.
 
 [parse, don't validate]:
   https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/
