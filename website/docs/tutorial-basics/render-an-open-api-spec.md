@@ -36,7 +36,7 @@ As before, first edit your `package.json` file to add our new dependencies
     "@types/express": "4.17.13",
     "@types/node": "18.6.1",
     "@types/superagent": "4.1.15",
-    "typescript": "4.7.4"
+    "typescript": "5.8.2"
   }
 }
 ```
