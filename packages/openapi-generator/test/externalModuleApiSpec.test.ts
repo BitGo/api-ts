@@ -1,6 +1,5 @@
 import assert from 'assert';
 import test from 'node:test';
-import { version } from 'typescript';
 import {
   Project,
   Route,
@@ -118,7 +117,7 @@ async function testCase(
     const openapi = convertRoutesToOpenAPI(
       {
         title: name,
-        version,
+        version: "1.0.0",
         description,
       },
       [],
@@ -138,7 +137,7 @@ testCase(
     openapi: '3.0.3',
     info: {
       title: 'simple api spec with imported types',
-      version: '4.7.4',
+      version: '1.0.0',
       description: 'simple api spec with imported types',
     },
     paths: {
@@ -237,7 +236,7 @@ testCase(
     openapi: '3.0.3',
     info: {
       title: 'simple api spec with exported enum',
-      version: '4.7.4',
+      version: '1.0.0',
       description: 'simple api spec with exported enum',
     },
     paths: {
@@ -279,7 +278,7 @@ testCase(
     openapi: "3.0.3",
     info: {
       title: "simple api spec with exported union type",
-      version: "4.7.4",
+      version: "1.0.0",
       description: "simple api spec with exported union type"
     },
     paths: {
@@ -324,7 +323,7 @@ testCase("simple api spec with custom codec", "test/sample-types/apiSpecWithCust
   openapi: "3.0.3",
   info: {
     title: "simple api spec with custom codec",
-    version: "4.7.4",
+    version: "1.0.0",
     description: "simple api spec with custom codec"
   },
   paths: {
