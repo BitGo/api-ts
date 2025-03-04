@@ -292,4 +292,3 @@ testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
     }
   }
 });
-
