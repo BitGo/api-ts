@@ -20,15 +20,20 @@ export function schemaToOpenAPI(
     switch (schema.type) {
       case 'boolean':
       case 'string':
-      case 'number':
         return {
           type: schema.type,
           ...(schema.enum ? { enum: schema.enum } : {}),
           ...defaultOpenAPIObject,
         };
-      case 'integer':
+      case 'number':
         return {
           type: 'number',
+          ...(schema.enum ? { enum: schema.enum } : {}),
+          ...defaultOpenAPIObject,
+        };
+      case 'integer':
+        return {
+          type: 'integer',
           ...(schema.enum ? { enum: schema.enum } : {}),
           ...defaultOpenAPIObject,
         };
