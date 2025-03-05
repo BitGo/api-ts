@@ -215,8 +215,8 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
             required: true,
             schema: {
               oneOf: [
-                { type: 'string', format: 'number' },
-                { type: 'string', enum: ['true', 'false'] }
+                { type: 'boolean' },
+                { type: 'string', format: 'number' }
               ]
             }
           },
@@ -227,7 +227,7 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
             schema: {
               oneOf: [
                 { type: 'string' },
-                { type: 'string', enum: ['true', 'false'] }
+                { type: 'boolean' }
               ]
             }
           },
@@ -235,7 +235,7 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
             name: 'firstNonUnion',
             in: 'query',
             required: true,
-            schema: { type: 'string', enum: ['true', 'false'] }
+            schema: { type: 'boolean' }
           },
           {
             name: 'secondNonUnion',

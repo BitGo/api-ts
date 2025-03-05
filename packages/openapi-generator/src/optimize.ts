@@ -40,6 +40,14 @@ function consolidateUnion(schema: Schema): Schema {
   const consolidatableTypes = ['boolean', 'number', 'string'];
   const innerSchemas = schema.schemas.map(optimize);
 
+  const booleanSchemas = innerSchemas.filter(
+    (s) => s.type === 'boolean' || s.decodedType === 'boolean',
+  );
+
+  if (booleanSchemas.length === innerSchemas.length && booleanSchemas.length > 0) {
+    return { type: 'boolean' };
+  }
+
   const isConsolidatableType = (s: Schema): boolean => {
     return (
       (s.primitive && consolidatableTypes.includes(s.type)) ||
