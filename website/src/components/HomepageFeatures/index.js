@@ -38,7 +38,7 @@ export default function HomepageFeatures() {
       ),
     },
     {
-      title: 'API definition',
+      title: 'API Specification',
       lightSvg: require('@site/static/img/api-m-light-blue.svg').default,
       darkSvg: require('@site/static/img/api-m-dark-blue.svg').default,
       description: (
