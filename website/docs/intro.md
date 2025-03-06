@@ -13,5 +13,5 @@ logic is never called with data it can't handle.
 
 [parse, don't validate]:
   https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/
-[type and semantic analysis]:
+[type and semantic validation]:
   https://bitgo.github.io/api-ts/docs/tutorial-basics/create-an-api-spec/#what-problem-does-io-ts-http-solve
