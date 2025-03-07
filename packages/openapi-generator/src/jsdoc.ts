@@ -43,7 +43,7 @@ export function parseCommentBlock(comment: Block): JSDoc {
       if (line.tokens.description === '') {
         continue;
       }
-      summary = line.tokens.description;
+      summary = line.tokens.description.trim();
     } else {
       description = `${description ?? ''}\n${line.tokens.description}`;
     }

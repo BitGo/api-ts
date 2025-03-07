@@ -49,6 +49,7 @@ export const KNOWN_IMPORTS: KnownImports = {
   'io-ts': {
     string: () => E.right({ type: 'string', primitive: true }),
     number: () => E.right({ type: 'number', primitive: true }),
+    integer: () => E.right({ type: 'integer', primitive: true }),
     bigint: () => E.right({ type: 'number' }),
     boolean: () => E.right({ type: 'boolean', primitive: true }),
     null: () => E.right({ type: 'null' }),

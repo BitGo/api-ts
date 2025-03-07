@@ -716,6 +716,128 @@ testCase('route with array union of null and undefined', ROUTE_WITH_ARRAY_UNION_
   }
 });
 
+const ROUTE_WITH_INTEGER_QUERY_PARAM = `                                                                    
+import * as t from 'io-ts';                                                                                 
+import * as h from '@api-ts/io-ts-http';                                                                    
+                                                                                                            
+/**                                                                                                         
+ * A route with integer query parameter                                                                     
+ *                                                                                                          
+ * @operationId api.v1.integerTest                                                                          
+ * @tag Test Routes                                                                                         
+ */                                                                                                         
+export const route = h.httpRoute({                                                                          
+  path: '/items',                                                                                           
+  method: 'GET',                                                                                            
+  request: h.httpRequest({                                                                                  
+    query: {                                                                                                
+      /**                                                                                                   
+       * Maximum number of items to return                                                                  
+       * @example 100                                                                                       
+       */                                                                                                   
+      limit: t.integer,                                                                                     
+                                                                                                            
+      /**                                                                                                   
+       * Page number for pagination                                                                         
+       * @minimum 1                                                                                         
+       */                                                                                                   
+      page: t.integer,                                                                                      
+                                                                                                            
+      /**                                                                                                   
+       * Regular number parameter for comparison                                                            
+       */                                                                                                   
+      ratio: t.number                                                                                       
+    },                                                                                                      
+  }),                                                                                                       
+  response: {                                                                                               
+    200: t.type({                                                                                           
+      items: t.array(t.string),                                                                             
+      totalCount: t.integer                                                                                 
+    })                                                                                                      
+  },                                                                                                        
+});                                                                                                         
+`;                                                                                                          
+                                                                                                            
+testCase('route with integer query parameters', ROUTE_WITH_INTEGER_QUERY_PARAM, {                           
+  openapi: '3.0.3',                                                                                         
+  info: {                                                                                                   
+    title: 'Test',                                                                                          
+    version: '1.0.0',                                                                                      
+  },                                                                                                        
+  paths: {                                                                                                  
+    '/items': {                                                                                             
+      get: {                                                                                                
+        summary: 'A route with integer query parameter',                                                    
+        operationId: 'api.v1.integerTest',                                                                  
+        tags: [                                                                                             
+          'Test Routes'                                                                                     
+        ],                                                                                                  
+        parameters: [                                                                                       
+          {                                                                                                 
+            name: 'limit',                                                                                  
+            description: 'Maximum number of items to return',                                               
+            in: 'query',                                                                                    
+            required: true,                                                                                 
+            schema: {                                                                                       
+              type: 'integer',                                                                              
+              example: 100                                                                                  
+            }                                                                                               
+          },                                                                                                
+          {                                                                                                 
+            name: 'page',                                                                                   
+            description: 'Page number for pagination',                                                      
+            in: 'query',                                                                                    
+            required: true,                                                                                 
+            schema: {                                                                                       
+              type: 'integer',                                                                              
+              minimum: 1                                                                                    
+            }                                                                                               
+          },                                                                                                
+          {                                                                                                 
+            name: 'ratio',             
+            description: 'Regular number parameter for comparison',                                                                      
+            in: 'query',                                                                                    
+            required: true,                                                                                 
+            schema: {                                                                                       
+              type: 'number'                                                                                
+            }                                                                                               
+          }                                                                                                 
+        ],                                                                                                  
+        responses: {                                                                                        
+          '200': {                                                                                          
+            description: 'OK',                                                                              
+            content: {                                                                                      
+              'application/json': {                                                                         
+                schema: {                                                                                   
+                  type: 'object',                                                                           
+                  properties: {                                                                             
+                    items: {                                                                                
+                      type: 'array',                                                                        
+                      items: {                                                                              
+                        type: 'string'                                                                      
+                      }                                                                                     
+                    },                                                                                      
+                    totalCount: {                                                                           
+                      type: 'integer'                                                                       
+                    }                                                                                       
+                  },                                                                                        
+                  required: [                                                                               
+                    'items',                                                                                
+                    'totalCount'                                                                            
+                  ]                                                                                         
+                }                                                                                           
+              }                                                                                             
+            }                                                                                               
+          }                                                                                                 
+        }                                                                                                   
+      }                                                                                                     
+    }                                                                                                       
+  },                                                                                                        
+  components: {                                                                                             
+    schemas: {}                                                                                             
+  }                                                                                                         
+});   
+
 const MULTIPLE_ROUTES = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
