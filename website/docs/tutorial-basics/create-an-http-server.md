@@ -34,7 +34,7 @@ First, edit your `package.json` file to add a few new dependencies (highlighted)
   "devDependencies": {
     "@types/express": "4.17.13",
     "@types/node": "18.6.1",
-    "typescript": "4.7.4"
+    "typescript": "5.8.2"
   }
 }
 ```
