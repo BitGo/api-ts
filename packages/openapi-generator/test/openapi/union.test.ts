@@ -201,7 +201,7 @@ testCase(
               in: 'query',
               required: true,
               schema: {
-                oneOf: [{ type: 'boolean' }, { type: 'string', format: 'number' }],
+                oneOf: [{ type: 'boolean' }, { type: 'number' }],
               },
             },
             {
@@ -222,7 +222,7 @@ testCase(
               name: 'secondNonUnion',
               in: 'query',
               required: true,
-              schema: { type: 'string', format: 'number' },
+              schema: { type: 'number' },
             },
             {
               name: 'thirdNonUnion',
