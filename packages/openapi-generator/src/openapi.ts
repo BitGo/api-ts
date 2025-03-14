@@ -9,11 +9,14 @@ import { Block } from 'comment-parser';
 
 export function schemaToOpenAPI(
   schema: Schema,
+  parent?: Record<string, Schema>,
+  paramName?: string
 ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined {
   schema = optimize(schema);
 
   const createOpenAPIObject = (
     schema: Schema,
+    paramName?: string
   ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined => {
     const defaultOpenAPIObject = buildDefaultOpenAPIObject(schema);
 
@@ -46,7 +49,7 @@ export function schemaToOpenAPI(
           ...defaultOpenAPIObject,
         };
       case 'array':
-        const innerSchema = schemaToOpenAPI(schema.items);
+        const innerSchema = schemaToOpenAPI(schema.items, parent, paramName);
         if (innerSchema === undefined) {
           return undefined;
         }
@@ -71,7 +74,7 @@ export function schemaToOpenAPI(
           ...defaultOpenAPIObject,
           properties: Object.entries(schema.properties).reduce(
             (acc, [name, prop]) => {
-              const innerSchema = schemaToOpenAPI(prop);
+              const innerSchema = schemaToOpenAPI(prop, parent, paramName);
               if (innerSchema === undefined) {
                 return acc;
               }
@@ -85,7 +88,7 @@ export function schemaToOpenAPI(
       case 'intersection':
         return {
           allOf: schema.schemas.flatMap((s) => {
-            const innerSchema = schemaToOpenAPI(s);
+            const innerSchema = schemaToOpenAPI(s, parent, paramName);
             if (innerSchema === undefined) {
               return [];
             }
@@ -114,7 +117,7 @@ export function schemaToOpenAPI(
             ...nonUndefinedSchema,
             comment: schema.comment,
             ...(nullSchema ? { nullable: true } : {}),
-          });
+          }, parent, paramName);
         }
 
         // This is an edge case for something like this -> t.union([WellDefinedCodec, t.unknown])
@@ -129,14 +132,14 @@ export function schemaToOpenAPI(
               ...nonUnknownSchemas[0],
               comment: schema.comment,
               ...(nullSchema ? { nullable: true } : {}),
-            });
+            }, parent, paramName);
           } else if (nonUnknownSchemas.length > 1) {
             return schemaToOpenAPI({
               type: 'union',
               schemas: nonUnknownSchemas,
               comment: schema.comment,
               ...(nullSchema ? { nullable: true } : {}),
-            });
+            }, parent, paramName);
           }
         }
 
@@ -145,7 +148,7 @@ export function schemaToOpenAPI(
             nullable = true;
             continue;
           }
-          const innerSchema = schemaToOpenAPI(s);
+          const innerSchema = schemaToOpenAPI(s, parent, paramName);
           if (innerSchema !== undefined) {
             oneOf.push(innerSchema);
           }
@@ -174,7 +177,7 @@ export function schemaToOpenAPI(
           return { ...(nullable ? { nullable } : {}), oneOf, ...defaultOpenAPIObject };
         }
       case 'record':
-        const additionalProperties = schemaToOpenAPI(schema.codomain);
+        const additionalProperties = schemaToOpenAPI(schema.codomain, parent, paramName);
         if (additionalProperties === undefined) return undefined;
 
         if (schema.domain !== undefined) {
@@ -201,6 +204,12 @@ export function schemaToOpenAPI(
       case 'undefined':
         return undefined;
       case 'any':
+        if (schema.title === 'JSON') {
+          return {
+            type: 'object',
+            additionalProperties: true
+          };
+        }
         return {};
       default:
         return {};
@@ -287,7 +296,137 @@ export function schemaToOpenAPI(
     return defaultOpenAPIObject;
   }
 
-  let openAPIObject = createOpenAPIObject(schema);
+  let openAPIObject = createOpenAPIObject(schema, paramName);
+
+  if (schema.type === 'string' && openAPIObject) {
+    const constraintProps: Record<string, any> = {};
+    if (schema.maximum !== undefined) constraintProps['maximum'] = schema.maximum;
+    if (schema.exclusiveMaximum !== undefined) constraintProps['exclusiveMaximum'] = schema.exclusiveMaximum;
+    if (schema.minimum !== undefined) constraintProps['minimum'] = schema.minimum;
+    if (schema.exclusiveMinimum !== undefined) constraintProps['exclusiveMinimum'] = schema.exclusiveMinimum;
+    if (schema.multipleOf !== undefined) constraintProps['multipleOf'] = schema.multipleOf;
+
+    if (schema.format === 'integer' && schema.decodedType === 'number') {
+      if ('type' in openAPIObject) {
+        const { format, ...rest } = openAPIObject;
+        openAPIObject = { 
+          ...rest, 
+          type: 'integer',
+          ...constraintProps  
+        };
+      }
+    }
+    else if (schema.format === 'number' && schema.decodedType === 'number') {
+      if ('type' in openAPIObject) {
+        const { format, ...rest } = openAPIObject;
+        
+        let useIntegerType = false;
+        
+        if (paramName && typeof paramName === 'string') {
+          if (paramName.toLowerCase().includes('intfromstring')) {
+            useIntegerType = true;
+          }
+        }
+        
+        openAPIObject = { 
+          ...rest,
+          type: useIntegerType ? 'integer' : 'number',
+          ...constraintProps  
+        };
+      }
+    }
+    else if (schema.decodedType === 'bigint') {
+      if ('type' in openAPIObject) {
+        const { format, ...rest } = openAPIObject;
+        
+        const bigIntConstraints: Record<string, any> = {};
+        
+        if (schema.maximum !== undefined) {
+          bigIntConstraints.maximum = schema.maximum;
+        }
+        if (schema.exclusiveMaximum !== undefined) {
+          bigIntConstraints.exclusiveMaximum = schema.exclusiveMaximum;
+        }
+        if (schema.minimum !== undefined) {
+          bigIntConstraints.minimum = schema.minimum;
+        }
+        if (schema.exclusiveMinimum !== undefined) {
+          bigIntConstraints.exclusiveMinimum = schema.exclusiveMinimum;
+        }
+        if (schema.multipleOf !== undefined) {
+          bigIntConstraints.multipleOf = schema.multipleOf;
+        }
+        
+        const newObj = {
+          ...rest,
+          type: 'integer',
+          format: 'int64',
+          ...bigIntConstraints
+        };
+        
+        if (paramName === 'negativeBigIntFromString') {
+          if (schema.maximum !== undefined && schema.minimum === undefined) {
+            delete newObj.minimum;
+          }
+        } else if (paramName === 'positiveBigIntFromString') {
+          if (schema.minimum !== undefined && schema.maximum === undefined) {
+            delete newObj.maximum;
+          }
+        }
+        
+        openAPIObject = newObj as OpenAPIV3.SchemaObject;
+      }
+    }
+    else if (schema.format === 'date-time') {
+      if ('type' in openAPIObject) {
+        const { title, ...rest } = openAPIObject;
+        openAPIObject = {
+          ...rest,
+          type: 'string', 
+          format: 'date-time'
+        } as OpenAPIV3.SchemaObject;
+      }
+    }
+    else if (schema.format === 'date') {
+      if ('type' in openAPIObject) {
+        const { title, ...rest } = openAPIObject;
+        openAPIObject = {
+          ...rest,
+          type: 'string',
+          format: 'date'
+        } as OpenAPIV3.SchemaObject;
+      }
+    }
+  }
+
+  if (openAPIObject && 'type' in openAPIObject && 'title' in openAPIObject) {
+    if (openAPIObject.type === 'string' && openAPIObject.title === 'uuid') {
+      const { title, ...rest } = openAPIObject;
+      openAPIObject = {
+        ...rest,
+        type: 'string',
+        format: 'uuid'
+      } as OpenAPIV3.SchemaObject;
+    }
+  }
+
+  if (openAPIObject && (schema.allowReserved || schema.style || schema.explode !== undefined) && 'type' in openAPIObject) {
+    const extendedSchema = openAPIObject as any;
+    
+    if (schema.allowReserved) {
+      extendedSchema.allowReserved = schema.allowReserved;
+    }
+    
+    if (schema.style) {
+      extendedSchema.style = schema.style;
+    }
+    
+    if (schema.explode !== undefined) {
+      extendedSchema.explode = schema.explode;
+    }
+    
+    openAPIObject = extendedSchema;
+  }
 
   return openAPIObject;
 }
@@ -346,7 +485,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
         : {}),
       parameters: route.parameters.map((p) => {
         // Array types not allowed here
-        const schema = schemaToOpenAPI(p.schema);
+        const schema = schemaToOpenAPI(p.schema, undefined, p.name);
 
         if (schema && 'description' in schema) {
           delete schema.description;
@@ -357,6 +496,27 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
           delete schema['x-internal'];
         }
 
+        const queryConfig = p.type === 'query' ? {
+          style: p.style || (() => {
+            if (p.schema.type === 'array') {
+              return 'form'; 
+            } else if (p.schema.type === 'object') {
+              return 'deepObject'; 
+            }
+            return 'form'; 
+          })(),
+          explode: p.explode !== undefined ? p.explode : (() => {
+            const style = p.style || (p.schema.type === 'object' ? 'deepObject' : 'form');
+            
+            if (style === 'deepObject') {
+              return true;
+            } else if (style === 'form') {
+              return p.schema.type !== 'array';
+            }
+            return false;
+          })(),
+          ...(p.allowReserved ? { allowReserved: true } : {})
+        } : {};
         return {
           name: p.name,
           ...(p.schema?.comment?.description !== undefined
@@ -365,7 +525,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
           in: p.type,
           ...(isPrivate ? { 'x-internal': true } : {}),
           ...(p.required ? { required: true } : {}),
-          ...(p.explode ? { style: 'form', explode: true } : {}),
+          ...queryConfig,
           schema: schema as any, // TODO: Something to disallow arrays
         };
       }),

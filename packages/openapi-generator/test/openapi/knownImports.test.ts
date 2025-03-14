@@ -32,12 +32,14 @@ testCase('route with schema with default metadata', ROUTE_WITH_SCHEMA_WITH_DEFAU
       get: {
         parameters: [
           {
+            explode: true,
             in: 'query',
             name: 'ipRestrict',
             required: true,
             schema: {
               type: 'boolean',
-            }
+            },
+            style: 'form'
           }
         ],
         responses: {
@@ -107,12 +109,14 @@ testCase('route with schema with default metadata', ROUTE_WITH_OVERIDDEN_METADAT
       get: {
         parameters: [
           {
+            explode: true,
             in: 'query',
             name: 'ipRestrict',
             required: true,
             schema: {
               type: 'boolean',
-            }
+            },
+            style: 'form'
           }
         ],
         responses: {

@@ -13,6 +13,8 @@ export type Parameter = {
   schema: Schema;
   explode?: boolean;
   required: boolean;
+  allowReserved?: boolean;
+  style?: string; 
 };
 
 export type Route = {
@@ -60,11 +62,29 @@ function parseRequestObject(schema: Schema): E.Either<string, Request> {
       return errorLeft('Route query must be an object');
     } else {
       for (const [name, prop] of Object.entries(querySchema.properties)) {
+        const style = prop.style;
+        const explode = prop.explode;
+        const allowReserved = prop.allowReserved;
+        const commentTags = prop.comment?.tags;
+        
+        const styleTag = commentTags?.find(tag => tag.tag === 'style');
+        const explodeTag = commentTags?.find(tag => tag.tag === 'explode');
+        const allowReservedTag = commentTags?.find(tag => tag.tag === 'allowReserved');
+        
+        const styleFromComment = styleTag?.name;
+        const explodeFromComment = explodeTag ? explodeTag.name === 'true' : undefined;
+        const allowReservedFromComment = allowReservedTag?.name === 'true';
+        
         parameters.push({
           type: 'query',
           name,
           schema: prop,
           required: querySchema.required.includes(name),
+          // Use direct schema properties first, then fall back to comment tags
+          ...(style || styleFromComment ? { style: style || styleFromComment } : {}),
+          ...(explode !== undefined || explodeFromComment !== undefined ? 
+              { explode: explode !== undefined ? explode : explodeFromComment } : {}),
+          ...(allowReserved || allowReservedFromComment ? { allowReserved: true } : {})
         });
       }
     }
@@ -154,6 +174,7 @@ function parseRequestUnion(
       explode: true,
       required: true,
       schema: querySchema,
+      style: 'form'
     });
   }
   if (headerSchema.schemas.length > 0) {
@@ -208,24 +229,111 @@ function parseRequestIntersection(
   if (schema.type !== 'intersection') {
     return errorLeft('request must be an intersection');
   }
-  const result: Request = {
-    parameters: [],
-    body: { type: 'intersection', schemas: [] },
-  };
-  for (const subSchema of schema.schemas) {
-    const subResultE = parseRequestSchema(project, subSchema);
-    if (E.isLeft(subResultE)) {
-      return subResultE;
+
+  const queryProps: Record<string, Schema> = {};
+  const queryRequired: Set<string> = new Set();
+  const paramProps: Record<string, Schema> = {};
+  const paramRequired: Set<string> = new Set();
+  const headerProps: Record<string, Schema> = {};
+  const headerRequired: Set<string> = new Set();
+  const parameterSerializationOptions: Record<string, { style?: string; explode?: boolean; allowReserved?: boolean }> = {};
+  let body: Schema | undefined;
+
+  for (let subSchema of schema.schemas) {
+    if (subSchema.type === 'ref') {
+      let derefE = derefRequestSchema(project, subSchema);
+      if (E.isLeft(derefE)) {
+        return derefE;
+      }
+      subSchema = derefE.right;
     }
-    result.parameters.push(...subResultE.right.parameters);
-    if (subResultE.right.body !== undefined) {
-      (result.body as CombinedType).schemas.push(subResultE.right.body);
+
+    if (subSchema.type !== 'object') {
+      return errorLeft('Route request intersection must be all objects');
+    }
+
+    const querySchema = subSchema.properties['query'];
+    if (querySchema?.type === 'object') {
+      for (const [name, prop] of Object.entries(querySchema.properties)) {
+        queryProps[name] = prop;
+        if (querySchema.required.includes(name)) {
+          queryRequired.add(name);
+        }
+        if (prop.style || prop.explode !== undefined || prop.allowReserved) {
+          parameterSerializationOptions[name] = {
+            ...(prop.style ? { style: prop.style } : {}),
+            ...(prop.explode !== undefined ? { explode: prop.explode } : {}),
+            ...(prop.allowReserved ? { allowReserved: prop.allowReserved } : {})
+          };
+        }
+      }
+    }
+
+    const pathSchema = subSchema.properties['params'];
+    if (pathSchema?.type === 'object') {
+      for (const [name, prop] of Object.entries(pathSchema.properties)) {
+        paramProps[name] = prop;
+        if (pathSchema.required.includes(name)) {
+          paramRequired.add(name);
+        }
+      }
+    }
+
+    const headerSchema = subSchema.properties['headers'];
+    if (headerSchema?.type === 'object') {
+      for (const [name, prop] of Object.entries(headerSchema.properties)) {
+        headerProps[name] = prop;
+        if (headerSchema.required.includes(name)) {
+          headerRequired.add(name);
+        }
+      }
+    }
+
+    const bodySchema = subSchema.properties['body'];
+    if (bodySchema !== undefined) {
+      if (body === undefined) {
+        body = bodySchema;
+      } else {
+        body = {
+          type: 'intersection',
+          schemas: [body, bodySchema],
+        };
+      }
     }
   }
-  if ((result.body as CombinedType).schemas.length === 0) {
-    delete result.body;
+
+  const parameters: Parameter[] = [];
+
+  for (const [name, prop] of Object.entries(queryProps)) {
+    const serializationOptions = parameterSerializationOptions[name] || {};
+    parameters.push({
+      type: 'query',
+      name,
+      schema: prop,
+      required: queryRequired.has(name),
+      ...serializationOptions
+    });
   }
-  return E.right(result);
+
+  for (const [name, prop] of Object.entries(paramProps)) {
+    parameters.push({
+      type: 'path',
+      name,
+      schema: prop,
+      required: paramRequired.has(name),
+    });
+  }
+
+  for (const [name, prop] of Object.entries(headerProps)) {
+    parameters.push({
+      type: 'header',
+      name,
+      schema: prop,
+      required: headerRequired.has(name),
+    });
+  }
+
+  return E.right({ parameters, body });
 }
 
 function parseRequestSchema(

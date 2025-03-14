@@ -197,7 +197,9 @@ testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
             required: true,
             schema: {
               type: 'string'
-            }
+            },
+            style: 'form',
+            explode: true
           }
         ],
         responses: {

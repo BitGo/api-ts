@@ -51,6 +51,8 @@ testCase('route with type descriptions', ROUTE_WITH_TYPE_DESCRIPTIONS, {
         tags: ['Test Routes'],
         parameters: [
           {
+            explode: true,
+            style: 'form',
             description: 'bar param',
             in: 'query',
             name: 'bar',
@@ -175,6 +177,8 @@ testCase('route with type descriptions with optional fields', ROUTE_WITH_TYPE_DE
         tags: ['Test Routes'],
         parameters: [
           {
+            explode: true,
+            style: 'form',
             description: 'bar param',
             in: 'query',
             name: 'bar',
@@ -302,6 +306,8 @@ testCase('route with mixed types and descriptions', ROUTE_WITH_MIXED_TYPES_AND_D
           ],
           parameters: [
             {
+              explode: true,
+              style: 'form',
               name: "bar",
               description: "bar param",
               in: "query",
@@ -476,6 +482,8 @@ testCase('route with array types and descriptions', ROUTE_WITH_ARRAY_TYPES_AND_D
         ],
         parameters: [
           {
+            explode: true,
+            style: 'form',
             name: 'bar',
             description: 'bar param',
             in: 'query',
@@ -616,6 +624,8 @@ testCase('route with record types and descriptions', ROUTE_WITH_RECORD_TYPES_AND
         ],
         parameters: [
           {
+            explode: true,
+            style: 'form',
             name: 'bar',
             description: 'bar param',
             in: 'query',
@@ -763,6 +773,8 @@ testCase('route with descriptions, patterns, and examples', ROUTE_WITH_DESCRIPTI
         ],
         parameters: [
           {
+            explode: true,
+            style: 'form',
             name: 'bar',
             description: 'This is a bar param.',
             in: 'query',
@@ -902,6 +914,8 @@ testCase('route with descriptions for references', ROUTE_WITH_DESCRIPTIONS_FOR_R
         ],
         parameters: [
           {
+            explode: false,
+            style: 'form',
             name: 'bar',
             in: 'query',
             required: true,
@@ -1047,6 +1061,8 @@ testCase('route with min and max values for strings and default value', ROUTE_WI
         ],
         parameters: [
           {
+            explode: false,
+            style: 'form',
             name: 'bar',
             in: 'query',
             required: true,

@@ -81,7 +81,11 @@ export type SchemaMetadata = Omit<
   | 'discriminator'
   | 'xml'
   | 'externalDocs'
->;
+> & {
+  allowReserved?: boolean;
+  style?: 'form' | 'spaceDelimited' | 'pipeDelimited' | 'deepObject';
+  explode?: boolean;
+};
 
 type SchemaTypeInfo = {
   primitive?: boolean;

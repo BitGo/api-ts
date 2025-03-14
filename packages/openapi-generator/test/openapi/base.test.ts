@@ -100,6 +100,8 @@ testCase('simple route', SIMPLE, {
             schema: {
               type: 'string',
             },
+            style: 'form',
+            explode: true
           },
         ],
         responses: {
@@ -131,6 +133,8 @@ testCase('simple route', SIMPLE, {
             schema: {
               type: 'string',
             },
+            style: 'form',
+            explode: true
           },
         ],
         responses: {
@@ -161,6 +165,8 @@ testCase('simple route', SIMPLE, {
             schema: {
               type: 'string',
             },
+            style: 'form',
+            explode: true
           },
         ],
         responses: {
@@ -511,6 +517,8 @@ testCase('optional parameter', OPTIONAL_PARAM, {
             schema: {
               type: 'string',
             },
+            style: 'form',
+            explode: true
           },
         ],
         responses: {
@@ -595,7 +603,9 @@ testCase('route with optional array query parameter and documentation', ROUTE_WI
                 pattern: '^[a-z]+$'
               },
               type: 'array'
-            }
+            },
+            style: 'form',
+            explode: true
           }
         ],
         responses: {
@@ -685,7 +695,9 @@ testCase('route with array union of null and undefined', ROUTE_WITH_ARRAY_UNION_
                 pattern: '^[a-z]+$'
               },
               type: 'array'
-            }
+            },
+            style: 'form',
+            explode: true
           }
         ],
         responses: {
@@ -778,6 +790,8 @@ testCase('multiple routes', MULTIPLE_ROUTES, {
             schema: {
               type: 'string',
             },
+            style: 'form',
+            explode: true
           },
         ],
         responses: {
@@ -804,6 +818,8 @@ testCase('multiple routes', MULTIPLE_ROUTES, {
             schema: {
               type: 'string',
             },
+            style: 'form',
+            explode: true
           },
         ],
         responses: {
@@ -830,6 +846,8 @@ testCase('multiple routes', MULTIPLE_ROUTES, {
             schema: {
               type: 'string',
             },
+            style: 'form',
+            explode: true
           },
         ],
         responses: {
@@ -914,6 +932,8 @@ testCase('multiple routes with methods', MULTIPLE_ROUTES_WITH_METHODS, {
             schema: {
               type: 'string',
             },
+            style: 'form',
+            explode: true
           },
         ],
         responses: {
@@ -938,6 +958,8 @@ testCase('multiple routes with methods', MULTIPLE_ROUTES_WITH_METHODS, {
             schema: {
               type: 'string',
             },
+            style: 'form',
+            explode: true
           },
         ],
         responses: {
@@ -962,6 +984,8 @@ testCase('multiple routes with methods', MULTIPLE_ROUTES_WITH_METHODS, {
             schema: {
               type: 'string',
             },
+            style: 'form',
+            explode: true
           },
         ],
         responses: {

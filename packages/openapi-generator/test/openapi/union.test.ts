@@ -42,22 +42,27 @@ testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, 
       get: {
         parameters: [
           {
+            explode: true,
             in: 'query',
             name: 'foo',
             required: true,
             schema: {
               type: 'string'
-            }
+            },
+            style: 'form'
           },
           {
+            explode: true,
             in: 'query',
             name: 'bar',
             required: true,
             schema: {
               type: 'number'
-            }
+            },
+            style: 'form'
           },
           {
+            explode: true,
             in: 'query',
             name: 'bucket',
             required: true,
@@ -67,7 +72,8 @@ testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, 
                 { type: 'number' },
                 { type: 'boolean' }
               ]
-            }
+            },
+            style: 'form'
           }
         ],
         requestBody: {
@@ -199,6 +205,7 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
       get: {
         parameters: [
           {
+            explode: true,
             name: 'firstUnion',
             in: 'query',
             required: true,
@@ -207,20 +214,24 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
                 { type: 'string' },
                 { type: 'number' }
               ]
-            }
+            },
+            style: 'form'
           },
           {
+            explode: true,
             name: 'secondUnion',
             in: 'query',
             required: true,
             schema: {
               oneOf: [
                 { type: 'boolean' },
-                { type: 'string', format: 'number' }
+                { type: 'number'}
               ]
-            }
+            },
+            style: 'form'
           },
           {
+            explode: true,
             name: 'thirdUnion',
             in: 'query',
             required: true,
@@ -229,25 +240,32 @@ testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UN
                 { type: 'string' },
                 { type: 'boolean' }
               ]
-            }
+            },
+            style: 'form'
           },
           {
+            explode: true,
             name: 'firstNonUnion',
             in: 'query',
             required: true,
-            schema: { type: 'boolean' }
+            schema: { type: 'boolean' },
+            style: 'form'
           },
           {
+            explode: true,
             name: 'secondNonUnion',
             in: 'query',
             required: true,
-            schema: { type: 'string', format: 'number' }
+            schema: { type: 'number' },
+            style: 'form'
           },
           {
+            explode: true,
             name: 'thirdNonUnion',
             in: 'query',
             required: true,
-            schema: { type: 'string' }
+            schema: { type: 'string' },
+            style: 'form'
           }
         ],
         responses: {

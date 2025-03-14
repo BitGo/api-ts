@@ -108,6 +108,8 @@ testCase('schema parameter with title tag', TITLE_TAG, {
       get: {
         parameters: [
           {
+            explode: true,
+            style: 'form',
             in: 'query',
             name: 'bar',
             description: 'bar param',
@@ -1157,6 +1159,8 @@ testCase("route with private properties in request query, params, body, and resp
       get: {
         parameters: [
           {
+            explode: true,
+            style: 'form',
             'x-internal': true,
             description: '',
             in: 'query',
