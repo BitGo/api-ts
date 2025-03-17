@@ -1,4 +1,4 @@
-import { testCase } from "./testHarness";
+import { testCase } from './testHarness';
 
 const ROUTE_WITH_SCHEMA_WITH_DEFAULT_METADATA = `
 import * as t from 'io-ts';
@@ -21,55 +21,57 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase('route with schema with default metadata', ROUTE_WITH_SCHEMA_WITH_DEFAULT_METADATA, {
-  openapi: '3.0.3',
-  info: {
-    title: 'Test',
-    version: '1.0.0'
-  },
-  paths: {
-    '/foo': {
-      get: {
-        parameters: [
-          {
-            in: 'query',
-            name: 'ipRestrict',
-            required: true,
-            schema: {
-              type: 'boolean',
-            }
-          }
-        ],
-        responses: {
-          '200': {
-            description: 'OK',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    test: {
-                      type: 'number',
-                      format: 'number',
-                      title: 'Unix Time (milliseconds)',
-                      description: 'Number of milliseconds since the Unix epoch',
-                    }
+testCase(
+  'route with schema with default metadata',
+  ROUTE_WITH_SCHEMA_WITH_DEFAULT_METADATA,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          parameters: [
+            {
+              in: 'query',
+              name: 'ipRestrict',
+              required: true,
+              schema: {
+                type: 'boolean',
+              },
+            },
+          ],
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      test: {
+                        type: 'number',
+                        format: 'number',
+                        title: 'Unix Time (milliseconds)',
+                        description: 'Number of milliseconds since the Unix epoch',
+                      },
+                    },
+                    required: ['test'],
                   },
-                  required: [
-                    'test'
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
   },
-  components: {
-    schemas: {}
-  }
-});
+);
 
 const ROUTE_WITH_OVERIDDEN_METADATA = `
 import * as t from 'io-ts';
@@ -100,7 +102,7 @@ testCase('route with schema with default metadata', ROUTE_WITH_OVERIDDEN_METADAT
   openapi: '3.0.3',
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   paths: {
     '/foo': {
@@ -112,8 +114,8 @@ testCase('route with schema with default metadata', ROUTE_WITH_OVERIDDEN_METADAT
             required: true,
             schema: {
               type: 'boolean',
-            }
-          }
+            },
+          },
         ],
         responses: {
           '200': {
@@ -128,20 +130,18 @@ testCase('route with schema with default metadata', ROUTE_WITH_OVERIDDEN_METADAT
                       format: 'string',
                       title: 'Unix Time (milliseconds)',
                       description: 'Testing overridden metadata',
-                    }
+                    },
                   },
-                  required: [
-                    'test'
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  required: ['test'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
-    schemas: {}
-  }
+    schemas: {},
+  },
 });

@@ -1,5 +1,4 @@
-import { testCase } from "./testHarness";
-
+import { testCase } from './testHarness';
 
 const SIMPLE = `
 import * as t from 'io-ts';
@@ -534,9 +533,6 @@ testCase('optional parameter', OPTIONAL_PARAM, {
   },
 });
 
-
-
-
 const ROUTE_WITH_ARRAY_QUERY_PARAM = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
@@ -568,64 +564,63 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase('route with optional array query parameter and documentation', ROUTE_WITH_ARRAY_QUERY_PARAM, {
-  openapi: '3.0.3',
-  info: {
-    title: 'Test',
-    version: '1.0.0'
-  },
-  paths: {
-    '/foo': {
-      get: {
-        summary: 'A simple route with type descriptions for references',
-        operationId: 'api.v1.test',
-        tags: [
-          'Test Routes'
-        ],
-        parameters: [
-          {
-            description: 'This is a foo description.',
-            in: 'query',
-            name: 'foo',
-            schema: {
-              items: {
-                description: 'This is a foo description.',
-                example: 'abc',
-                type: 'string',
-                pattern: '^[a-z]+$'
+testCase(
+  'route with optional array query parameter and documentation',
+  ROUTE_WITH_ARRAY_QUERY_PARAM,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          summary: 'A simple route with type descriptions for references',
+          operationId: 'api.v1.test',
+          tags: ['Test Routes'],
+          parameters: [
+            {
+              description: 'This is a foo description.',
+              in: 'query',
+              name: 'foo',
+              schema: {
+                items: {
+                  description: 'This is a foo description.',
+                  example: 'abc',
+                  type: 'string',
+                  pattern: '^[a-z]+$',
+                },
+                type: 'array',
               },
-              type: 'array'
-            }
-          }
-        ],
-        responses: {
-          '200': {
-            description: 'OK',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    test: {
-                      type: 'string'
-                    }
+            },
+          ],
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      test: {
+                        type: 'string',
+                      },
+                    },
+                    required: ['test'],
                   },
-                  required: [
-                    'test'
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
   },
-  components: {
-    schemas: {}
-  }
-});
-
+);
 
 const ROUTE_WITH_ARRAY_UNION_NULL_UNDEFINED_QUERY_PARAM = `
 import * as t from 'io-ts';
@@ -658,63 +653,63 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase('route with array union of null and undefined', ROUTE_WITH_ARRAY_UNION_NULL_UNDEFINED_QUERY_PARAM, {
-  openapi: '3.0.3',
-  info: {
-    title: 'Test',
-    version: '1.0.0'
-  },
-  paths: {
-    '/foo': {
-      get: {
-        summary: 'A simple route with type descriptions for references',
-        operationId: 'api.v1.test',
-        tags: [
-          'Test Routes'
-        ],
-        parameters: [
-          {
-            description: 'This is a foo description.',
-            in: 'query',
-            name: 'ipRestrict',
-            schema: {
-              items: {
-                description: 'This is a foo description.',
-                example: 'abc',
-                type: 'string',
-                pattern: '^[a-z]+$'
+testCase(
+  'route with array union of null and undefined',
+  ROUTE_WITH_ARRAY_UNION_NULL_UNDEFINED_QUERY_PARAM,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          summary: 'A simple route with type descriptions for references',
+          operationId: 'api.v1.test',
+          tags: ['Test Routes'],
+          parameters: [
+            {
+              description: 'This is a foo description.',
+              in: 'query',
+              name: 'ipRestrict',
+              schema: {
+                items: {
+                  description: 'This is a foo description.',
+                  example: 'abc',
+                  type: 'string',
+                  pattern: '^[a-z]+$',
+                },
+                type: 'array',
               },
-              type: 'array'
-            }
-          }
-        ],
-        responses: {
-          '200': {
-            description: 'OK',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    test: {
-                      type: 'string'
-                    }
+            },
+          ],
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      test: {
+                        type: 'string',
+                      },
+                    },
+                    required: ['test'],
                   },
-                  required: [
-                    'test'
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
   },
-  components: {
-    schemas: {}
-  }
-});
+);
 
 const MULTIPLE_ROUTES = `
 import * as t from 'io-ts';

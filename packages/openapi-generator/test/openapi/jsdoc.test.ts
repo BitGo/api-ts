@@ -1,5 +1,4 @@
-import { testCase } from "./testHarness";
-
+import { testCase } from './testHarness';
 
 const TITLE_TAG = `
 import * as t from 'io-ts';
@@ -162,11 +161,11 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase("route with private headers", ROUTE_WITH_PRIVATE_HEADERS, {
+testCase('route with private headers', ROUTE_WITH_PRIVATE_HEADERS, {
   openapi: '3.0.3',
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   paths: {
     '/foo': {
@@ -179,17 +178,17 @@ testCase("route with private headers", ROUTE_WITH_PRIVATE_HEADERS, {
             name: 'x-private-header',
             required: true,
             schema: {
-              type: 'string'
-            }
+              type: 'string',
+            },
           },
           {
             in: 'header',
             name: 'public-header',
             required: true,
             schema: {
-              type: 'string'
-            }
-          }
+              type: 'string',
+            },
+          },
         ],
         responses: {
           '200': {
@@ -197,20 +196,19 @@ testCase("route with private headers", ROUTE_WITH_PRIVATE_HEADERS, {
             content: {
               'application/json': {
                 schema: {
-                  type: 'string'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
-    schemas: {}
-  }
+    schemas: {},
+  },
 });
-
 
 const ROUTE_WITH_RESPONSE_EXAMPLE_STRING = `
 import * as t from 'io-ts';
@@ -535,9 +533,6 @@ testCase('route with multiple unknown tags', ROUTE_WITH_MULTIPLE_UNKNOWN_TAGS, {
   },
 });
 
-
-
-
 const ROUTE_WITH_DEPRECATED_TAG = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
@@ -572,7 +567,7 @@ testCase('route with deprecated tag', ROUTE_WITH_DEPRECATED_TAG, {
   openapi: '3.0.3',
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   paths: {
     '/foo': {
@@ -580,9 +575,7 @@ testCase('route with deprecated tag', ROUTE_WITH_DEPRECATED_TAG, {
         summary: 'A simple route with type descriptions for references',
         operationId: 'api.v1.test',
         parameters: [],
-        tags: [
-          'Test Routes'
-        ],
+        tags: ['Test Routes'],
         requestBody: {
           content: {
             'application/json': {
@@ -592,15 +585,13 @@ testCase('route with deprecated tag', ROUTE_WITH_DEPRECATED_TAG, {
                   foo: {
                     type: 'string',
                     description: 'This is a foo description.',
-                    deprecated: true
-                  }
+                    deprecated: true,
+                  },
                 },
-                required: [
-                  'foo'
-                ]
-              }
-            }
-          }
+                required: ['foo'],
+              },
+            },
+          },
         },
         responses: {
           '200': {
@@ -611,26 +602,22 @@ testCase('route with deprecated tag', ROUTE_WITH_DEPRECATED_TAG, {
                   type: 'object',
                   properties: {
                     test: {
-                      type: 'string'
-                    }
+                      type: 'string',
+                    },
                   },
-                  required: [
-                    'test'
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  required: ['test'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
-    schemas: {}
-  }
+    schemas: {},
+  },
 });
-
-
 
 const ROUTE_WITH_MIN_MAX_AND_OTHER_TAGS = `
 import * as t from 'io-ts';
@@ -677,7 +664,7 @@ testCase('route with min and max tags', ROUTE_WITH_MIN_MAX_AND_OTHER_TAGS, {
   openapi: '3.0.3',
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   paths: {
     '/foo': {
@@ -685,9 +672,7 @@ testCase('route with min and max tags', ROUTE_WITH_MIN_MAX_AND_OTHER_TAGS, {
         summary: 'A simple route with type descriptions for references',
         operationId: 'api.v1.test',
         parameters: [],
-        tags: [
-          'Test Routes'
-        ],
+        tags: ['Test Routes'],
         requestBody: {
           content: {
             'application/json': {
@@ -708,15 +693,13 @@ testCase('route with min and max tags', ROUTE_WITH_MIN_MAX_AND_OTHER_TAGS, {
                     exclusiveMaximum: true,
                     uniqueItems: true,
                     readOnly: true,
-                    writeOnly: true
-                  }
+                    writeOnly: true,
+                  },
                 },
-                required: [
-                  'foo'
-                ]
-              }
-            }
-          }
+                required: ['foo'],
+              },
+            },
+          },
         },
         responses: {
           '200': {
@@ -727,25 +710,22 @@ testCase('route with min and max tags', ROUTE_WITH_MIN_MAX_AND_OTHER_TAGS, {
                   type: 'object',
                   properties: {
                     test: {
-                      type: 'string'
-                    }
+                      type: 'string',
+                    },
                   },
-                  required: [
-                    'test'
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  required: ['test'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
-    schemas: {}
-  }
+    schemas: {},
+  },
 });
-
 
 const SCHEMA_WITH_TITLES_IN_REQUEST_BODIES = `
 import * as t from 'io-ts';
@@ -777,11 +757,11 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BODIES, {
+testCase('route with titles in request bodies', SCHEMA_WITH_TITLES_IN_REQUEST_BODIES, {
   openapi: '3.0.3',
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   paths: {
     '/foo': {
@@ -795,11 +775,11 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
                 properties: {
                   params: {
                     type: 'object',
-                    title: "Some Readable ParamsFoo Title",
+                    title: 'Some Readable ParamsFoo Title',
                     properties: {
-                      someId: { type: 'string' }
+                      someId: { type: 'string' },
                     },
-                    required: ['someId']
+                    required: ['someId'],
                   },
                   body: {
                     type: 'object',
@@ -807,16 +787,16 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
                     properties: {
                       foo: {
                         type: 'string',
-                        description: 'a foo description'
-                      }
+                        description: 'a foo description',
+                      },
                     },
-                    required: ['foo']
-                  }
+                    required: ['foo'],
+                  },
                 },
-                required: ['params', 'body']
-              }
-            }
-          }
+                required: ['params', 'body'],
+              },
+            },
+          },
         },
         responses: {
           '200': {
@@ -825,14 +805,14 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
               'application/json': {
                 schema: {
                   type: 'string',
-                  enum: ['OK']
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  enum: ['OK'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
@@ -840,7 +820,7 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
         title: 'Some Readable ParamsFoo Title',
         type: 'object',
         properties: { someId: { type: 'string' } },
-        required: ['someId']
+        required: ['someId'],
       },
       BodyFoo: {
         title: 'Some Readable BodyFoo Title',
@@ -848,15 +828,14 @@ testCase("route with titles in request bodies", SCHEMA_WITH_TITLES_IN_REQUEST_BO
         properties: {
           foo: {
             type: 'string',
-            description: 'a foo description'
-          }
+            description: 'a foo description',
+          },
         },
-        required: ['foo']
-      }
-    }
-  }
+        required: ['foo'],
+      },
+    },
+  },
 });
-
 
 const ROUTE_WITH_ARRAY_EXAMPLE = `
 import * as t from 'io-ts';
@@ -899,11 +878,11 @@ export const route = h.httpRoute({
   },
 });`;
 
-testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE, {
+testCase('route with array examples', ROUTE_WITH_ARRAY_EXAMPLE, {
   openapi: '3.0.3',
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   paths: {
     '/foo': {
@@ -919,7 +898,7 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE, {
                     type: 'array',
                     items: {
                       type: 'string',
-                      example: '"btc"'
+                      example: '"btc"',
                     },
                   },
                   array2: {
@@ -927,41 +906,36 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE, {
                     example: ['btc', 'eth'],
                     items: {
                       type: 'string',
-                      example: 'btc'
+                      example: 'btc',
                     },
                   },
                   array3: {
                     items: {
-                      type: 'number'
+                      type: 'number',
                     },
                     maxItems: 5,
                     minItems: 1,
-                    type: 'array'
+                    type: 'array',
                   },
                   objectWithArray: {
                     properties: {
                       nestedArray: {
-                        example: [
-                          'btc',
-                          'eth'
-                        ],
+                        example: ['btc', 'eth'],
                         items: {
                           example: 'btc',
-                          type: 'string'
+                          type: 'string',
                         },
-                        type: 'array'
-                      }
+                        type: 'array',
+                      },
                     },
-                    required: [
-                      'nestedArray'
-                    ],
-                    type: 'object'
+                    required: ['nestedArray'],
+                    type: 'object',
                   },
                 },
                 required: ['array1', 'array2', 'array3', 'objectWithArray'],
               },
-            }
-          }
+            },
+          },
         },
         responses: {
           '200': {
@@ -970,26 +944,25 @@ testCase("route with array examples", ROUTE_WITH_ARRAY_EXAMPLE, {
               'application/json': {
                 schema: {
                   type: 'string',
-                  enum: ['OK']
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  enum: ['OK'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
       innerItems: {
-        title: "innerItems",
-        type: "string",
-        example: 'btc'
-      }
-    }
-  }
+        title: 'innerItems',
+        type: 'string',
+        example: 'btc',
+      },
+    },
+  },
 });
-
 
 const ROUTE_WITH_NESTED_ARRAY_EXAMPLES = `
 import * as t from 'io-ts';
@@ -1025,91 +998,96 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase("route with nested array examples", ROUTE_WITH_NESTED_ARRAY_EXAMPLES, {
-  openapi: "3.0.3",
+testCase('route with nested array examples', ROUTE_WITH_NESTED_ARRAY_EXAMPLES, {
+  openapi: '3.0.3',
   info: {
-    title: "Test",
-    version: "1.0.0"
+    title: 'Test',
+    version: '1.0.0',
   },
   paths: {
-    "/foo": {
+    '/foo': {
       post: {
         parameters: [],
         requestBody: {
           content: {
-            "application/json": {
+            'application/json': {
               schema: {
-                type: "object",
+                type: 'object',
                 properties: {
                   nested: {
-                    "$ref": "#/components/schemas/thirdLevel"
-                  }
+                    $ref: '#/components/schemas/thirdLevel',
+                  },
                 },
-                required: [
-                  "nested"
-                ]
-              }
-            }
-          }
+                required: ['nested'],
+              },
+            },
+          },
         },
         responses: {
           200: {
-            description: "OK",
+            description: 'OK',
             content: {
-              "application/json": {
+              'application/json': {
                 schema: {
-                  type: "string",
-                  enum: [
-                    "OK"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  type: 'string',
+                  enum: ['OK'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
       firstLevel: {
-        title: "firstLevel",
-        type: "array",
-        example: [ "a", "b" ],
+        title: 'firstLevel',
+        type: 'array',
+        example: ['a', 'b'],
         items: {
-          type: "string"
-        }
+          type: 'string',
+        },
       },
       secondLevel: {
-        title: "secondLevel",
-        type: "array",
-        example: [ [ "a", "b" ], [ "c", "d" ] ],
+        title: 'secondLevel',
+        type: 'array',
+        example: [
+          ['a', 'b'],
+          ['c', 'd'],
+        ],
         items: {
-          type: "array",
-          example: [ "a", "b" ],
+          type: 'array',
+          example: ['a', 'b'],
           items: {
-            type: "string"
-          }
-        }
+            type: 'string',
+          },
+        },
       },
       thirdLevel: {
-        title: "thirdLevel",
-        type: "array",
-        example: [[["a"],["b"]],[["c"],["d"]]],
+        title: 'thirdLevel',
+        type: 'array',
+        example: [
+          [['a'], ['b']],
+          [['c'], ['d']],
+        ],
         items: {
-          type: "array",
-          example: [["a","b"],["c","d"]],
+          type: 'array',
+          example: [
+            ['a', 'b'],
+            ['c', 'd'],
+          ],
           items: {
-            type: "array",
-            example: ["a","b"],
+            type: 'array',
+            example: ['a', 'b'],
             items: {
-              type: "string"
-            }
-          }
-        }
-      }
-    }
-  }
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+  },
 });
 
 const ROUTE_WITH_PRIVATE_PROPERTIES = `
@@ -1146,119 +1124,111 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase("route with private properties in request query, params, body, and response", ROUTE_WITH_PRIVATE_PROPERTIES, {
-  openapi: "3.0.3",
-  info: {
-    title: "Test",
-    version: "1.0.0"
-  },
-  paths: {
-    '/foo': {
-      get: {
-        parameters: [
-          {
-            'x-internal': true,
-            description: '',
-            in: 'query',
-            name: 'query',
-            required: true,
-            schema: {
-              type: 'string'
-            }
-          },
-          {
-            'x-internal': true,
-            description: '',
-            in: 'path',
-            name: 'path',
-            required: true,
-            schema: {
-              type: 'string'
-            }
-          }
-        ],
-        requestBody: {
-          content: {
-            'application/json': {
+testCase(
+  'route with private properties in request query, params, body, and response',
+  ROUTE_WITH_PRIVATE_PROPERTIES,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          parameters: [
+            {
+              'x-internal': true,
+              description: '',
+              in: 'query',
+              name: 'query',
+              required: true,
               schema: {
-                properties: {
-                  bar: {
-                    'x-internal': true,
-                    type: 'string'
-                  },
-                  foo: {
-                    type: 'string'
-                  },
-                  privateObject: {
-                    'x-internal': true,
-                    properties: {
-                      privateFieldInObject: {
-                        type: 'boolean'
-                      }
-                    },
-                    required: [
-                      'privateFieldInObject'
-                    ],
-                    type: 'object'
-                  }
-                },
-                required: [
-                  'foo',
-                  'bar',
-                  'privateObject'
-                ],
-                type: 'object'
-              }
-            }
-          },
-        },
-        responses: {
-          '200': {
+                type: 'string',
+              },
+            },
+            {
+              'x-internal': true,
+              description: '',
+              in: 'path',
+              name: 'path',
+              required: true,
+              schema: {
+                type: 'string',
+              },
+            },
+          ],
+          requestBody: {
             content: {
               'application/json': {
                 schema: {
-                  '$ref': '#/components/schemas/SampleType'
-                }
-              }
+                  properties: {
+                    bar: {
+                      'x-internal': true,
+                      type: 'string',
+                    },
+                    foo: {
+                      type: 'string',
+                    },
+                    privateObject: {
+                      'x-internal': true,
+                      properties: {
+                        privateFieldInObject: {
+                          type: 'boolean',
+                        },
+                      },
+                      required: ['privateFieldInObject'],
+                      type: 'object',
+                    },
+                  },
+                  required: ['foo', 'bar', 'privateObject'],
+                  type: 'object',
+                },
+              },
             },
-            description: 'OK'
-          }
-        }
-      }
+          },
+          responses: {
+            '200': {
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/SampleType',
+                  },
+                },
+              },
+              description: 'OK',
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        SampleType: {
+          properties: {
+            bar: {
+              'x-internal': true,
+              type: 'string',
+            },
+            foo: {
+              type: 'string',
+            },
+            privateObject: {
+              'x-internal': true,
+              properties: {
+                privateFieldInObject: {
+                  type: 'boolean',
+                },
+              },
+              required: ['privateFieldInObject'],
+              type: 'object',
+            },
+          },
+          required: ['foo', 'bar', 'privateObject'],
+          title: 'SampleType',
+          type: 'object',
+        },
+      },
     },
   },
-  components: {
-    schemas: {
-      SampleType: {
-        properties: {
-          bar: {
-            'x-internal': true,
-            type: 'string'
-          },
-          foo: {
-            type: 'string'
-          },
-          privateObject: {
-            'x-internal': true,
-            properties: {
-              privateFieldInObject: {
-                type: 'boolean'
-              }
-            },
-            required: [
-              'privateFieldInObject'
-            ],
-            type: 'object'
-          }
-        },
-        required: [
-          'foo',
-          'bar',
-          'privateObject'
-        ],
-        title: 'SampleType',
-        type: 'object'
-      }
-    }
-  },
-});
+);

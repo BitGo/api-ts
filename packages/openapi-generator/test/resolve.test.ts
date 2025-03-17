@@ -86,7 +86,10 @@ testCase(
   {
     FOO: {
       type: 'union',
-      schemas: [{ type: 'string', primitive: true }, { type: 'number', primitive: true }],
+      schemas: [
+        { type: 'string', primitive: true },
+        { type: 'number', primitive: true },
+      ],
     },
   },
   ['Unimplemented initializer type ArrayExpression'],

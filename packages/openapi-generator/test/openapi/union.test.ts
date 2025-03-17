@@ -1,4 +1,4 @@
-import { testCase } from "./testHarness";
+import { testCase } from './testHarness';
 
 const SCHEMA_WITH_REDUNDANT_UNIONS = `
 import * as t from 'io-ts';
@@ -35,7 +35,7 @@ testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, 
   openapi: '3.0.3',
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   paths: {
     '/foo': {
@@ -46,29 +46,25 @@ testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, 
             name: 'foo',
             required: true,
             schema: {
-              type: 'string'
-            }
+              type: 'string',
+            },
           },
           {
             in: 'query',
             name: 'bar',
             required: true,
             schema: {
-              type: 'number'
-            }
+              type: 'number',
+            },
           },
           {
             in: 'query',
             name: 'bucket',
             required: true,
             schema: {
-              oneOf: [
-                { type: 'string' },
-                { type: 'number' },
-                { type: 'boolean' }
-              ]
-            }
-          }
+              oneOf: [{ type: 'string' }, { type: 'number' }, { type: 'boolean' }],
+            },
+          },
         ],
         requestBody: {
           content: {
@@ -80,48 +76,37 @@ testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, 
                       nested: {
                         properties: {
                           bar: {
-                            type: 'number'
+                            type: 'number',
                           },
                           foo: {
-                            type: 'string'
-                          }
+                            type: 'string',
+                          },
                         },
-                        required: [
-                          'bar',
-                          'foo'
-                        ],
-                        type: 'object'
-                      }
+                        required: ['bar', 'foo'],
+                        type: 'object',
+                      },
                     },
-                    required: [
-                      'nested'
-                    ],
-                    type: 'object'
+                    required: ['nested'],
+                    type: 'object',
                   },
                   typeUnion: {
                     properties: {
                       bar: {
-                        type: 'number'
+                        type: 'number',
                       },
                       foo: {
-                        type: 'string'
-                      }
+                        type: 'string',
+                      },
                     },
-                    required: [
-                      'bar',
-                      'foo'
-                    ],
-                    type: 'object'
-                  }
+                    required: ['bar', 'foo'],
+                    type: 'object',
+                  },
                 },
-                required: [
-                  'typeUnion',
-                  'nestedTypeUnion'
-                ],
-                type: 'object'
-              }
-            }
-          }
+                required: ['typeUnion', 'nestedTypeUnion'],
+                type: 'object',
+              },
+            },
+          },
         },
         responses: {
           '200': {
@@ -129,34 +114,36 @@ testCase('route with reduntant response schemas', SCHEMA_WITH_REDUNDANT_UNIONS, 
             content: {
               'application/json': {
                 schema: {
-                  oneOf: [{
-                    type: 'string'
-                  }, {
-                    type: 'number'
-                  }]
-                }
-              }
-            }
+                  oneOf: [
+                    {
+                      type: 'string',
+                    },
+                    {
+                      type: 'number',
+                    },
+                  ],
+                },
+              },
+            },
           },
           '400': {
             description: 'Bad Request',
             content: {
               'application/json': {
                 schema: {
-                  type: 'boolean'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  type: 'boolean',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
-    schemas: {}
-  }
+    schemas: {},
+  },
 });
-
 
 const ROUTE_WITH_CONSOLIDATABLE_UNION_SCHEMAS = `
 import * as t from 'io-ts';
@@ -188,93 +175,88 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase("route with consolidatable union schemas", ROUTE_WITH_CONSOLIDATABLE_UNION_SCHEMAS, {
-  openapi: '3.0.3',
-  info: {
-    title: 'Test',
-    version: '1.0.0'
-  },
-  paths: {
-    '/foo': {
-      get: {
-        parameters: [
-          {
-            name: 'firstUnion',
-            in: 'query',
-            required: true,
-            schema: {
-              oneOf: [
-                { type: 'string' },
-                { type: 'number' }
-              ]
-            }
-          },
-          {
-            name: 'secondUnion',
-            in: 'query',
-            required: true,
-            schema: {
-              oneOf: [
-                { type: 'boolean' },
-                { type: 'string', format: 'number' }
-              ]
-            }
-          },
-          {
-            name: 'thirdUnion',
-            in: 'query',
-            required: true,
-            schema: {
-              oneOf: [
-                { type: 'string' },
-                { type: 'boolean' }
-              ]
-            }
-          },
-          {
-            name: 'firstNonUnion',
-            in: 'query',
-            required: true,
-            schema: { type: 'boolean' }
-          },
-          {
-            name: 'secondNonUnion',
-            in: 'query',
-            required: true,
-            schema: { type: 'string', format: 'number' }
-          },
-          {
-            name: 'thirdNonUnion',
-            in: 'query',
-            required: true,
-            schema: { type: 'string' }
-          }
-        ],
-        responses: {
-          '200': {
-            description: 'OK',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    fourthUnion: { type: 'boolean' },
-                    fifthUnion: { type: 'boolean' },
-                    sixthUnion: { type: 'number' }
+testCase(
+  'route with consolidatable union schemas',
+  ROUTE_WITH_CONSOLIDATABLE_UNION_SCHEMAS,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          parameters: [
+            {
+              name: 'firstUnion',
+              in: 'query',
+              required: true,
+              schema: {
+                oneOf: [{ type: 'string' }, { type: 'number' }],
+              },
+            },
+            {
+              name: 'secondUnion',
+              in: 'query',
+              required: true,
+              schema: {
+                oneOf: [{ type: 'boolean' }, { type: 'string', format: 'number' }],
+              },
+            },
+            {
+              name: 'thirdUnion',
+              in: 'query',
+              required: true,
+              schema: {
+                oneOf: [{ type: 'string' }, { type: 'boolean' }],
+              },
+            },
+            {
+              name: 'firstNonUnion',
+              in: 'query',
+              required: true,
+              schema: { type: 'boolean' },
+            },
+            {
+              name: 'secondNonUnion',
+              in: 'query',
+              required: true,
+              schema: { type: 'string', format: 'number' },
+            },
+            {
+              name: 'thirdNonUnion',
+              in: 'query',
+              required: true,
+              schema: { type: 'string' },
+            },
+          ],
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      fourthUnion: { type: 'boolean' },
+                      fifthUnion: { type: 'boolean' },
+                      sixthUnion: { type: 'number' },
+                    },
+                    required: ['fourthUnion', 'sixthUnion'],
                   },
-                  required: ['fourthUnion', 'sixthUnion']
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
   },
-  components: {
-    schemas: {}
-  }
-});
+);
 
 const ROUTE_WITH_UNKNOWN_UNIONS = `
 import * as t from 'io-ts';
@@ -299,10 +281,10 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase("route with unknown unions", ROUTE_WITH_UNKNOWN_UNIONS, {
+testCase('route with unknown unions', ROUTE_WITH_UNKNOWN_UNIONS, {
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   openapi: '3.0.3',
   paths: {
@@ -316,62 +298,58 @@ testCase("route with unknown unions", ROUTE_WITH_UNKNOWN_UNIONS, {
                 schema: {
                   properties: {
                     nested: {
-                      '$ref': '#/components/schemas/NestedUnknownUnion'
+                      $ref: '#/components/schemas/NestedUnknownUnion',
                     },
                     single: {
-                      '$ref': '#/components/schemas/SingleUnknownUnion'
+                      $ref: '#/components/schemas/SingleUnknownUnion',
                     },
                     unknown: {
-                      '$ref': '#/components/schemas/UnknownUnion'
-                    }
+                      $ref: '#/components/schemas/UnknownUnion',
+                    },
                   },
-                  required: [
-                    'single',
-                    'unknown',
-                    'nested'
-                  ],
-                  type: 'object'
-                }
-              }
+                  required: ['single', 'unknown', 'nested'],
+                  type: 'object',
+                },
+              },
             },
-            description: 'OK'
-          }
-        }
-      }
-    }
+            description: 'OK',
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
       NestedUnknownUnion: {
         oneOf: [
           {
-            type: 'string'
+            type: 'string',
           },
           {
-            type: 'boolean'
-          }
+            type: 'boolean',
+          },
         ],
-        title: 'NestedUnknownUnion'
+        title: 'NestedUnknownUnion',
       },
       SingleUnknownUnion: {
         title: 'SingleUnknownUnion',
-        type: 'string'
+        type: 'string',
       },
       UnknownUnion: {
         oneOf: [
           {
-            type: 'string'
+            type: 'string',
           },
           {
-            type: 'number'
+            type: 'number',
           },
           {
-            type: 'boolean'
-          }
+            type: 'boolean',
+          },
         ],
-        title: 'UnknownUnion'
-      }
-    }
+        title: 'UnknownUnion',
+      },
+    },
   },
 });
 
@@ -402,39 +380,48 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase("route with duplicate headers in request union", ROUTE_WITH_DUPLICATE_HEADERS, {
-  info: {
-    title: 'Test',
-    version: '1.0.0'
+testCase(
+  'route with duplicate headers in request union',
+  ROUTE_WITH_DUPLICATE_HEADERS,
+  {
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    openapi: '3.0.3',
+    paths: {
+      '/foo': {
+        get: {
+          parameters: [
+            { in: 'header', name: 'x-foo', required: true, schema: { type: 'string' } },
+            {
+              in: 'header',
+              name: 'x-common',
+              required: true,
+              schema: { type: 'string' },
+            },
+            { in: 'header', name: 'x-bar', required: true, schema: { type: 'number' } },
+          ],
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
   },
-  openapi: '3.0.3',
-  paths: {
-    '/foo': {
-      get: {
-        parameters: [
-          { in: 'header', name: 'x-foo', required: true, schema: { type: 'string' } },
-          { in: 'header', name: 'x-common', required: true, schema: { type: 'string' } },
-          { in: 'header', name: 'x-bar', required: true, schema: { type: 'number' } },
-        ],
-        responses: {
-          '200': {
-            description: 'OK',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'string'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  components: {
-    schemas: {}
-  }
-});
+);
 
 const ROUTE_WITH_REQUEST_UNION = `
 import * as t from 'io-ts';
@@ -458,10 +445,10 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase("route with request union", ROUTE_WITH_REQUEST_UNION, {
+testCase('route with request union', ROUTE_WITH_REQUEST_UNION, {
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   openapi: '3.0.3',
   paths: {
@@ -476,16 +463,16 @@ testCase("route with request union", ROUTE_WITH_REQUEST_UNION, {
             content: {
               'application/json': {
                 schema: {
-                  type: 'string'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
-    schemas: {}
-  }
+    schemas: {},
+  },
 });

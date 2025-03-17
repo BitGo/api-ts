@@ -103,7 +103,7 @@ async function testCase(
         const codecE = parseCodecInitializer(project, newSourceFile, init);
         if (E.isLeft(codecE)) {
           errors.push(
-          `Could not parse codec '${ref.name}' in '${ref.location}': ${codecE.left}`,
+            `Could not parse codec '${ref.name}' in '${ref.location}': ${codecE.left}`,
           );
           break;
         }
@@ -117,7 +117,7 @@ async function testCase(
     const openapi = convertRoutesToOpenAPI(
       {
         title: name,
-        version: "1.0.0",
+        version: '1.0.0',
         description,
       },
       [],
@@ -125,7 +125,7 @@ async function testCase(
       components,
     );
 
-    assert.deepStrictEqual(errors, expectedErrors); 
+    assert.deepStrictEqual(errors, expectedErrors);
     assert.deepStrictEqual(openapi, expected);
   });
 }
@@ -275,91 +275,96 @@ testCase(
   'simple api spec with exported union type',
   'test/sample-types/apiSpecWithUnion.ts',
   {
-    openapi: "3.0.3",
+    openapi: '3.0.3',
     info: {
-      title: "simple api spec with exported union type",
-      version: "1.0.0",
-      description: "simple api spec with exported union type"
+      title: 'simple api spec with exported union type',
+      version: '1.0.0',
+      description: 'simple api spec with exported union type',
     },
     paths: {
-      "/test": {
+      '/test': {
         get: {
           parameters: [],
           responses: {
             200: {
-              description: "OK",
+              description: 'OK',
               content: {
                 'application/json': {
                   schema: {
-                    $ref: "#/components/schemas/SampleUnion"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                    $ref: '#/components/schemas/SampleUnion',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     components: {
       schemas: {
         SampleUnion: {
-          title: "SampleUnion",
+          title: 'SampleUnion',
           oneOf: [
             {
-              type: "string"
+              type: 'string',
             },
             {
-              type: "number"
-            }
-          ]
-        }
-      }
-    }
+              type: 'number',
+            },
+          ],
+        },
+      },
+    },
   },
-  []
-)
+  [],
+);
 
-testCase("simple api spec with custom codec", "test/sample-types/apiSpecWithCustomCodec.ts", {
-  openapi: "3.0.3",
-  info: {
-    title: "simple api spec with custom codec",
-    version: "1.0.0",
-    description: "simple api spec with custom codec"
-  },
-  paths: {
-    "/test": {
-      get: {
-        parameters: [],
-        responses: {
-          200: {
-            description: "OK",
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'string',
-                  description: 'Sample custom codec',
-                  example: 'sample',
-                  format: 'sample'
-                }
-              }
-            }
+testCase(
+  'simple api spec with custom codec',
+  'test/sample-types/apiSpecWithCustomCodec.ts',
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'simple api spec with custom codec',
+      version: '1.0.0',
+      description: 'simple api spec with custom codec',
+    },
+    paths: {
+      '/test': {
+        get: {
+          parameters: [],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'string',
+                    description: 'Sample custom codec',
+                    example: 'sample',
+                    format: 'sample',
+                  },
+                },
+              },
+            },
+            201: {
+              description: 'Created',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'number',
+                    description: 'Another sample codec',
+                  },
+                },
+              },
+            },
           },
-          201: {
-            description: 'Created',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'number',
-                  description: 'Another sample codec',
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
   },
-  components: {
-    schemas: {}
-  }
-}, []);
+  [],
+);
