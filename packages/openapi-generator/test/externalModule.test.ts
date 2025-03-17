@@ -28,7 +28,7 @@ async function testCase(
     for (const path of Object.keys(expected)) {
       const resolvedPath = p.resolve(path);
       const sourceFile = project.get(resolvedPath);
-      
+
       if (sourceFile === undefined) {
         throw new Error(`Source file ${path} not found`);
       }

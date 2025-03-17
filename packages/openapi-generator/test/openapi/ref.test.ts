@@ -1,4 +1,4 @@
-import { testCase } from "./testHarness";
+import { testCase } from './testHarness';
 
 const SCHEMA_REF = `
 import * as t from 'io-ts';
@@ -100,59 +100,59 @@ const Foo = t.string;
 `;
 
 testCase('request body ref with comments', SCHEMA_REF_WITH_COMMENT_AT_DECLARATION, {
-  openapi: "3.0.3",
+  openapi: '3.0.3',
   info: {
-    title: "Test",
-    version: "1.0.0"
+    title: 'Test',
+    version: '1.0.0',
   },
   paths: {
-    "/foo": {
+    '/foo': {
       get: {
         parameters: [
           {
-            name: "body",
-            in: "path",
+            name: 'body',
+            in: 'path',
             required: true,
             schema: {
-              type: "string"
-            }
+              type: 'string',
+            },
           },
           {
-            name: "size",
-            description: "Size of the body",
-            in: "path",
+            name: 'size',
+            description: 'Size of the body',
+            in: 'path',
             required: true,
             schema: {
-              type: "number",
-              example: 10
-            }
-          }
+              type: 'number',
+              example: 10,
+            },
+          },
         ],
         responses: {
-          "200": {
-            description: "OK",
+          '200': {
+            description: 'OK',
             content: {
-              "application/json": {
+              'application/json': {
                 schema: {
-                  $ref: "#/components/schemas/Foo"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  $ref: '#/components/schemas/Foo',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
       Foo: {
-        title: "Foo",
-        type: "string",
+        title: 'Foo',
+        type: 'string',
         description: "a Foo of type 'string'",
-        example: "foo"
-      }
-    }
-  }
+        example: 'foo',
+      },
+    },
+  },
 });
 
 const SCHEMA_DOUBLE_REF = `
@@ -305,7 +305,6 @@ testCase('request body nullable ref', SCHEMA_NULLABLE_REF, {
   },
 });
 
-
 const ROUTE_WITH_SCHEMA_WITH_COMMENT = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
@@ -352,16 +351,14 @@ testCase('route with api error schema', ROUTE_WITH_SCHEMA_WITH_COMMENT, {
   openapi: '3.0.3',
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   paths: {
     '/foo': {
       get: {
         summary: 'A simple route with type descriptions for references',
         operationId: 'api.v1.test',
-        tags: [
-          'Test Routes'
-        ],
+        tags: ['Test Routes'],
         parameters: [],
         responses: {
           '200': {
@@ -369,33 +366,33 @@ testCase('route with api error schema', ROUTE_WITH_SCHEMA_WITH_COMMENT, {
             content: {
               'application/json': {
                 schema: {
-                  '$ref': '#/components/schemas/SimpleRouteResponse'
-                }
-              }
-            }
+                  $ref: '#/components/schemas/SimpleRouteResponse',
+                },
+              },
+            },
           },
           '400': {
             content: {
               'application/json': {
                 schema: {
-                  '$ref': '#/components/schemas/ApiError'
-                }
-              }
+                  $ref: '#/components/schemas/ApiError',
+                },
+              },
             },
-            description: 'Bad Request'
+            description: 'Bad Request',
           },
           '401': {
             description: 'Unauthorized',
             content: {
               'application/json': {
                 schema: {
-                  $ref: '#/components/schemas/InvalidError'
-                }
-              }
-            }
-          }
-        }
-      }
+                  $ref: '#/components/schemas/InvalidError',
+                },
+              },
+            },
+          },
+        },
+      },
     },
   },
   components: {
@@ -403,26 +400,22 @@ testCase('route with api error schema', ROUTE_WITH_SCHEMA_WITH_COMMENT, {
       ApiError: {
         properties: {
           error: {
-            type: 'string'
-          }
+            type: 'string',
+          },
         },
-        required: [
-          'error'
-        ],
+        required: ['error'],
         title: 'Human Readable Api Error Schema',
         description: 'Human readable description of the ApiError schema',
-        type: 'object'
+        type: 'object',
       },
       SimpleRouteResponse: {
         description: 'Human readable description of the Simple Route Response',
         properties: {
           test: {
-            type: 'string'
-          }
+            type: 'string',
+          },
         },
-        required: [
-          'test'
-        ],
+        required: ['test'],
         title: 'Human Readable Simple Route Response',
         type: 'object',
       },
@@ -435,20 +428,16 @@ testCase('route with api error schema', ROUTE_WITH_SCHEMA_WITH_COMMENT, {
             properties: {
               error: {
                 type: 'string',
-                enum: [
-                  'invalid'
-                ]
-              }
+                enum: ['invalid'],
+              },
             },
-            required: [
-              'error'
-            ]
+            required: ['error'],
           },
           {
-            $ref: '#/components/schemas/ApiError'
-          }
+            $ref: '#/components/schemas/ApiError',
+          },
         ],
       },
-    }
-  }
+    },
+  },
 });

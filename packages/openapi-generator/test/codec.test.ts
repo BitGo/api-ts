@@ -220,7 +220,10 @@ export const FOO = t.union([t.string, t.number]);
 testCase('union type is parsed', UNION, {
   FOO: {
     type: 'union',
-    schemas: [{ type: 'string', primitive: true }, { type: 'number', primitive: true }],
+    schemas: [
+      { type: 'string', primitive: true },
+      { type: 'number', primitive: true },
+    ],
   },
 });
 
@@ -235,7 +238,10 @@ export const FOO = t.union([...common, t.number]);
 testCase('union type with spread is parsed', UNION_SPREAD, {
   FOO: {
     type: 'union',
-    schemas: [{ type: 'string', primitive: true }, { type: 'number', primitive: true }],
+    schemas: [
+      { type: 'string', primitive: true },
+      { type: 'number', primitive: true },
+    ],
   },
   common: {
     type: 'tuple',
@@ -252,7 +258,10 @@ export const FOO = t.union([...[t.string], t.number]);
 testCase('union type with inline spread is parsed', UNION_INLINE_SPREAD, {
   FOO: {
     type: 'union',
-    schemas: [{ type: 'string', primitive: true }, { type: 'number', primitive: true }],
+    schemas: [
+      { type: 'string', primitive: true },
+      { type: 'number', primitive: true },
+    ],
   },
 });
 
@@ -285,7 +294,11 @@ export const FOO = t.record(t.string, t.number);
 `;
 
 testCase('record type is parsed', RECORD, {
-  FOO: { type: 'record', domain: {type: 'string', primitive: true}, codomain: { type: 'number', primitive: true } },
+  FOO: {
+    type: 'record',
+    domain: { type: 'string', primitive: true },
+    codomain: { type: 'number', primitive: true },
+  },
 });
 
 const ENUM = `

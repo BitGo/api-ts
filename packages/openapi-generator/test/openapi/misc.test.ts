@@ -1,4 +1,4 @@
-import { testCase } from "./testHarness";
+import { testCase } from './testHarness';
 
 const HEADER_COMMENT = `
 /*
@@ -69,12 +69,6 @@ testCase('source file with a header comment', HEADER_COMMENT, {
   },
 });
 
-
-
-
-
-
-
 const SCHEMA_WITH_MANY_RESPONSE_TYPES = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
@@ -96,66 +90,62 @@ export const route = h.httpRoute({
 })
 `;
 
-testCase('route with many response codes uses default status code descriptions', SCHEMA_WITH_MANY_RESPONSE_TYPES, {
-  openapi: '3.0.3',
-  info: {
-    title: 'Test',
-    version: '1.0.0'
-  },
-  paths: {
-    '/foo': {
-      get: {
-        parameters: [],
-        responses: {
-          '200': {
-            description: 'OK',
-            content: {
-              'application/json': {
-                schema: {
-                  description: 'string response type',
-                  type: 'string'
-                }
-              }
-            }
+testCase(
+  'route with many response codes uses default status code descriptions',
+  SCHEMA_WITH_MANY_RESPONSE_TYPES,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          parameters: [],
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    description: 'string response type',
+                    type: 'string',
+                  },
+                },
+              },
+            },
+            '400': {
+              description: 'Bad Request',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/ApiError',
+                  },
+                },
+              },
+            },
           },
-          '400': {
-            description: 'Bad Request',
-            content: {
-              'application/json': {
-                schema: {
-                  '$ref': '#/components/schemas/ApiError'
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  components: {
-    schemas: {
-      ApiError: {
-        properties: {
-          error: {
-            type: 'string',
-            description: 'error message',
-          }
         },
-        required: [
-          'error'
-        ],
-        type: 'object',
-        title: 'ApiError'
       },
-    }
-  }
-});
-
-
-
-
-
-
+    },
+    components: {
+      schemas: {
+        ApiError: {
+          properties: {
+            error: {
+              type: 'string',
+              description: 'error message',
+            },
+          },
+          required: ['error'],
+          type: 'object',
+          title: 'ApiError',
+        },
+      },
+    },
+  },
+);
 
 const ROUTE_WITH_RECORD_TYPES = `
 import * as t from 'io-ts';
@@ -181,11 +171,11 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
+testCase('route with record types', ROUTE_WITH_RECORD_TYPES, {
   openapi: '3.0.3',
   info: {
     title: 'Test',
-    version: '1.0.0'
+    version: '1.0.0',
   },
   paths: {
     '/foo': {
@@ -196,9 +186,9 @@ testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
             in: 'query',
             required: true,
             schema: {
-              type: 'string'
-            }
-          }
+              type: 'string',
+            },
+          },
         ],
         responses: {
           '200': {
@@ -214,9 +204,9 @@ testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
                       properties: {
                         name: { type: 'string' },
                         age: { type: 'string' },
-                        address: { type: 'string' }
+                        address: { type: 'string' },
                       },
-                      required: [ 'name', 'age', 'address' ]
+                      required: ['name', 'age', 'address'],
                     },
                     // becomes t.type()
                     anotherPerson: {
@@ -226,33 +216,33 @@ testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
                           type: 'object',
                           properties: {
                             bigName: { type: 'string' },
-                            bigAge: { type: 'number' }
+                            bigAge: { type: 'number' },
                           },
-                          required: [ 'bigName', 'bigAge' ]
+                          required: ['bigName', 'bigAge'],
                         },
                         age: {
                           type: 'object',
                           properties: {
                             bigName: { type: 'string' },
-                            bigAge: { type: 'number' }
+                            bigAge: { type: 'number' },
                           },
-                          required: [ 'bigName', 'bigAge' ]
+                          required: ['bigName', 'bigAge'],
                         },
                         address: {
                           type: 'object',
                           properties: {
                             bigName: { type: 'string' },
-                            bigAge: { type: 'number' }
+                            bigAge: { type: 'number' },
                           },
-                          required: [ 'bigName', 'bigAge' ]
-                        }
+                          required: ['bigName', 'bigAge'],
+                        },
                       },
-                      required: [ 'name', 'age', 'address' ]
+                      required: ['name', 'age', 'address'],
                     },
                     bigPerson: {
                       // stays as t.record()
                       type: 'object',
-                      additionalProperties: { type: 'string' }
+                      additionalProperties: { type: 'string' },
                     },
                     anotherBigPerson: {
                       // stays as t.record()
@@ -261,34 +251,39 @@ testCase("route with record types", ROUTE_WITH_RECORD_TYPES, {
                         type: 'object',
                         properties: {
                           bigName: { type: 'string' },
-                          bigAge: { type: 'number' }
+                          bigAge: { type: 'number' },
                         },
-                        required: [ 'bigName', 'bigAge' ]
-                      }
-                    }
+                        required: ['bigName', 'bigAge'],
+                      },
+                    },
                   },
-                  required: [ 'person', 'anotherPerson', 'bigPerson', 'anotherBigPerson' ]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+                  required: [
+                    'person',
+                    'anotherPerson',
+                    'bigPerson',
+                    'anotherBigPerson',
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
       ValidKeys: {
         title: 'ValidKeys',
         type: 'string',
-        enum: [ 'name', 'age', 'address' ]
+        enum: ['name', 'age', 'address'],
       },
       PersonObject: {
         title: 'PersonObject',
         type: 'object',
         properties: { bigName: { type: 'string' }, bigAge: { type: 'number' } },
-        required: [ 'bigName', 'bigAge' ]
-      }
-    }
-  }
+        required: ['bigName', 'bigAge'],
+      },
+    },
+  },
 });

@@ -155,7 +155,7 @@ test('consolidatable unions are consolidated to single primitive type', () => {
     required: [],
   };
 
-  const expected: Schema = { type: 'boolean', };
+  const expected: Schema = { type: 'boolean' };
 
   assert.deepEqual(optimize(input), expected);
 });
@@ -174,8 +174,8 @@ test('non-consolidatable unions are not consolidated', () => {
     type: 'union',
     schemas: [
       { type: 'string', primitive: true },
-      { type: 'string', enum: [ 'true', 'false' ] },
-    ]
+      { type: 'string', enum: ['true', 'false'] },
+    ],
   };
 
   assert.deepEqual(optimize(input), expected);
