@@ -1,9 +1,8 @@
 {
   "label": "Explanation",
-  "documentation_type": "explanation",
   "position": 5,
   "link": {
     "type": "generated-index",
-    "description": "Conceptual guides explaining api-ts architecture and design decisions."
+    "description": "Conceptual guides understanding API design philosophy"
   }
 }

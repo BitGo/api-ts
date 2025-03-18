@@ -1,9 +1,8 @@
 {
   "label": "Reference",
-  "documentation_type": "reference",
   "position": 4,
   "link": {
     "type": "generated-index",
-    "description": "Technical reference documentation for api-ts components"
+    "description": "Technical specifications and API reference documentation"
   }
 }

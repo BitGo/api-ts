@@ -1,9 +1,8 @@
 {
   "label": "Tutorial - Basics",
-  "documentation_type": "tutorial",
   "position": 2,
   "link": {
     "type": "generated-index",
-    "description": "5 minutes to learn the most important api-ts concepts."
+    "description": "Hands-on learning experiences for API specification fundamentals"
   }
 }
