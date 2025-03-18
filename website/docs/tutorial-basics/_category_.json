@@ -1,5 +1,6 @@
 {
   "label": "Tutorial - Basics",
+  "documentation_type": "tutorial",
   "position": 2,
   "link": {
     "type": "generated-index",
