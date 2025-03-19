@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src/**/*", "test/**/*"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "exactOptionalPropertyTypes": true
+  },
+  "references": [
+    {
+      "path": "../io-ts-http"
+    },
+    {
+      "path": "../typed-express-router"
+    },
+    {
+      "path": "../express-wrapper"
+    },
+    {
+      "path": "../superagent-wrapper"
+    }
+  ]
+}
