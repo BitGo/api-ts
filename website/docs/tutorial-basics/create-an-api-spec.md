@@ -4,12 +4,13 @@ sidebar_position: 1
 
 # Create an API Specification
 
-Use `@api-ts/io-ts-http` to define a standalone **API specification** in TypeScript.
+Learn to define a standalone **API specification** in TypeScript using
+`@api-ts/io-ts-http`.
 
-## What problem does `io-ts-http` solve?
+## Understanding API Contracts
 
-Web services use an [API] as a contract to describe how _clients_ should communicate
-with _servers_.
+Web services use an [API] as a contract to describe how _clients_ communicate with
+_servers_.
 
 When a server receives a request from a client, the server needs to answer a few
 questions before it can begin fulfilling that request:
@@ -26,8 +27,8 @@ questions before it can begin fulfilling that request:
 
 We'll call the first _type analysis_ and the second _semantic analysis_.
 
-`io-ts-http` lets you define API contracts to an **arbitrary degree of precision**,
-removing the burden of semantic analysis from your business logic.
+`io-ts-http` enables defining API contracts to an **arbitrary degree of precision**,
+removing the burden of semantic analysis from business logic.
 
 [api]: https://en.wikipedia.org/wiki/API
 
@@ -41,7 +42,7 @@ $ mkdir api-ts-example
 $ cd api-ts-example
 ```
 
-In your new directory, create a `package.json` file:
+In the new directory, create a `package.json` file:
 
 ```json package.json
 {
@@ -91,7 +92,7 @@ export const API = apiSpec({
 });
 ```
 
-Compile your API specification with:
+Compile the API specification with:
 
 ```
 $ npm run build

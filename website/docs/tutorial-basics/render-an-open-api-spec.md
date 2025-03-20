@@ -2,19 +2,21 @@
 sidebar_position: 4
 ---
 
-# Render an OpenAPI specification
+# Render an OpenAPI Specification
+
+Learn how to generate OpenAPI specifications from `io-ts-http` API definitions.
 
 An `io-ts-http` specification contains a superset of an [OpenAPI] specification.
 `api-ts` provides `@api-ts/openapi-generator` to produce an OpenAPI specification from
-your `io-ts-http` API specification. This lets you plug your API specification into the
-existing OpenAPI ecosystem to HTTP clients for languages other than TypeScript. These
-clients won't be as ergonomic or type-safe as an `api-ts` HTTP client.
+an `io-ts-http` API specification. This enables integration with the existing OpenAPI
+ecosystem to generate HTTP clients for languages other than TypeScript. These clients
+won't be as ergonomic or type-safe as an `api-ts` HTTP client.
 
 [openapi]: https://www.openapis.org/
 
-## Use `openapi-generator`
+## Working with `openapi-generator`
 
-As before, first edit your `package.json` file to add our new dependencies
+As in previous steps, first edit the `package.json` file to add new dependencies
 (highlighted):
 
 ```json package.json focus=15
@@ -41,13 +43,13 @@ As before, first edit your `package.json` file to add our new dependencies
 }
 ```
 
-And install it by running:
+Install it by running:
 
 ```
 $ npm install
 ```
 
-The `openapi-generator` requires our TypeScript compiler settings to be specified in a
+The `openapi-generator` requires TypeScript compiler settings to be specified in a
 `tsconfig.json` file, so create one like this:
 
 ```json tsconfig.json
