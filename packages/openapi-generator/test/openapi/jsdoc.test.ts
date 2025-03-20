@@ -60,8 +60,6 @@ testCase('schema parameter with title tag', TITLE_TAG, {
             in: 'query',
             name: 'union',
             required: true,
-            style: 'form',
-            explode: true,
             schema: {
               oneOf: [
                 {
