@@ -4,14 +4,16 @@ sidebar_position: 3
 
 # Create an HTTP Client
 
+Learn how API specifications enable type-safe communication between clients and servers.
+
 `io-ts-http` API specifications are not coupled to any particular HTTP client. `api-ts`
-provides helper libraries that wrap your favorite HTTP client and use the TypeScript
-type-checker to ensure type-safe communication with a server implementing an
+provides helper libraries that integrate with various HTTP clients and use the
+TypeScript type-checker to ensure type-safe communication with a server implementing an
 `io-ts-http` specification.
 
-## Create a type-safe HTTP Client from an API specification
+## Building a type-safe HTTP Client
 
-As before, first edit your `package.json` file to add our new dependencies
+As in previous steps, first edit the `package.json` file to add new dependencies
 (highlighted):
 
 ```json package.json focus=10,12,17
@@ -37,7 +39,7 @@ As before, first edit your `package.json` file to add our new dependencies
 }
 ```
 
-And install them by running:
+Install them by running:
 
 ```
 $ npm install
@@ -71,14 +73,14 @@ main();
 
 Notice the inferred type of `response.body`.
 
-Compile and run `client.ts` (make sure your server is still running!):
+Compile and run `client.ts` (ensure the server is running):
 
 ```
 $ npm run build
 $ node ./client.js
 ```
 
-You will see output like
+The output will be:
 
 ```
 Response is: Hello, world!

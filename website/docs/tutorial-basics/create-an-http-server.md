@@ -4,20 +4,19 @@ sidebar_position: 2
 
 # Create an HTTP Server
 
-An API specification is only useful when clients and servers adhere to its rules.
+Learn how API specifications enable type-safe communication between clients and servers.
 
 `io-ts-http` API specifications are not coupled to any particular HTTP server. `api-ts`
-provides helper libraries that wrap your favorite web server and use the TypeScript
-type-checker to ensure your server implementation satisfies the target API
-specification.
+provides helper libraries that integrate with various web servers and use the TypeScript
+type-checker to ensure server implementations satisfy the target API specification.
 
-## Create an HTTP server implementing your API specification
+## Building a server with your API specification
 
-We'll use [express] as our underlying web server in this tutorial.
+This tutorial uses [express] as the underlying web server.
 
 [express]: https://github.com/expressjs/express
 
-First, edit your `package.json` file to add a few new dependencies (highlighted):
+First, edit the `package.json` file to add a few new dependencies (highlighted):
 
 ```json package.json focus=7,9,13,14
 {
@@ -39,7 +38,7 @@ First, edit your `package.json` file to add a few new dependencies (highlighted)
 }
 ```
 
-And install them by running:
+Install them by running:
 
 ```
 $ npm install
@@ -77,7 +76,7 @@ $ npm run build
 $ node ./server.js
 ```
 
-Finally, submit an HTTP request to your server in a web browser or using a new terminal:
+Test the server by submitting an HTTP request in a web browser or using a new terminal:
 
 ```
 $ curl localhost:3000/hello/world
