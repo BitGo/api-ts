@@ -297,7 +297,7 @@ export const KNOWN_IMPORTS: KnownImports = {
       E.right({
         type: 'string',
         format: 'number',
-        minimum: 0,
+        maximum: 0,
         decodedType: 'bigint',
       }),
     NonPositiveBigInt: () =>

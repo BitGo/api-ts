@@ -287,6 +287,8 @@ testCase('request union route', UNION, {
             in: 'query',
             name: 'union',
             required: true,
+            style: 'form',
+            explode: true,
             schema: {
               oneOf: [
                 {

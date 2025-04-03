@@ -11,6 +11,7 @@ export type Parameter = {
   type: 'path' | 'query' | 'header';
   name: string;
   schema: Schema;
+  explode?: boolean;
   required: boolean;
 };
 
@@ -150,6 +151,7 @@ function parseRequestUnion(
     parameters.push({
       type: 'query',
       name: 'union',
+      explode: true,
       required: true,
       schema: querySchema,
     });

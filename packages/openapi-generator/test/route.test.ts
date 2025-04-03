@@ -271,6 +271,7 @@ testCase('query param union route', QUERY_PARAM_UNION, {
         type: 'query',
         name: 'union',
         required: true,
+        explode: true,
         schema: {
           type: 'union',
           schemas: [
@@ -337,6 +338,7 @@ testCase('path param union route', PATH_PARAM_UNION, {
         type: 'query',
         name: 'union',
         required: true,
+        explode: true,
         schema: {
           type: 'union',
           schemas: [
