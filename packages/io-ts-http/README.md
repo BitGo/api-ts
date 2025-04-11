@@ -63,15 +63,6 @@ For comprehensive documentation, visit our
   - [Create an HTTP server](https://bitgo.github.io/api-ts/docs/tutorial-basics/create-an-http-server)
   - [Create an HTTP client](https://bitgo.github.io/api-ts/docs/tutorial-basics/create-an-http-client)
 
-- **How-to guides**: Problem-oriented guides for specific tasks
-
-  - [Advanced HTTP routes](https://bitgo.github.io/api-ts/docs/how-to-guides/advanced-http-routes)
-  - [Working with combinators](https://bitgo.github.io/api-ts/docs/how-to-guides/working-with-combinators)
-
-- **Explanation**: Conceptual documentation
-
-  - [Understanding io-ts-http](https://bitgo.github.io/api-ts/docs/explanation/io-ts-http-concepts)
-
 - **Reference**: Technical documentation
   - [apiSpec](https://bitgo.github.io/api-ts/docs/reference/io-ts-http/api-spec)
   - [httpRoute](https://bitgo.github.io/api-ts/docs/reference/io-ts-http/http-route)
