@@ -6,7 +6,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 // Remove the shiki theme import that's causing the error
 // const theme = require('shiki/themes/nord.json');
-const { remarkCodeHike } = require('@code-hike/mdx');
+const { remarkCodeHike, recmaCodeHike } = require('codehike/mdx');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -39,6 +39,7 @@ const config = {
         docs: {
           // Update to use a default theme instead of the missing nord theme
           beforeDefaultRemarkPlugins: [[remarkCodeHike, { theme: 'github-dark' }]],
+          recmaPlugins: [[recmaCodeHike, { theme: 'github-dark' }]],
           sidebarPath: require.resolve('./sidebars.js'),
           // Remove this to remove the "edit this page" links.
           editUrl: 'https://github.com/BitGo/api-ts/tree/master/website/',
@@ -49,10 +50,7 @@ const config = {
           editUrl: 'https://github.com/BitGo/api-ts/tree/master/website',
         },
         theme: {
-          customCss: [
-            require.resolve('@code-hike/mdx/styles.css'),
-            require.resolve('./src/css/custom.css'),
-          ],
+          customCss: [require.resolve('./src/css/custom.css')],
         },
       }),
     ],
