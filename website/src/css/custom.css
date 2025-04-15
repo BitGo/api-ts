@@ -119,3 +119,17 @@
   border-color: white;
   color: white;
 }
+
+/* CodeHike Spotlight Component Styles */
+.spotlight-container {
+  margin: 2rem 0;
+}
+
+.spotlight-container pre {
+  margin: 0;
+  border-radius: 0.5rem;
+}
+
+.spotlight-container code {
+  font-size: 0.9rem;
+}
