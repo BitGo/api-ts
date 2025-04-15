@@ -8,11 +8,9 @@ Query parameters are represented as the type
 `Record<string, string | string[] | undefined>`, so using a codec that doesn't decode
 from a `string | string[] | undefined` will produce a type error.
 
-<CH.Spotlight>
-
 Consider this `httpRoute` that compiles successfully.
 
-```typescript spec.ts
+```typescript
 import * as t from 'io-ts';
 import { httpRoute, httpRequest } from '@api-ts/io-ts-http';
 
@@ -30,9 +28,10 @@ const GetHello = httpRoute({
 });
 ```
 
----
+If you add an expected `number` value to the `httpRoute`'s query parameters, you'll see
+the following compilation error:
 
-```typescript spec.ts focus=14:16
+```typescript
 import * as t from 'io-ts';
 import { httpRoute, httpRequest } from '@api-ts/io-ts-http';
 
@@ -72,8 +71,6 @@ number.
 We need a codec that decodes a `string` into a `number` and converts the
 string-representation of a number into the `number` type.
 
----
-
 This is a fairly common requirement, so this codec already exists: [io-ts-types] offers
 the [NumberFromString] codec that decodes a `string` value into a `number`. Use
 `NumberFromString` to fix your compilation error.
@@ -82,7 +79,7 @@ the [NumberFromString] codec that decodes a `string` value into a `number`. Use
 [numberfromstring]:
   https://gcanti.github.io/io-ts-types/modules/NumberFromString.ts.html
 
-```typescript spec.ts focus=2,15:17
+```typescript
 import * as t from 'io-ts';
 import { NumberFromString } from 'io-ts-types';
 import { httpRoute, httpRequest } from '@api-ts/io-ts-http';
@@ -103,8 +100,6 @@ const GetHello = httpRoute({
   },
 });
 ```
-
-</CH.Spotlight>
 
 In general, the solution to decoding a query parameter into a non-string type is to use
 a codec that decodes and encodes from a `string` into your desired type.
