@@ -64,6 +64,20 @@ const sidebars = {
             'reference/io-ts-http/interfaces',
           ],
         },
+        {
+          type: 'category',
+          label: 'openapi-generator',
+          link: {
+            type: 'doc',
+            id: 'reference/openapi-generator/index',
+          },
+          items: [
+            'reference/openapi-generator/cli',
+            'reference/openapi-generator/configuration',
+            'reference/openapi-generator/support',
+            'reference/openapi-generator/jsdoc',
+          ],
+        },
       ],
     },
   ],
