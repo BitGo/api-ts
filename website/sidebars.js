@@ -92,6 +92,22 @@ const sidebars = {
             'reference/superagent-wrapper/api-client',
           ],
         },
+        {
+          type: 'category',
+          label: 'typed-express-router',
+          link: {
+            type: 'doc',
+            id: 'reference/typed-express-router/index',
+          },
+          items: [
+            'reference/typed-express-router/create-router',
+            'reference/typed-express-router/wrap-router',
+            'reference/typed-express-router/typed-router',
+            'reference/typed-express-router/request-response',
+            'reference/typed-express-router/configuration',
+            'reference/typed-express-router/typed-request-handler',
+          ],
+        },
       ],
     },
   ],
