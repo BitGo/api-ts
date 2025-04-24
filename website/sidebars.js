@@ -78,6 +78,20 @@ const sidebars = {
             'reference/openapi-generator/jsdoc',
           ],
         },
+        {
+          type: 'category',
+          label: 'superagent-wrapper',
+          link: {
+            type: 'doc',
+            id: 'reference/superagent-wrapper/index',
+          },
+          items: [
+            'reference/superagent-wrapper/superagent-request-factory',
+            'reference/superagent-wrapper/supertest-request-factory',
+            'reference/superagent-wrapper/build-api-client',
+            'reference/superagent-wrapper/api-client',
+          ],
+        },
       ],
     },
   ],

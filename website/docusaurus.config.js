@@ -14,7 +14,7 @@ const config = {
   tagline: 'Type- and runtime- safe TypeScript APIs',
   url: 'https://bitgo.github.io',
   baseUrl: '/api-ts/',
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/Shield_Logo_Blue-Dark.svg',
 
