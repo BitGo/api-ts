@@ -548,8 +548,8 @@ export const route = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({
     body: {
-      /** 
-       * This is a foo description. 
+      /**
+       * This is a foo description.
        * @deprecated
       */
       foo: t.string()
@@ -634,8 +634,8 @@ export const route = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({
     body: {
-      /** 
-       * This is a foo description. 
+      /**
+       * This is a foo description.
        * @minimum 5
        * @maximum 10
        * @minItems 1
@@ -734,7 +734,7 @@ import * as h from '@api-ts/io-ts-http';
 /**
  * @title Some Readable BodyFoo Title
  */
-const BodyFoo = t.type({ 
+const BodyFoo = t.type({
   /** a foo description */
   foo: t.string,
 });
@@ -747,8 +747,8 @@ const ParamsFoo = { someId: t.string };
 export const route = h.httpRoute({
   path: '/foo',
   method: 'POST',
-  request: h.httpRequest({ 
-    params: {}, 
+  request: h.httpRequest({
+    params: {},
     body: h.httpRequest({ params: ParamsFoo, body: BodyFoo, })
   }),
   response: {
@@ -841,7 +841,7 @@ const ROUTE_WITH_ARRAY_EXAMPLE = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
-/** 
+/**
  * @example btc
  */
 const innerItems = t.string;
@@ -849,9 +849,9 @@ const innerItems = t.string;
 export const route = h.httpRoute({
   path: '/foo',
   method: 'POST',
-  request: h.httpRequest({ 
-    params: {}, 
-    body: t.type({ 
+  request: h.httpRequest({
+    params: {},
+    body: t.type({
       /**
        * @example "btc"
        */
@@ -968,27 +968,27 @@ const ROUTE_WITH_NESTED_ARRAY_EXAMPLES = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
-/** 
+/**
  * @example ["a", "b"]
  */
 const firstLevel = t.array(t.string);
 
-/** 
+/**
  * @example [["a", "b"], ["c", "d"]]
  */
 const secondLevel = t.array(firstLevel);
 
-/** 
- * @example [[["a"], ["b"]], [["c"], ["d"]]] 
+/**
+ * @example [[["a"], ["b"]], [["c"], ["d"]]]
  */
 const thirdLevel = t.array(secondLevel);
 
 export const route = h.httpRoute({
   path: '/foo',
   method: 'POST',
-  request: h.httpRequest({ 
-    params: {}, 
-    body: t.type({ 
+  request: h.httpRequest({
+    params: {},
+    body: t.type({
       nested: thirdLevel
     })
   }),
@@ -1024,7 +1024,7 @@ testCase('route with nested array examples', ROUTE_WITH_NESTED_ARRAY_EXAMPLES, {
           },
         },
         responses: {
-          200: {
+          '200': {
             description: 'OK',
             content: {
               'application/json': {
@@ -1107,14 +1107,14 @@ const SampleType = t.type({
 export const route = h.httpRoute({
   path: '/foo',
   method: 'GET',
-  request: h.httpRequest({ 
+  request: h.httpRequest({
     params: {
       /** @private */
       path: t.string
     },
     query: {
       /** @private */
-      query: t.string  
+      query: t.string
     },
     body: SampleType
   }),
