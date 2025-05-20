@@ -125,13 +125,30 @@ export const KNOWN_IMPORTS: KnownImports = {
       if (arg.type !== 'object') {
         return errorLeft(`Unimplemented keyof type ${arg.type}`);
       }
-      const schemas: Schema[] = Object.keys(arg.properties).map((prop) => ({
-        type: 'string',
-        enum: [prop],
-      }));
+
+      // Extract enum descriptions from object properties
+      const enumDescriptions: Record<string, string> = {};
+      const schemas: Schema[] = [];
+
+      Object.entries(arg.properties).forEach(([prop, propSchema]) => {
+        // Create schema for each property
+        schemas.push({
+          type: 'string',
+          enum: [prop],
+        });
+
+        // Extract description from property's comment if it exists
+        if (propSchema.comment?.description) {
+          enumDescriptions[prop] = propSchema.comment.description;
+        }
+      });
+
+      // Only include enumDescriptions if we actually found any descriptions
+      const hasDescriptions = Object.keys(enumDescriptions).length > 0;
       return E.right({
         type: 'union',
         schemas,
+        ...(hasDescriptions ? { enumDescriptions } : {}),
       });
     },
     brand: (_, arg) => E.right(arg),

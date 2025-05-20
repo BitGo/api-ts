@@ -13,6 +13,7 @@ export type UndefinedValue = {
 export type Primitive = {
   type: 'string' | 'number' | 'integer' | 'boolean' | 'null';
   enum?: (string | number | boolean | null | PseudoBigInt)[];
+  enumDescriptions?: Record<string, string>;
 };
 
 export function isPrimitive(schema: Schema): schema is Primitive {
@@ -45,6 +46,7 @@ export type RecordObject = {
 export type CombinedType = {
   type: 'union' | 'intersection' | 'tuple';
   schemas: Schema[];
+  enumDescriptions?: Record<string, string>;
 };
 
 export type Reference = {
@@ -81,7 +83,11 @@ export type SchemaMetadata = Omit<
   | 'discriminator'
   | 'xml'
   | 'externalDocs'
->;
+> & {
+  // Additional schema metadata not defined in OpenAPI but used internally
+  enum?: (string | number | boolean | null | PseudoBigInt)[];
+  enumDescriptions?: Record<string, string>;
+};
 
 type SchemaTypeInfo = {
   primitive?: boolean;
