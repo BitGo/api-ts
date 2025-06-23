@@ -12,6 +12,8 @@ export type UndefinedValue = {
 
 export type Primitive = {
   type: 'string' | 'number' | 'integer' | 'boolean' | 'null';
+  // DISCUSS: Is it worth ensuring that enum descriptions can only be set when enum is?
+  // Why is "enum" an array here?
   enum?: (string | number | boolean | null | PseudoBigInt)[];
   enumDescriptions?: Record<string, string>;
 };
@@ -83,7 +85,9 @@ export type SchemaMetadata = Omit<
   | 'discriminator'
   | 'xml'
   | 'externalDocs'
+  // DISCUSS: Is this the right place for this metadata?
 > & {
+  // DISCUSS: accuracy of this comment.
   // Additional schema metadata not defined in OpenAPI but used internally
   enum?: (string | number | boolean | null | PseudoBigInt)[];
   enumDescriptions?: Record<string, string>;

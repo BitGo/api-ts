@@ -126,6 +126,8 @@ export const KNOWN_IMPORTS: KnownImports = {
         return errorLeft(`Unimplemented keyof type ${arg.type}`);
       }
 
+      // DISCUSS: What on earth are these changes about?
+
       // Extract enum descriptions from object properties
       const enumDescriptions: Record<string, string> = {};
       const schemas: Schema[] = [];
