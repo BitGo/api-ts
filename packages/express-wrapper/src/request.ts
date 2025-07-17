@@ -8,8 +8,10 @@ import * as PathReporter from 'io-ts/lib/PathReporter';
 
 import { ApiSpec, HttpRoute, RequestType, ResponseType } from '@api-ts/io-ts-http';
 import {
-  OnDecodeErrorFn,
-  OnEncodeErrorFn,
+  type DecodeErrorFormatterFn,
+  type EncodeErrorFormatterFn,
+  type GetDecodeErrorStatusCodeFn,
+  type GetEncodeErrorStatusCodeFn,
   TypedRequestHandler,
 } from '@api-ts/typed-express-router';
 
@@ -94,17 +96,28 @@ const createNamedFunction = <F extends (...args: any) => void>(
   fn: F,
 ): F => Object.defineProperty(fn, 'name', { value: name });
 
-export const onDecodeError: OnDecodeErrorFn = (errs, _req, res) => {
+export const defaultDecodeErrorFormatter: DecodeErrorFormatterFn = (errs, _req) => {
   const validationErrors = PathReporter.failure(errs);
-  const validationErrorMessage = validationErrors.join('\n');
-  res.writeHead(400, { 'Content-Type': 'application/json' });
-  res.write(JSON.stringify({ error: validationErrorMessage }));
-  res.end();
+  return { error: validationErrors.join('\n') };
 };
 
-export const onEncodeError: OnEncodeErrorFn = (err, _req, res) => {
+export const defaultEncodeErrorFormatter: EncodeErrorFormatterFn = (_err, _req) => {
+  return {};
+};
+
+export const defaultGetDecodeErrorStatusCode: GetDecodeErrorStatusCodeFn = (
+  _errs,
+  _req,
+) => {
+  return 400;
+};
+
+export const defaultGetEncodeErrorStatusCode: GetEncodeErrorStatusCodeFn = (
+  err,
+  _req,
+) => {
   console.warn('Error in route handler:', err);
-  res.status(500).end();
+  return 500;
 };
 
 export const handleRequest = (
