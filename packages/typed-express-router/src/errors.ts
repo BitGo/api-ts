@@ -1,22 +1,22 @@
-import express from 'express';
-import { Errors } from 'io-ts';
 import * as PathReporter from 'io-ts/lib/PathReporter';
 
-export function defaultOnDecodeError(
-  errs: Errors,
-  _req: express.Request,
-  res: express.Response,
-) {
-  const validationErrors = PathReporter.failure(errs);
-  const validationErrorMessage = validationErrors.join('\n');
-  res.status(400).json({ error: validationErrorMessage }).end();
-}
+import type {
+  DecodeErrorFormatterFn,
+  EncodeErrorFormatterFn,
+  GetDecodeErrorStatusCodeFn,
+  GetEncodeErrorStatusCodeFn,
+} from './types';
 
-export function defaultOnEncodeError(
-  err: unknown,
-  _req: express.Request,
-  res: express.Response,
-) {
-  res.status(500).end();
-  console.warn(`Error in route handler: ${err}`);
-}
+export const defaultDecodeErrorFormatter: DecodeErrorFormatterFn = PathReporter.failure;
+
+export const defaultGetDecodeErrorStatusCode: GetDecodeErrorStatusCodeFn = (
+  _err,
+  _req,
+) => 400;
+
+export const defaultEncodeErrorFormatter: EncodeErrorFormatterFn = () => ({});
+
+export const defaultGetEncodeErrorStatusCode: GetEncodeErrorStatusCodeFn = (
+  _err,
+  _req,
+) => 500;

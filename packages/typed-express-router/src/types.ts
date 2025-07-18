@@ -2,6 +2,12 @@ import { ApiSpec, HttpRoute, Method as HttpMethod } from '@api-ts/io-ts-http';
 import express from 'express';
 import * as t from 'io-ts';
 
+export type Json = boolean | number | string | null | JsonArray | JsonRecord;
+export interface JsonRecord {
+  readonly [key: string]: Json;
+}
+export interface JsonArray extends ReadonlyArray<Json> {}
+
 export type Methods = Lowercase<HttpMethod>;
 
 export type WrappedRequest<Decoded = unknown> = express.Request & {
@@ -18,17 +24,9 @@ export type WrappedResponse<Responses extends {} = Record<string | number, unkno
     ) => void;
   };
 
-export type OnDecodeErrorFn = (
-  errs: t.Errors,
-  req: express.Request,
-  res: express.Response,
-) => void;
+export type EncodeErrorFormatterFn = (err: unknown, req: WrappedRequest) => Json;
 
-export type OnEncodeErrorFn = (
-  err: unknown,
-  req: WrappedRequest,
-  res: WrappedResponse,
-) => void;
+export type GetEncodeErrorStatusCodeFn = (err: unknown, req: WrappedRequest) => number;
 
 export type AfterEncodedResponseSentFn = (
   status: number,
@@ -37,15 +35,26 @@ export type AfterEncodedResponseSentFn = (
   res: WrappedResponse,
 ) => void;
 
+export type DecodeErrorFormatterFn = (
+  errs: Array<t.ValidationError>,
+  req: WrappedRequest,
+) => Json;
+
+export type GetDecodeErrorStatusCodeFn = (
+  errs: Array<t.ValidationError>,
+  req: WrappedRequest,
+) => number;
+
 export type UncheckedWrappedRouteOptions = {
-  onEncodeError?: OnEncodeErrorFn;
+  decodeErrorFormatter?: DecodeErrorFormatterFn;
+  encodeErrorFormatter?: EncodeErrorFormatterFn;
+  getDecodeErrorStatusCode?: GetDecodeErrorStatusCodeFn;
+  getEncodeErrorStatusCode?: GetEncodeErrorStatusCodeFn;
   afterEncodedResponseSent?: AfterEncodedResponseSentFn;
   routeAliases?: string[];
 };
 
-export type WrappedRouteOptions = UncheckedWrappedRouteOptions & {
-  onDecodeError?: OnDecodeErrorFn;
-};
+export type WrappedRouteOptions = UncheckedWrappedRouteOptions;
 
 export type WrappedRouterOptions = express.RouterOptions & WrappedRouteOptions;
 
@@ -204,3 +213,8 @@ export type WrappedRouter<Spec extends ApiSpec> = Omit<
      */
     patchUnchecked: AddUncheckedRouteHandler<Spec, 'patch'>;
   };
+
+export type SpanMetadata = {
+  apiName?: string;
+  httpRoute?: HttpRoute;
+};

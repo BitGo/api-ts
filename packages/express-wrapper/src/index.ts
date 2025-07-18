@@ -6,9 +6,22 @@
 import express from 'express';
 
 import { ApiSpec, HttpRoute, Method as HttpMethod } from '@api-ts/io-ts-http';
-import { createRouter } from '@api-ts/typed-express-router';
+import {
+  createRouter,
+  DecodeErrorFormatterFn,
+  EncodeErrorFormatterFn,
+  GetDecodeErrorStatusCodeFn,
+  GetEncodeErrorStatusCodeFn,
+} from '@api-ts/typed-express-router';
 
-import { handleRequest, onDecodeError, onEncodeError, RouteHandler } from './request';
+import {
+  handleRequest,
+  defaultDecodeErrorFormatter,
+  defaultEncodeErrorFormatter,
+  defaultGetDecodeErrorStatusCode,
+  defaultGetEncodeErrorStatusCode,
+  RouteHandler,
+} from './request';
 import { defaultResponseEncoder, ResponseEncoder } from './response';
 
 export { middlewareFn, MiddlewareChain, MiddlewareChainOutput } from './middleware';
@@ -25,16 +38,26 @@ type CreateRouterProps<Spec extends ApiSpec> = {
     };
   };
   encoder?: ResponseEncoder;
+  decodeErrorFormatter?: DecodeErrorFormatterFn;
+  encodeErrorFormatter?: EncodeErrorFormatterFn;
+  getDecodeErrorStatusCode?: GetDecodeErrorStatusCodeFn;
+  getEncodeErrorStatusCode?: GetEncodeErrorStatusCodeFn;
 };
 
 export function routerForApiSpec<Spec extends ApiSpec>({
   spec,
   routeHandlers,
   encoder = defaultResponseEncoder,
+  decodeErrorFormatter = defaultDecodeErrorFormatter,
+  encodeErrorFormatter = defaultEncodeErrorFormatter,
+  getDecodeErrorStatusCode = defaultGetDecodeErrorStatusCode,
+  getEncodeErrorStatusCode = defaultGetEncodeErrorStatusCode,
 }: CreateRouterProps<Spec>) {
   const router = createRouter(spec, {
-    onDecodeError,
-    onEncodeError,
+    decodeErrorFormatter,
+    encodeErrorFormatter,
+    getDecodeErrorStatusCode,
+    getEncodeErrorStatusCode,
   });
   for (const apiName of Object.keys(spec)) {
     const resource = spec[apiName] as Spec[string];
