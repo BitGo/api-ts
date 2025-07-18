@@ -53,6 +53,7 @@ type SuperagentLike<Req> = {
 
 export type Response = {
   body: unknown;
+  text: unknown;
   status: number;
 };
 
@@ -126,19 +127,20 @@ const patchRequest = <
 
   patchedReq.decode = () =>
     req.then((res) => {
-      const { body, status } = res;
+      const { body, text, status } = res;
+      const bodyOrText = body || text;
 
       if (!hasCodecForStatus(route.response, status)) {
         return decodedResponse({
           // DISCUSS: what's this non-standard HTTP status code?
           status: 'decodeError',
           error: `No codec for status ${status}`,
-          body,
+          body: bodyOrText,
           original: res,
         });
       }
       return pipe(
-        route.response[status].decode(res.body),
+        route.response[status].decode(bodyOrText),
         E.map((body) =>
           decodedResponse<Route>({
             status,
@@ -151,7 +153,7 @@ const patchRequest = <
           decodedResponse<Route>({
             status: 'decodeError',
             error: PathReporter.failure(error).join('\n'),
-            body: res.body,
+            body: bodyOrText,
             original: res,
           }),
         ),
