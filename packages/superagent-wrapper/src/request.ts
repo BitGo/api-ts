@@ -144,7 +144,7 @@ const patchRequest = <
         E.map((body) =>
           decodedResponse<Route>({
             status,
-            body: bodyOrText,
+            body,
             original: res,
           } as SuccessfulResponses<Route>),
         ),
