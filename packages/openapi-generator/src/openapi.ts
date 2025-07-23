@@ -54,16 +54,29 @@ export function schemaToOpenAPI(
         const { example, minItems, maxItems, ...rest } = defaultOpenAPIObject;
         const isArrayExample = example && Array.isArray(example);
 
+        // Handle case where innerSchema is a $ref
+        const wrappedInnerSchema =
+          '$ref' in innerSchema
+            ? // When there's a $ref, we need to wrap it in allOf to preserve other properties
+              {
+                allOf: [innerSchema],
+              }
+            : {
+                ...innerSchema,
+              };
+
+        const items = {
+          ...wrappedInnerSchema,
+          ...rest,
+          ...(!isArrayExample && example ? { example } : {}),
+        };
+
         return {
           type: 'array',
           ...(minItems ? { minItems } : {}),
           ...(maxItems ? { maxItems } : {}),
           ...(isArrayExample ? { example } : {}),
-          items: {
-            ...innerSchema,
-            ...rest,
-            ...(!isArrayExample && example ? { example } : {}),
-          },
+          items,
         };
       case 'object':
         return {
@@ -153,23 +166,25 @@ export function schemaToOpenAPI(
         if (oneOf.length === 0) {
           return undefined;
         } else if (oneOf.length === 1) {
-          if (
-            Object.keys(
-              oneOf[0] as OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
-            )[0] === '$ref'
-          )
+          const singleSchema = oneOf[0];
+          if (singleSchema === undefined) {
+            return undefined;
+          }
+          // Check if the schema is a $ref
+          if ('$ref' in singleSchema) {
             // OpenAPI spec doesn't allow $ref properties to have siblings, so they're wrapped in an 'allOf' array
             return {
               ...(nullable ? { nullable } : {}),
-              allOf: oneOf,
+              allOf: [singleSchema],
               ...defaultOpenAPIObject,
             };
-          else
+          } else {
             return {
               ...(nullable ? { nullable } : {}),
-              ...oneOf[0],
+              ...singleSchema,
               ...defaultOpenAPIObject,
             };
+          }
         } else {
           return { ...(nullable ? { nullable } : {}), oneOf, ...defaultOpenAPIObject };
         }
