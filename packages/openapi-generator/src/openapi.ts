@@ -55,14 +55,21 @@ export function schemaToOpenAPI(
         const isArrayExample = example && Array.isArray(example);
 
         // Handle case where innerSchema is a $ref
-        const items =
+        const wrappedInnerSchema =
           '$ref' in innerSchema
-            ? innerSchema // If it's just a $ref with no siblings, use it directly
+            ? // When there's a $ref, we need to wrap it in allOf to preserve other properties
+              {
+                allOf: [innerSchema],
+              }
             : {
                 ...innerSchema,
-                ...rest,
-                ...(!isArrayExample && example ? { example } : {}),
               };
+
+        const items = {
+          ...wrappedInnerSchema,
+          ...rest,
+          ...(!isArrayExample && example ? { example } : {}),
+        };
 
         return {
           type: 'array',
