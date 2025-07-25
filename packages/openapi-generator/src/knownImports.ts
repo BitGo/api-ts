@@ -137,6 +137,7 @@ export const KNOWN_IMPORTS: KnownImports = {
     brand: (_, arg) => E.right(arg),
     UnknownRecord: () => E.right({ type: 'record', codomain: { type: 'any' } }),
     void: () => E.right({ type: 'undefined' }),
+    identity: (_, arg) => E.right(arg),
   },
   'io-ts-numbers': {
     NumberFromString: () =>
