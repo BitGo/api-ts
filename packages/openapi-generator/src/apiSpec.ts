@@ -15,6 +15,18 @@ export function parseApiSpec(
   sourceFile: SourceFile,
   expr: swc.Expression,
 ): E.Either<string, Route[]> {
+  // If we receive an identifier (variable), first resolve it to its actual value
+  // This allows directly passing variables to apiSpec() without needing to wrap them in object literals
+  // Example: export const MyApiSpec = apiSpec(myApiSpecProps);
+  if (expr.type === 'Identifier') {
+    const resolvedE = resolveLiteralOrIdentifier(project, sourceFile, expr);
+    if (E.isLeft(resolvedE)) {
+      return resolvedE;
+    }
+    const [newSourceFile, resolvedExpr] = resolvedE.right;
+    return parseApiSpec(project, newSourceFile, resolvedExpr);
+  }
+
   if (expr.type !== 'ObjectExpression') {
     return errorLeft(`unimplemented route expression type ${expr.type}`);
   }
