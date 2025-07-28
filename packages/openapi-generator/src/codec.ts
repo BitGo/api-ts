@@ -54,12 +54,37 @@ function codecIdentifier(
   } else if (id.type === 'MemberExpression') {
     const object = id.object;
     if (object.type !== 'Identifier') {
-      if (object.type === 'MemberExpression')
+      if (object.type === 'MemberExpression') {
+        // Handle double-nested member expressions
+        if (
+          object.object.type === 'Identifier' &&
+          object.property.type === 'Identifier' &&
+          object.property.value === 'keys'
+        ) {
+          // Handle `Type.keys.propertyName` format
+          if (id.property.type === 'Identifier') {
+            return E.right({
+              type: 'string',
+              enum: [id.property.value],
+            });
+          }
+          // Handle `Type.keys["Property Name"]` format (computed property)
+          else if (
+            id.property.type === 'Computed' &&
+            id.property.expression.type === 'StringLiteral'
+          ) {
+            return E.right({
+              type: 'string',
+              enum: [id.property.expression.value],
+            });
+          }
+        }
+
         return errorLeft(
-          `Object ${
-            ((object as swc.MemberExpression) && { value: String }).value
-          } is deeply nested, which is unsupported`,
+          `Nested member expressions are not supported (${object.object.type}.${object.property.type}.${id.property.type})`,
         );
+      }
+
       return errorLeft(`Unimplemented object type ${object.type}`);
     }
 
