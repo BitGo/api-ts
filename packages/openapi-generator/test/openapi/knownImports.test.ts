@@ -88,8 +88,8 @@ export const route = h.httpRoute({
   }),
   response: {
     200: {
-      /** 
-       * Testing overridden metadata 
+      /**
+       * Testing overridden metadata
        * @format string
        */
       test: DateFromNumber
@@ -133,6 +133,77 @@ testCase('route with schema with default metadata', ROUTE_WITH_OVERIDDEN_METADAT
                     },
                   },
                   required: ['test'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
+
+const ROUTE_WITH_IDENTITY_CODEC = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/identity',
+  method: 'POST',
+  request: h.httpRequest({
+    body: {
+      data: t.identity(t.number)
+    },
+  }),
+  response: {
+    200: {
+      result: t.identity(t.number)
+    }
+  },
+});
+`;
+
+testCase('route with t.identity codec', ROUTE_WITH_IDENTITY_CODEC, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/identity': {
+      post: {
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  data: {
+                    type: 'number',
+                  },
+                },
+                required: ['data'],
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    result: {
+                      type: 'number',
+                    },
+                  },
+                  required: ['result'],
                 },
               },
             },
