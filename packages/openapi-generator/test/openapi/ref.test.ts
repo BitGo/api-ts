@@ -336,7 +336,7 @@ const SimpleRouteResponse = t.type({
  * @title Human Readable Invalid Error Schema
  */
 const InvalidError = t.intersection([
-  ApiError, 
+  ApiError,
   t.type({ error: t.literal('invalid') })]);
 /**
  * Human readable description of the ApiError schema
@@ -441,3 +441,201 @@ testCase('route with api error schema', ROUTE_WITH_SCHEMA_WITH_COMMENT, {
     },
   },
 });
+
+const ROUTE_WITH_ARRAY_OF_INNER_SCHEMA_REF_WITH_NO_SIBLINGS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+/**
+ * A simple route with type descriptions for references
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: SimpleRouteResponse
+  },
+ });
+
+
+ /**
+  * Human readable description of the Simple Route Response
+  * @title Human Readable Simple Route Response
+ */
+const SimpleRouteResponse = t.type({
+  test: t.array(TestRef)
+});
+
+const TestRefBase = t.string;
+
+const TestRef = TestRefBase;
+ `;
+
+testCase(
+  'inner schema ref in array',
+  ROUTE_WITH_ARRAY_OF_INNER_SCHEMA_REF_WITH_NO_SIBLINGS,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          summary: 'A simple route with type descriptions for references',
+          operationId: 'api.v1.test',
+          tags: ['Test Routes'],
+          parameters: [],
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/SimpleRouteResponse',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        SimpleRouteResponse: {
+          description: 'Human readable description of the Simple Route Response',
+          properties: {
+            test: {
+              type: 'array',
+              items: {
+                $ref: '#/components/schemas/TestRefBase',
+              },
+            },
+          },
+          required: ['test'],
+          title: 'Human Readable Simple Route Response',
+          type: 'object',
+        },
+        TestRefBase: {
+          title: 'TestRefBase',
+          type: 'string',
+        },
+        TestRef: {
+          allOf: [
+            {
+              title: 'TestRef',
+            },
+            {
+              $ref: '#/components/schemas/TestRefBase',
+            },
+          ],
+        },
+      },
+    },
+  },
+);
+
+const ROUTE_WITH_ARRAY_OF_INNER_SCHEMA_REF_AND_DESCRIPTION = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+/**
+ * A simple route with type descriptions for references
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: SimpleRouteResponse
+  },
+ });
+
+
+ /**
+  * Human readable description of the Simple Route Response
+  * @title Human Readable Simple Route Response
+ */
+const SimpleRouteResponse = t.type({
+  /** List of test refs */
+  test: t.array(TestRef)
+});
+
+const TestRefBase = t.string;
+
+const TestRef = TestRefBase;
+ `;
+
+testCase(
+  'inner schema ref in array with description',
+  ROUTE_WITH_ARRAY_OF_INNER_SCHEMA_REF_AND_DESCRIPTION,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          summary: 'A simple route with type descriptions for references',
+          operationId: 'api.v1.test',
+          tags: ['Test Routes'],
+          parameters: [],
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/SimpleRouteResponse',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        SimpleRouteResponse: {
+          description: 'Human readable description of the Simple Route Response',
+          properties: {
+            test: {
+              type: 'array',
+              items: {
+                allOf: [{ $ref: '#/components/schemas/TestRefBase' }],
+                description: 'List of test refs',
+              },
+            },
+          },
+          required: ['test'],
+          title: 'Human Readable Simple Route Response',
+          type: 'object',
+        },
+        TestRefBase: {
+          title: 'TestRefBase',
+          type: 'string',
+        },
+        TestRef: {
+          allOf: [
+            {
+              title: 'TestRef',
+            },
+            {
+              $ref: '#/components/schemas/TestRefBase',
+            },
+          ],
+        },
+      },
+    },
+  },
+);
