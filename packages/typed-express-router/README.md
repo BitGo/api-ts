@@ -76,13 +76,19 @@ logging.
 
 ```ts
 const typedRouter = createRouter(MyApi, {
-  onDecodeError: (errs, req, res) => {
+  decodeErrorFormatter: (errs, req) => {
     // Format `errs` however you want
-    res.send(400).json({ message: 'Bad request' }).end();
+    return { message: 'Bad request' };
   },
-  onEncodeError: (err, req, res) => {
+  getDecodeErrorStatusCode: (errs, req) => {
+    return 400;
+  },
+  encodeErrorFormatter: (err, req) => {
+    return { message: 'Internal server error' };
+  },
+  getEncodeErrorStatusCode: (err, req) => {
     // Ideally won't happen unless type safety is violated, so it's a 500
-    res.send(500).json({ message: 'Internal server error' }).end();
+    return 500;
   },
   afterEncodedResponseSent: (status, payload, req, res) => {
     // Perform side effects or other things, `res` should be ended by this point
@@ -92,7 +98,7 @@ const typedRouter = createRouter(MyApi, {
 
 // Override the decode error handler on one route
 typedRouter.get('hello.world', [HelloWorldHandler], {
-  onDecodeError: customHelloDecodeErrorHandler,
+  decodeErrorFormatter: customHelloDecodeErrorFormatter,
 });
 ```
 
@@ -100,9 +106,10 @@ typedRouter.get('hello.world', [HelloWorldHandler], {
 
 If you need custom behavior on decode errors that is more involved than just sending an
 error response, then the unchecked variant of the router functions can be used. They do
-not fail and call `onDecodeError` when a request is invalid. Instead, they will still
-populate `req.decoded`, except this time it'll contain the
-`Either<Errors, DecodedRequest>` type for route handlers to inspect.
+not fail and send a http response using `decodeErrorFormatter` and
+`getDecodeErrorStatusCode` when a request is invalid. Instead, they will still populate
+`req.decoded`, except this time it'll contain the `Either<Errors, DecodedRequest>` type
+for route handlers to inspect.
 
 ```ts
 // Just a normal express route
