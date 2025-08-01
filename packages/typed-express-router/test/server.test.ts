@@ -361,8 +361,8 @@ test('should return a 400 when request fails to decode', async () => {
 
 test('should invoke custom decode error function', async () => {
   const router = createRouter(TestApiSpec, {
-    onDecodeError: (_errs, _req, res) => {
-      res.status(400).json('Custom decode error').end();
+    decodeErrorFormatter: (_errs, _req) => {
+      return 'Custom decode error';
     },
   });
 
@@ -390,8 +390,8 @@ test('should invoke custom decode error function', async () => {
 
 test('should invoke per-route custom decode error function', async () => {
   const router = createRouter(TestApiSpec, {
-    onDecodeError: (_errs, _req, res) => {
-      res.status(400).json('Top-level decode error').end();
+    decodeErrorFormatter: (_errs, _req) => {
+      return 'Top-level decode error';
     },
   });
 
@@ -403,8 +403,8 @@ test('should invoke per-route custom decode error function', async () => {
       },
     ],
     {
-      onDecodeError: (_errs, _req, res) => {
-        res.status(400).json('Route decode error').end();
+      decodeErrorFormatter: (_errs, _req) => {
+        return 'Route decode error';
       },
       routeAliases: ['/helloNoPathParams'],
     },
@@ -440,10 +440,31 @@ test('should send a 500 when response type does not match', async () => {
   assert.equal(response.original.status, 500);
 });
 
+test('should invoke default encode error function when response type does not match', async () => {
+  const router = createRouter(TestApiSpec);
+
+  router.get('hello.world', [
+    (_req, res) => {
+      res.sendEncoded(200, { what: 'is this parameter?' } as any);
+    },
+  ]);
+
+  const app = express();
+  app.use(express.json());
+  app.use(router);
+
+  const server = supertest(app);
+  const apiClient = buildApiClient(supertestRequestFactory(server), TestApiSpec);
+  const response = await apiClient['hello.world'].get({ id: '1234' }).decode();
+
+  assert.equal(response.original.status, 500);
+  assert.deepStrictEqual(response.body, {});
+});
+
 test('should invoke custom encode error function when response type does not match', async () => {
   const router = createRouter(TestApiSpec, {
-    onEncodeError: (_err, _req, res) => {
-      res.status(500).json('Custom encode error').end();
+    encodeErrorFormatter: (_err, _req) => {
+      return 'Custom encode error';
     },
   });
 
@@ -467,8 +488,8 @@ test('should invoke custom encode error function when response type does not mat
 
 test('should invoke per-route custom encode error function when response type does not match', async () => {
   const router = createRouter(TestApiSpec, {
-    onEncodeError: (_err, _req, res) => {
-      res.status(500).json('Top-level encode error').end();
+    encodeErrorFormatter: (_err, _req) => {
+      return 'Top-level encode error';
     },
   });
 
@@ -480,8 +501,8 @@ test('should invoke per-route custom encode error function when response type do
       },
     ],
     {
-      onEncodeError: (_err, _req, res) => {
-        res.status(500).json('Route encode error').end();
+      encodeErrorFormatter: (_err, _req) => {
+        return 'Route encode error';
       },
     },
   );
@@ -500,8 +521,8 @@ test('should invoke per-route custom encode error function when response type do
 
 test('should invoke custom encode error function when an unknown HTTP status is passed to `sendEncoded`', async () => {
   const router = createRouter(TestApiSpec, {
-    onEncodeError: (_err, _req, res) => {
-      res.status(500).json('Custom encode error').end();
+    encodeErrorFormatter: (_err, _req) => {
+      return 'Custom encode error';
     },
   });
 
@@ -538,8 +559,8 @@ test('should invoke custom encode error function when an unknown keyed status is
   });
 
   const router = createRouter(WeirdApi, {
-    onEncodeError: (_err, _req, res) => {
-      res.status(500).json('Custom encode error').end();
+    encodeErrorFormatter: (_err, _req) => {
+      return 'Custom encode error';
     },
   });
 

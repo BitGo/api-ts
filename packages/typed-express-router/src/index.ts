@@ -3,11 +3,27 @@
  */
 
 import { ApiSpec, HttpRoute, KeyToHttpStatus } from '@api-ts/io-ts-http';
+import type { Span } from '@opentelemetry/api';
 import express from 'express';
 import * as E from 'fp-ts/Either';
 import { pipe } from 'fp-ts/pipeable';
-import { defaultOnDecodeError, defaultOnEncodeError } from './errors';
+
+import {
+  defaultDecodeErrorFormatter,
+  defaultEncodeErrorFormatter,
+  defaultGetDecodeErrorStatusCode,
+  defaultGetEncodeErrorStatusCode,
+} from './errors';
 import { apiTsPathToExpress } from './path';
+import {
+  ApiTsAttributes,
+  createDecodeSpan,
+  createSendEncodedSpan,
+  endSpan,
+  recordSpanDecodeError,
+  recordSpanEncodeError,
+  setSpanAttributes,
+} from './telemetry';
 import {
   AddRouteHandler,
   AddUncheckedRouteHandler,
@@ -22,8 +38,10 @@ import {
 
 export type {
   AfterEncodedResponseSentFn,
-  OnDecodeErrorFn,
-  OnEncodeErrorFn,
+  DecodeErrorFormatterFn,
+  EncodeErrorFormatterFn,
+  GetDecodeErrorStatusCodeFn,
+  GetEncodeErrorStatusCodeFn,
   TypedRequestHandler,
   UncheckedRequestHandler,
   WrappedRouter,
@@ -43,17 +61,21 @@ export type {
 export function createRouter<Spec extends ApiSpec>(
   spec: Spec,
   {
-    onDecodeError,
-    onEncodeError,
+    encodeErrorFormatter,
+    getEncodeErrorStatusCode,
     afterEncodedResponseSent,
+    decodeErrorFormatter,
+    getDecodeErrorStatusCode,
     ...options
   }: WrappedRouterOptions = {},
 ): WrappedRouter<Spec> {
   const router = express.Router(options);
   return wrapRouter(router, spec, {
-    onDecodeError,
-    onEncodeError,
+    encodeErrorFormatter,
+    getEncodeErrorStatusCode,
     afterEncodedResponseSent,
+    decodeErrorFormatter,
+    getDecodeErrorStatusCode,
   });
 }
 
@@ -69,9 +91,11 @@ export function wrapRouter<Spec extends ApiSpec>(
   router: express.Router,
   spec: Spec,
   {
-    onDecodeError = defaultOnDecodeError,
-    onEncodeError = defaultOnEncodeError,
+    encodeErrorFormatter = defaultEncodeErrorFormatter,
+    getEncodeErrorStatusCode = defaultGetEncodeErrorStatusCode,
     afterEncodedResponseSent = () => {},
+    decodeErrorFormatter = defaultDecodeErrorFormatter,
+    getDecodeErrorStatusCode = defaultGetDecodeErrorStatusCode,
   }: WrappedRouteOptions,
 ): WrappedRouter<Spec> {
   const routerMiddleware: UncheckedRequestHandler[] = [];
@@ -81,12 +105,14 @@ export function wrapRouter<Spec extends ApiSpec>(
   ): AddUncheckedRouteHandler<Spec, Method> {
     return (apiName, handlers, options) => {
       const route: HttpRoute | undefined = spec[apiName]?.[method];
+      let decodeSpan: Span | undefined;
       if (route === undefined) {
         // Should only happen with an explicit undefined property, which we can only prevent at the
         // type level with the `exactOptionalPropertyTypes` tsconfig option
         throw Error(`Method "${method}" at "${apiName}" must not be "undefined"'`);
       }
       const wrapReqAndRes: UncheckedRequestHandler = (req, res, next) => {
+        decodeSpan = createDecodeSpan({ apiName, httpRoute: route });
         // Intentionally passing explicit arguments here instead of decoding
         // req by itself because of issues that arise while using Node 16
         // See https://github.com/BitGo/api-ts/pull/394 for more information.
@@ -103,6 +129,10 @@ export function wrapRouter<Spec extends ApiSpec>(
           status: keyof (typeof route)['response'],
           payload: unknown,
         ) => {
+          const encodeSpan = createSendEncodedSpan({
+            apiName,
+            httpRoute: route,
+          });
           try {
             const codec = route.response[status];
             if (!codec) {
@@ -112,6 +142,9 @@ export function wrapRouter<Spec extends ApiSpec>(
               typeof status === 'number'
                 ? status
                 : KeyToHttpStatus[status as keyof KeyToHttpStatus];
+            setSpanAttributes(encodeSpan, {
+              [ApiTsAttributes.API_TS_STATUS_CODE]: statusCode,
+            });
             if (statusCode === undefined) {
               throw new Error(`unknown HTTP status code for key ${status}`);
             } else if (!codec.is(payload)) {
@@ -126,18 +159,42 @@ export function wrapRouter<Spec extends ApiSpec>(
               res as WrappedResponse,
             );
           } catch (err) {
-            (options?.onEncodeError ?? onEncodeError)(
-              err,
-              req as WrappedRequest,
-              res as WrappedResponse,
-            );
+            const statusCode = (
+              options?.getEncodeErrorStatusCode ?? getEncodeErrorStatusCode
+            )(err, req);
+            const encodeErrorMessage = (
+              options?.encodeErrorFormatter ?? encodeErrorFormatter
+            )(err, req);
+
+            recordSpanEncodeError(encodeSpan, err, statusCode);
+            res.status(statusCode).json(encodeErrorMessage);
+          } finally {
+            endSpan(encodeSpan);
           }
         };
         next();
       };
 
+      const endDecodeSpanMiddleware: UncheckedRequestHandler = (req, _res, next) => {
+        pipe(
+          req.decoded,
+          E.getOrElseW((errs) => {
+            const decodeErrorMessage = (
+              options?.decodeErrorFormatter ?? decodeErrorFormatter
+            )(errs, req);
+            const statusCode = (
+              options?.getDecodeErrorStatusCode ?? getDecodeErrorStatusCode
+            )(errs, req);
+            recordSpanDecodeError(decodeSpan, decodeErrorMessage, statusCode);
+          }),
+        );
+        endSpan(decodeSpan);
+        next();
+      };
+
       const middlewareChain = [
         wrapReqAndRes,
+        endDecodeSpanMiddleware,
         ...routerMiddleware,
         ...handlers,
       ] as express.RequestHandler[];
@@ -164,7 +221,13 @@ export function wrapRouter<Spec extends ApiSpec>(
           req.decoded,
           E.matchW(
             (errs) => {
-              (options?.onDecodeError ?? onDecodeError)(errs, req, res);
+              const statusCode = (
+                options?.getDecodeErrorStatusCode ?? getDecodeErrorStatusCode
+              )(errs, req);
+              const decodeErrorMessage = (
+                options?.decodeErrorFormatter ?? decodeErrorFormatter
+              )(errs, req);
+              res.status(statusCode).json(decodeErrorMessage);
             },
             (value) => {
               req.decoded = value;
