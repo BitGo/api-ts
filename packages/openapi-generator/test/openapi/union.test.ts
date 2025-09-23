@@ -353,6 +353,365 @@ testCase('route with unknown unions', ROUTE_WITH_UNKNOWN_UNIONS, {
   },
 });
 
+const ROUTE_WITH_PATH_PARAMS_IN_UNION_NOT_FIRST = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/internal/api/policy/v1/{applicationName}/touchpoints/{touchpoint}/rules/evaluation',
+  method: 'POST',
+  request: t.union([
+    // First schema has NO path parameters - this was causing the bug
+    h.httpRequest({
+      body: { emptyRequest: t.boolean }
+    }),
+    // Second schema HAS path parameters - these should be preserved
+    h.httpRequest({
+      params: {
+        applicationName: t.string,
+        touchpoint: t.string,
+      },
+      body: { requestWithParams: t.string }
+    }),
+  ]),
+  response: {
+    200: t.string,
+  },
+});
+`;
+
+testCase(
+  'route with path params in union second schema (regression test)',
+  ROUTE_WITH_PATH_PARAMS_IN_UNION_NOT_FIRST,
+  {
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    openapi: '3.0.3',
+    paths: {
+      '/internal/api/policy/v1/{applicationName}/touchpoints/{touchpoint}/rules/evaluation':
+        {
+          post: {
+            parameters: [
+              {
+                in: 'path',
+                name: 'applicationName',
+                required: true,
+                schema: { type: 'string' },
+              },
+              {
+                in: 'path',
+                name: 'touchpoint',
+                required: true,
+                schema: { type: 'string' },
+              },
+            ],
+            requestBody: {
+              content: {
+                'application/json': {
+                  schema: {
+                    oneOf: [
+                      {
+                        properties: {
+                          emptyRequest: { type: 'boolean' },
+                        },
+                        required: ['emptyRequest'],
+                        type: 'object',
+                      },
+                      {
+                        properties: {
+                          requestWithParams: { type: 'string' },
+                        },
+                        required: ['requestWithParams'],
+                        type: 'object',
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            responses: {
+              '200': {
+                description: 'OK',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+    },
+    components: {
+      schemas: {},
+    },
+  },
+);
+
+const ROUTE_WITH_PATH_PARAMS_ONLY_IN_THIRD_SCHEMA = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const route = h.httpRoute({
+  path: '/api/{userId}/posts/{postId}',
+  method: 'GET',
+  request: t.union([
+    // First: empty request
+    h.httpRequest({}),
+    // Second: only query params
+    h.httpRequest({
+      query: { filter: t.string }
+    }),
+    // Third: has the path params
+    h.httpRequest({
+      params: {
+        userId: t.string,
+        postId: t.string,
+      },
+      query: { details: t.boolean }
+    }),
+  ]),
+  response: {
+    200: t.string,
+  },
+});
+`;
+
+testCase(
+  'route with path params only in third schema',
+  ROUTE_WITH_PATH_PARAMS_ONLY_IN_THIRD_SCHEMA,
+  {
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    openapi: '3.0.3',
+    paths: {
+      '/api/{userId}/posts/{postId}': {
+        get: {
+          parameters: [
+            {
+              in: 'query',
+              name: 'union',
+              required: true,
+              explode: true,
+              style: 'form',
+              schema: {
+                oneOf: [
+                  {
+                    properties: { filter: { type: 'string' } },
+                    required: ['filter'],
+                    type: 'object',
+                  },
+                  {
+                    properties: { details: { type: 'boolean' } },
+                    required: ['details'],
+                    type: 'object',
+                  },
+                ],
+              },
+            },
+            { in: 'path', name: 'userId', required: true, schema: { type: 'string' } },
+            { in: 'path', name: 'postId', required: true, schema: { type: 'string' } },
+          ],
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
+  },
+);
+
+const REAL_WORLD_POLICY_EVALUATION_ROUTE = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+const AddressBookConnectionSides = t.union([t.literal('send'), t.literal('receive')]);
+
+/**
+ * Create policy evaluation definition
+ * @operationId v1.post.policy.evaluation.definition
+ * @tag Policy Builder
+ * @private
+ */
+export const route = h.httpRoute({
+  path: '/internal/api/policy/v1/{applicationName}/touchpoints/{touchpoint}/rules/evaluations',
+  method: 'POST',
+  request: t.union([
+    h.httpRequest({
+      params: {
+        applicationName: t.string,
+        touchpoint: t.string,
+      },
+      body: t.type({
+        approvalRequestId: t.string,
+        counterPartyId: t.string,
+        description: h.optional(t.string),
+        enterpriseId: t.string,
+        grossAmount: h.optional(t.number),
+        idempotencyKey: t.string,
+        isFirstTimeCounterParty: t.boolean,
+        isMutualConnection: t.boolean,
+        netAmount: h.optional(t.number),
+        settlementId: t.string,
+        userId: t.string,
+        walletId: t.string,
+      })
+    }),
+    h.httpRequest({
+      params: {
+        applicationName: t.string,
+        touchpoint: t.string,
+      },
+      body: t.type({
+        connectionId: t.string,
+        description: h.optional(t.string),
+        enterpriseId: t.string,
+        idempotencyKey: t.string,
+        side: AddressBookConnectionSides,
+        walletId: t.string,
+      })
+    }),
+  ]),
+  response: {
+    200: t.string,
+  },
+});
+`;
+
+testCase(
+  'real-world policy evaluation route with union request bodies',
+  REAL_WORLD_POLICY_EVALUATION_ROUTE,
+  {
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    openapi: '3.0.3',
+    paths: {
+      '/internal/api/policy/v1/{applicationName}/touchpoints/{touchpoint}/rules/evaluations':
+        {
+          post: {
+            summary: 'Create policy evaluation definition',
+            operationId: 'v1.post.policy.evaluation.definition',
+            tags: ['Policy Builder'],
+            'x-internal': true,
+            parameters: [
+              {
+                in: 'path',
+                name: 'applicationName',
+                required: true,
+                schema: { type: 'string' },
+              },
+              {
+                in: 'path',
+                name: 'touchpoint',
+                required: true,
+                schema: { type: 'string' },
+              },
+            ],
+            requestBody: {
+              content: {
+                'application/json': {
+                  schema: {
+                    oneOf: [
+                      {
+                        type: 'object',
+                        properties: {
+                          approvalRequestId: { type: 'string' },
+                          counterPartyId: { type: 'string' },
+                          description: { type: 'string' },
+                          enterpriseId: { type: 'string' },
+                          grossAmount: { type: 'number' },
+                          idempotencyKey: { type: 'string' },
+                          isFirstTimeCounterParty: { type: 'boolean' },
+                          isMutualConnection: { type: 'boolean' },
+                          netAmount: { type: 'number' },
+                          settlementId: { type: 'string' },
+                          userId: { type: 'string' },
+                          walletId: { type: 'string' },
+                        },
+                        required: [
+                          'approvalRequestId',
+                          'counterPartyId',
+                          'enterpriseId',
+                          'idempotencyKey',
+                          'isFirstTimeCounterParty',
+                          'isMutualConnection',
+                          'settlementId',
+                          'userId',
+                          'walletId',
+                        ],
+                      },
+                      {
+                        type: 'object',
+                        properties: {
+                          connectionId: { type: 'string' },
+                          description: { type: 'string' },
+                          enterpriseId: { type: 'string' },
+                          idempotencyKey: { type: 'string' },
+                          side: {
+                            $ref: '#/components/schemas/AddressBookConnectionSides',
+                          },
+                          walletId: { type: 'string' },
+                        },
+                        required: [
+                          'connectionId',
+                          'enterpriseId',
+                          'idempotencyKey',
+                          'side',
+                          'walletId',
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            responses: {
+              '200': {
+                description: 'OK',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+    },
+    components: {
+      schemas: {
+        AddressBookConnectionSides: {
+          enum: ['send', 'receive'],
+          title: 'AddressBookConnectionSides',
+          type: 'string',
+        },
+      },
+    },
+  },
+);
+
 const ROUTE_WITH_DUPLICATE_HEADERS = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';

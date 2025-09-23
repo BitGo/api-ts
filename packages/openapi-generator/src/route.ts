@@ -183,17 +183,20 @@ function parseRequestUnion(
     parameters.push(...headerParams.values());
   }
 
-  const firstSubSchema = schema.schemas[0];
-  if (firstSubSchema !== undefined && firstSubSchema.type === 'object') {
-    const pathSchema = firstSubSchema.properties['params'];
-    if (pathSchema !== undefined && pathSchema.type === 'object') {
-      for (const [name, prop] of Object.entries(pathSchema.properties)) {
-        parameters.push({
-          type: 'path',
-          name,
-          schema: prop,
-          required: pathSchema.required.includes(name),
-        });
+  // Find the first schema in the union that has path parameters
+  for (const subSchema of schema.schemas) {
+    if (subSchema.type === 'object') {
+      const pathSchema = subSchema.properties['params'];
+      if (pathSchema !== undefined && pathSchema.type === 'object') {
+        for (const [name, prop] of Object.entries(pathSchema.properties)) {
+          parameters.push({
+            type: 'path',
+            name,
+            schema: prop,
+            required: pathSchema.required.includes(name),
+          });
+        }
+        break; // Found path params, stop looking
       }
     }
   }
