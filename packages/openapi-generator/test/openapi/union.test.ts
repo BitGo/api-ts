@@ -361,11 +361,9 @@ export const route = h.httpRoute({
   path: '/internal/api/policy/v1/{applicationName}/touchpoints/{touchpoint}/rules/evaluation',
   method: 'POST',
   request: t.union([
-    // First schema has NO path parameters - this was causing the bug
     h.httpRequest({
       body: { emptyRequest: t.boolean }
     }),
-    // Second schema HAS path parameters - these should be preserved
     h.httpRequest({
       params: {
         applicationName: t.string,
@@ -539,7 +537,7 @@ testCase(
   },
 );
 
-const REAL_WORLD_POLICY_EVALUATION_ROUTE = `
+const ROUTE_WITH_FULLY_DEFINED_PARAMS = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
@@ -597,8 +595,8 @@ export const route = h.httpRoute({
 `;
 
 testCase(
-  'real-world policy evaluation route with union request bodies',
-  REAL_WORLD_POLICY_EVALUATION_ROUTE,
+  'union request with consistently defined path parameters',
+  ROUTE_WITH_FULLY_DEFINED_PARAMS,
   {
     info: {
       title: 'Test',
