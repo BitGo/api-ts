@@ -216,5 +216,5 @@ export async function runMiddlewareChainIgnoringResults<
       }
     });
   }
-  return input;
+  return { ...input, ...(req.body || {}) };
 }
