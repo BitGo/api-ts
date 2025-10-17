@@ -216,5 +216,11 @@ export async function runMiddlewareChainIgnoringResults<
       }
     });
   }
-  return input;
+  return { 
+    ...(req as any).decoded, 
+    ...(req.body || {}), 
+    ...(req.query || {}), 
+    ...(req.params || {}),
+    ...(req.headers || {})
+  };
 }
