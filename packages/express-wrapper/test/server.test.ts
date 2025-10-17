@@ -276,3 +276,59 @@ test('should return a 400 when request fails to decode', async () => {
 
   assert(response.body.error.startsWith('Invalid value undefined supplied to'));
 });
+
+test('middleware that modifies req.body should reach handler even without routeHandler()', async () => {
+  const PostWithData = httpRoute({
+    path: '/data',
+    method: 'POST',
+    request: httpRequest({
+      body: {
+        originalField: t.string,
+        addedByMiddleware: optional(t.string),
+      },
+    }),
+    response: {
+      200: t.type({
+        originalField: t.string,
+        addedByMiddleware: optional(t.string),
+      }),
+    },
+  });
+
+  const testApiSpec = apiSpec({
+    'test.route': {
+      post: PostWithData,
+    },
+  });
+
+  const modifyBodyMiddleware: express.RequestHandler = (req, _res, next) => {
+    req.body.addedByMiddleware = 'ADDED';
+    next();
+  };
+
+  const handler = async (params: { originalField: string; addedByMiddleware?: string }) => {
+    return {
+      type: 200,
+      payload: {
+        originalField: params.originalField,
+        addedByMiddleware: params.addedByMiddleware,
+      },
+    } as const;
+  };
+
+  const app = createServer(testApiSpec, (app: express.Application) => {
+    app.use(express.json());
+    return {
+      'test.route': {
+        post: { middleware: [modifyBodyMiddleware], handler },
+      },
+    };
+  });
+
+  const response = await supertest(app)
+    .post('/data')
+    .send({ originalField: 'test' })
+    .expect(200);
+
+  assert.equal(response.body.addedByMiddleware, 'ADDED', 'addedByMiddleware should be present because req.body is part of req.decoded');
+});
