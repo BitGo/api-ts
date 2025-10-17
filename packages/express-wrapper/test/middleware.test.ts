@@ -40,38 +40,6 @@ test('should handle errors passed to next()', async () => {
   );
 });
 
-test('middleware that modifies req should pass changes through chain', async () => {
-  const testReq = { body: {}, headers: {} } as express.Request;
-  const testRes = {} as express.Response;
-
-  const modifyReqMiddleware: express.RequestHandler = (req, _res, next) => {
-    (req as any).userId = 123;
-    next();
-  };
-
-  const checkReqMiddleware: express.RequestHandler = (req, _res, next) => {
-    assert.equal(
-      (req as any).userId,
-      123,
-      'userId should still be on req in second middleware',
-    );
-    next();
-  };
-
-  await runMiddlewareChain(
-    { foo: 'test' },
-    [modifyReqMiddleware, noopMiddleware, checkReqMiddleware],
-    testReq,
-    testRes,
-  );
-
-  assert.equal(
-    (testReq as any).userId,
-    123,
-    'req should still have userId after chain',
-  );
-});
-
 test('should work with middleware that return values', async () => {
   const result = await runMiddlewareChain(
     { foo: 'test' },

@@ -202,7 +202,7 @@ export async function runMiddlewareChainIgnoringResults<
   Input,
   Chain extends MiddlewareChain,
 >(
-  input: Input,
+  _input: Input,
   chain: Chain,
   req: express.Request,
   res: express.Response,
@@ -216,11 +216,11 @@ export async function runMiddlewareChainIgnoringResults<
       }
     });
   }
-  return { 
-    ...(req as any).decoded, 
-    ...(req.body || {}), 
-    ...(req.query || {}), 
+  return {
+    ...(req as any).decoded,
+    ...(req.body || {}),
+    ...(req.query || {}),
     ...(req.params || {}),
-    ...(req.headers || {})
+    ...(req.headers || {}),
   };
 }
