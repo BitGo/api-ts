@@ -189,14 +189,19 @@ export async function runMiddlewareChain<
 }
 
 /**
- * Runs a middleware chain, but does not modify the decoded request (input) with properties from any middleware.
+ * Runs a middleware chain and merges standard Express properties (body, query, params, headers) with the decoded request.
+ * Does not incorporate other modifications middleware may make to the request object.
  * This primarily exists to preserve backwards-compatible behavior for RouteHandlers defined without the `routeHandler` function.
  *
- * @param input - the decoded request properties (just passed through)
+ * Note: The name "IgnoringResults" refers to ignoring typed middleware return values (via middlewareFn),
+ * NOT ignoring standard Express request modifications. Middleware can still modify req.body/query/params/headers
+ * and those changes WILL be included in the returned object.
+ *
+ * @param _input - the decoded request properties (unused, decoded data is read from req)
  * @param chain - the middleware chain
  * @param req - express request object
  * @param res - express response object
- * @returns `input` unmodified
+ * @returns decoded request merged with req.body, req.query, req.params, and req.headers
  */
 export async function runMiddlewareChainIgnoringResults<
   Input,
