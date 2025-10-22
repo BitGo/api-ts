@@ -180,3 +180,72 @@ test('non-consolidatable unions are not consolidated', () => {
 
   assert.deepEqual(optimize(input), expected);
 });
+
+test('intersection with non-object types removes empty object', () => {
+  const input: Schema = {
+    type: 'intersection',
+    schemas: [
+      {
+        type: 'object',
+        properties: {},
+        required: [],
+      },
+      {
+        type: 'ref',
+        name: 'SomeType',
+        location: '/path/to/file.ts',
+      },
+    ],
+  };
+
+  // The empty object should be removed, leaving just the ref
+  const expected: Schema = {
+    type: 'ref',
+    name: 'SomeType',
+    location: '/path/to/file.ts',
+  };
+
+  assert.deepEqual(optimize(input), expected);
+});
+
+test('intersection with multiple non-object types removes empty object', () => {
+  const input: Schema = {
+    type: 'intersection',
+    schemas: [
+      {
+        type: 'object',
+        properties: {},
+        required: [],
+      },
+      {
+        type: 'ref',
+        name: 'TypeA',
+        location: '/path/to/file.ts',
+      },
+      {
+        type: 'ref',
+        name: 'TypeB',
+        location: '/path/to/file.ts',
+      },
+    ],
+  };
+
+  // The empty object should be removed, leaving the intersection of refs
+  const expected: Schema = {
+    type: 'intersection',
+    schemas: [
+      {
+        type: 'ref',
+        name: 'TypeA',
+        location: '/path/to/file.ts',
+      },
+      {
+        type: 'ref',
+        name: 'TypeB',
+        location: '/path/to/file.ts',
+      },
+    ],
+  };
+
+  assert.deepEqual(optimize(input), expected);
+});
