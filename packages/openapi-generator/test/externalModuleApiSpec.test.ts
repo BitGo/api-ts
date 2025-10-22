@@ -368,3 +368,46 @@ testCase(
   },
   [],
 );
+
+testCase(
+  'simple api spec with util type functions',
+  'test/sample-types/apiSpecWithArrow.ts',
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'simple api spec with util type functions',
+      version: '1.0.0',
+      description: 'simple api spec with util type functions',
+    },
+    paths: {
+      '/test': {
+        get: {
+          parameters: [],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      hasLargeNumberOfAddresses: {
+                        nullable: true,
+                        type: 'boolean',
+                      },
+                    },
+                    required: ['hasLargeNumberOfAddresses'],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
+  },
+  [],
+);

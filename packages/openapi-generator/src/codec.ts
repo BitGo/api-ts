@@ -450,6 +450,20 @@ export function parsePlainInitializer(
   }
 }
 
+function parseFunctionBody(
+  project: Project,
+  source: SourceFile,
+  func: swc.ArrowFunctionExpression,
+): E.Either<string, Schema> {
+  if (func.body === undefined) {
+    return errorLeft('Function body is undefined');
+  }
+  if (func.body.type === 'BlockStatement') {
+    return errorLeft('BlockStatement arrow functions are not yet supported');
+  }
+  return parseCodecInitializer(project, source, func.body);
+}
+
 export function parseCodecInitializer(
   project: Project,
   source: SourceFile,
@@ -471,8 +485,29 @@ export function parseCodecInitializer(
   } else if (init.type === 'CallExpression') {
     const callee = init.callee;
     if (callee.type !== 'Identifier' && callee.type !== 'MemberExpression') {
-      return errorLeft(`Unimplemented callee type ${init.callee.type}`);
+      return errorLeft(`Unimplemented callee type ${callee.type}`);
     }
+
+    let calleeName: string | [string, string] | undefined;
+    if (callee.type === 'Identifier') {
+      calleeName = callee.value;
+    } else if (
+      callee.object.type === 'Identifier' &&
+      callee.property.type === 'Identifier'
+    ) {
+      calleeName = [callee.object.value, callee.property.value];
+    }
+
+    if (calleeName !== undefined) {
+      const calleeInitE = findSymbolInitializer(project, source, calleeName);
+      if (E.isRight(calleeInitE)) {
+        const [calleeSourceFile, calleeInit] = calleeInitE.right;
+        if (calleeInit !== null && calleeInit.type === 'ArrowFunctionExpression') {
+          return parseFunctionBody(project, calleeSourceFile, calleeInit);
+        }
+      }
+    }
+
     const identifierE = codecIdentifier(project, source, callee);
     if (E.isLeft(identifierE)) {
       return identifierE;
