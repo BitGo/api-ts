@@ -290,5 +290,5 @@ const MISSING_REFERENCE = {
 };
 
 testCase('missing reference', MISSING_REFERENCE, '/index.ts', {}, [
-  "Cannot find module 'foo' in the project",
+  "Cannot find external codec 'Foo' from module 'foo'. To fix this, add the codec definition to your codec config file. See: https://github.com/BitGo/api-ts/tree/master/packages/openapi-generator#4-defining-custom-codecs",
 ]);
