@@ -411,3 +411,46 @@ testCase(
   },
   [],
 );
+
+testCase(
+  'simple api spec with block statement arrow functions',
+  'test/sample-types/apiSpecWithBlockArrow.ts',
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'simple api spec with block statement arrow functions',
+      version: '1.0.0',
+      description: 'simple api spec with block statement arrow functions',
+    },
+    paths: {
+      '/test': {
+        get: {
+          parameters: [],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      hasLargeNumberOfAddresses: {
+                        nullable: true,
+                        type: 'boolean',
+                      },
+                    },
+                    required: ['hasLargeNumberOfAddresses'],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
+  },
+  [],
+);
