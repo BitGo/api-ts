@@ -528,7 +528,11 @@ export function parseCodecInitializer(
           // schema.location might be a package name -> need to resolve the path from the project types
           const path = project.getTypes()[schema.name];
           if (path === undefined)
-            return errorLeft(`Cannot find module '${schema.location}' in the project`);
+            return errorLeft(
+              `Cannot find external codec '${schema.name}' from module '${schema.location}'. ` +
+                `To fix this, add the codec definition to your codec config file. ` +
+                `See: https://github.com/BitGo/api-ts/tree/master/packages/openapi-generator#4-defining-custom-codecs`,
+            );
           refSource = project.get(path);
           if (refSource === undefined) {
             return errorLeft(`Cannot find '${schema.name}' from '${schema.location}'`);
