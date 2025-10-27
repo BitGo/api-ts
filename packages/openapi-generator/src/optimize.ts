@@ -1,5 +1,5 @@
 import { combineComments } from './comments';
-import { isPrimitive, type Primitive, type Schema } from './ir';
+import { isPrimitive, type CombinedType, type Primitive, type Schema } from './ir';
 
 export type OptimizeFn = (schema: Schema) => Schema;
 
@@ -28,6 +28,28 @@ export function foldIntersection(schema: Schema, optimize: OptimizeFn): Schema {
       };
     }
   });
+
+  // If the combined object is empty (no properties) and result is an intersection,
+  // we can simplify by removing the empty object
+  const hasProperties = Object.keys(combinedObject.properties).length > 0;
+
+  if (!hasProperties && result !== combinedObject) {
+    // At this point, result must be an intersection since it was reassigned
+    const intersectionResult = result as unknown as CombinedType;
+
+    // Remove the empty object from the intersection
+    const nonEmptySchemas = intersectionResult.schemas.filter(
+      (s: Schema) => !(s.type === 'object' && Object.keys(s.properties).length === 0),
+    );
+
+    if (nonEmptySchemas.length === 0) {
+      return combinedObject;
+    } else if (nonEmptySchemas.length === 1) {
+      return nonEmptySchemas[0]!;
+    } else {
+      return { type: 'intersection', schemas: nonEmptySchemas };
+    }
+  }
 
   return result;
 }
