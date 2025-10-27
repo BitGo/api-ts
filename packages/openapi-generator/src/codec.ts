@@ -459,7 +459,14 @@ function parseFunctionBody(
     return errorLeft('Function body is undefined');
   }
   if (func.body.type === 'BlockStatement') {
-    return errorLeft('BlockStatement arrow functions are not yet supported');
+    const returnStmt = func.body.stmts.find((s) => s.type === 'ReturnStatement');
+    if (!returnStmt || returnStmt.type !== 'ReturnStatement') {
+      return errorLeft('BlockStatement must contain a return statement');
+    }
+    if (!returnStmt.argument) {
+      return errorLeft('Return statement must have an argument');
+    }
+    return parseCodecInitializer(project, source, returnStmt.argument);
   }
   return parseCodecInitializer(project, source, func.body);
 }
