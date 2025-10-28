@@ -510,7 +510,10 @@ export function parseCodecInitializer(
       if (E.isRight(calleeInitE)) {
         const [calleeSourceFile, calleeInit] = calleeInitE.right;
         if (calleeInit !== null && calleeInit.type === 'ArrowFunctionExpression') {
-          return parseFunctionBody(project, calleeSourceFile, calleeInit);
+          const bodyResult = parseFunctionBody(project, calleeSourceFile, calleeInit);
+          if (E.isRight(bodyResult)) {
+            return bodyResult;
+          }
         }
       }
     }
