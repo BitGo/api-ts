@@ -1440,3 +1440,144 @@ testCase(
     },
   },
 );
+
+const ROUTE_WITH_ENUM_ARRAY_PARAMETER_DESCRIPTIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * This is a big test of TESTINESS
+ */
+export const TransactionRequestState = t.keyof(
+  {
+    pendingApproval: 1,
+    canceled: 1,
+    rejected: 1,
+    initialized: 1,
+    pendingDelivery: 1,
+    delivered: 1,
+    pendingUserSignature: 1,
+    pendingUserCommitment: 1,
+    pendingUserRShare: 1,
+    pendingUserGShare: 1,
+    readyToSend: 1,
+    signed: 1,
+    failed: 1,
+  },
+  'TransactionRequestState',
+);
+
+/**
+ * A route that demonstrates enum descriptions being moved to parameter level
+ *
+ * @operationId api.v1.enumTest
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/transactions',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      states: t.array(TransactionRequestState),
+    },
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase(
+  'route with enum array parameter descriptions moved to parameter level',
+  ROUTE_WITH_ENUM_ARRAY_PARAMETER_DESCRIPTIONS,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/transactions': {
+        get: {
+          summary:
+            'A route that demonstrates enum descriptions being moved to parameter level',
+          operationId: 'api.v1.enumTest',
+          tags: ['Test Routes'],
+          parameters: [
+            {
+              name: 'states',
+              description: 'This is a big test of TESTINESS',
+              in: 'query',
+              required: true,
+              schema: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  enum: [
+                    'pendingApproval',
+                    'canceled',
+                    'rejected',
+                    'initialized',
+                    'pendingDelivery',
+                    'delivered',
+                    'pendingUserSignature',
+                    'pendingUserCommitment',
+                    'pendingUserRShare',
+                    'pendingUserGShare',
+                    'readyToSend',
+                    'signed',
+                    'failed',
+                  ],
+                },
+              },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      result: {
+                        type: 'string',
+                      },
+                    },
+                    required: ['result'],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        TransactionRequestState: {
+          title: 'TransactionRequestState',
+          type: 'string',
+          enum: [
+            'pendingApproval',
+            'canceled',
+            'rejected',
+            'initialized',
+            'pendingDelivery',
+            'delivered',
+            'pendingUserSignature',
+            'pendingUserCommitment',
+            'pendingUserRShare',
+            'pendingUserGShare',
+            'readyToSend',
+            'signed',
+            'failed',
+          ],
+          description: 'This is a big test of TESTINESS',
+        },
+      },
+    },
+  },
+);

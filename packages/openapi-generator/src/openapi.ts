@@ -367,6 +367,24 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
         // Array types not allowed here
         const schema = schemaToOpenAPI(p.schema);
 
+        let schemaDescription =
+          schema && 'description' in schema ? schema.description : undefined;
+
+        if (
+          !schemaDescription &&
+          !p.schema?.comment?.description &&
+          schema &&
+          !('$ref' in schema) &&
+          schema.type === 'array' &&
+          'items' in schema &&
+          schema.items &&
+          typeof schema.items === 'object' &&
+          'description' in schema.items
+        ) {
+          schemaDescription = schema.items.description;
+          delete schema.items.description; // Only delete when we're using it as parameter description
+        }
+
         if (schema && 'description' in schema) {
           delete schema.description;
         }
@@ -376,10 +394,13 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
           delete schema['x-internal'];
         }
 
+        const parameterDescription =
+          p.schema?.comment?.description ?? schemaDescription;
+
         return {
           name: p.name,
-          ...(p.schema?.comment?.description !== undefined
-            ? { description: p.schema.comment.description }
+          ...(parameterDescription !== undefined
+            ? { description: parameterDescription }
             : {}),
           in: p.type,
           ...(isPrivate ? { 'x-internal': true } : {}),
