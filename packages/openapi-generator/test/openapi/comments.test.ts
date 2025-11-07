@@ -1441,6 +1441,180 @@ testCase(
   },
 );
 
+const ROUTE_WITH_INDIVIDUAL_ENUM_DESCRIPTIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * Transaction Request State Enum with individual descriptions
+ */
+export const TransactionRequestState = t.keyof(
+  {
+    /** Transaction is waiting for approval from authorized users */
+    pendingApproval: 1,
+    /** Transaction was canceled by the user */
+    canceled: 1,
+    /** Transaction was rejected by approvers */
+    rejected: 1,
+    /** Transaction has been initialized but not yet processed */
+    initialized: 1,
+    /** Transaction is ready to be delivered */
+    pendingDelivery: 1,
+    /** Transaction has been successfully delivered */
+    delivered: 1,
+  },
+  'TransactionRequestState',
+);
+
+/**
+ * Route to test individual enum variant descriptions
+ *
+ * @operationId api.v1.enumVariantDescriptions
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/transactions',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      states: t.array(TransactionRequestState),
+    },
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase(
+  'individual enum variant descriptions are preserved in oneOf',
+  ROUTE_WITH_INDIVIDUAL_ENUM_DESCRIPTIONS,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/transactions': {
+        get: {
+          summary: 'Route to test individual enum variant descriptions',
+          operationId: 'api.v1.enumVariantDescriptions',
+          tags: ['Test Routes'],
+          parameters: [
+            {
+              name: 'states',
+              description:
+                'Transaction Request State Enum with individual descriptions',
+              in: 'query',
+              required: true,
+              schema: {
+                type: 'array',
+                items: {
+                  oneOf: [
+                    {
+                      type: 'string',
+                      enum: ['pendingApproval'],
+                      description:
+                        'Transaction is waiting for approval from authorized users',
+                    },
+                    {
+                      type: 'string',
+                      enum: ['canceled'],
+                      description: 'Transaction was canceled by the user',
+                    },
+                    {
+                      type: 'string',
+                      enum: ['rejected'],
+                      description: 'Transaction was rejected by approvers',
+                    },
+                    {
+                      type: 'string',
+                      enum: ['initialized'],
+                      description:
+                        'Transaction has been initialized but not yet processed',
+                    },
+                    {
+                      type: 'string',
+                      enum: ['pendingDelivery'],
+                      description: 'Transaction is ready to be delivered',
+                    },
+                    {
+                      type: 'string',
+                      enum: ['delivered'],
+                      description: 'Transaction has been successfully delivered',
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      result: {
+                        type: 'string',
+                      },
+                    },
+                    required: ['result'],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        TransactionRequestState: {
+          title: 'TransactionRequestState',
+          description: 'Transaction Request State Enum with individual descriptions',
+          oneOf: [
+            {
+              type: 'string',
+              enum: ['pendingApproval'],
+              description: 'Transaction is waiting for approval from authorized users',
+            },
+            {
+              type: 'string',
+              enum: ['canceled'],
+              description: 'Transaction was canceled by the user',
+            },
+            {
+              type: 'string',
+              enum: ['rejected'],
+              description: 'Transaction was rejected by approvers',
+            },
+            {
+              type: 'string',
+              enum: ['initialized'],
+              description: 'Transaction has been initialized but not yet processed',
+            },
+            {
+              type: 'string',
+              enum: ['pendingDelivery'],
+              description: 'Transaction is ready to be delivered',
+            },
+            {
+              type: 'string',
+              enum: ['delivered'],
+              description: 'Transaction has been successfully delivered',
+            },
+          ],
+        },
+      },
+    },
+  },
+);
+
 const ROUTE_WITH_ENUM_ARRAY_PARAMETER_DESCRIPTIONS = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';

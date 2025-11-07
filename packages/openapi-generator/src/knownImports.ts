@@ -125,10 +125,16 @@ export const KNOWN_IMPORTS: KnownImports = {
       if (arg.type !== 'object') {
         return errorLeft(`Unimplemented keyof type ${arg.type}`);
       }
-      const schemas: Schema[] = Object.keys(arg.properties).map((prop) => ({
-        type: 'string',
-        enum: [prop],
-      }));
+      const schemas: Schema[] = Object.keys(arg.properties).map((prop) => {
+        const propertySchema = arg.properties[prop];
+        return {
+          type: 'string',
+          enum: [prop],
+          // Preserve the comment from the original property
+          ...(propertySchema?.comment ? { comment: propertySchema.comment } : {}),
+        };
+      });
+
       return E.right({
         type: 'union',
         schemas,

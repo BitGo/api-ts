@@ -160,9 +160,14 @@ export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
   const remainder: Schema[] = [];
   innerSchemas.forEach((innerSchema) => {
     if (isPrimitive(innerSchema) && innerSchema.enum !== undefined) {
-      innerSchema.enum.forEach((value) => {
-        literals[innerSchema.type].add(value);
-      });
+      // If this enum has a comment, preserve it in the union instead of consolidating
+      if (innerSchema.comment) {
+        remainder.push(innerSchema);
+      } else {
+        innerSchema.enum.forEach((value) => {
+          literals[innerSchema.type].add(value);
+        });
+      }
     } else {
       remainder.push(innerSchema);
     }
