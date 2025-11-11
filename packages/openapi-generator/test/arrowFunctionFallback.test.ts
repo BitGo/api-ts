@@ -1,8 +1,8 @@
-const E = require('fp-ts/lib/Either');
-const assert = require('node:assert/strict');
-const test = require('node:test');
-const { TestProject } = require('./testProject');
-const { parsePlainInitializer } = require('../src');
+import * as E from 'fp-ts/lib/Either';
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { TestProject } from './testProject';
+import { parsePlainInitializer } from '../src';
 
 test('arrow function with parameters should use custom codec definition', async () => {
   const files = {
