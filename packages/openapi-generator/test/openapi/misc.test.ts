@@ -287,3 +287,144 @@ testCase('route with record types', ROUTE_WITH_RECORD_TYPES, {
     },
   },
 });
+
+const CONTENT_TYPE_TEST = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * Route with multipart/form-data content type
+ *
+ * @contentType multipart/form-data
+ * @operationId api.v1.uploadDocument
+ * @tag Document Upload
+ */
+export const uploadRoute = h.httpRoute({
+  path: '/upload',
+  method: 'POST',
+  request: h.httpRequest({
+    body: t.type({
+      file: t.unknown,
+      documentType: t.string,
+    }),
+  }),
+  response: {
+    201: t.type({
+      id: t.string,
+      success: t.boolean,
+    }),
+  },
+});
+
+/**
+ * Route with default application/json content type
+ *
+ * @operationId api.v1.createUser
+ * @tag User Management
+ */
+export const createUserRoute = h.httpRoute({
+  path: '/users',
+  method: 'POST',
+  request: h.httpRequest({
+    body: t.type({
+      name: t.string,
+      email: t.string,
+    }),
+  }),
+  response: {
+    201: t.type({
+      id: t.string,
+      name: t.string,
+    }),
+  },
+});
+`;
+
+testCase('route with contentType tag uses multipart/form-data', CONTENT_TYPE_TEST, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/upload': {
+      post: {
+        summary: 'Route with multipart/form-data content type',
+        operationId: 'api.v1.uploadDocument',
+        tags: ['Document Upload'],
+        parameters: [],
+        requestBody: {
+          content: {
+            'multipart/form-data': {
+              schema: {
+                type: 'object',
+                properties: {
+                  file: {},
+                  documentType: { type: 'string' },
+                },
+                required: ['file', 'documentType'],
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Created',
+            content: {
+              'multipart/form-data': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    success: { type: 'boolean' },
+                  },
+                  required: ['id', 'success'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/users': {
+      post: {
+        summary: 'Route with default application/json content type',
+        operationId: 'api.v1.createUser',
+        tags: ['User Management'],
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  email: { type: 'string' },
+                },
+                required: ['name', 'email'],
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Created',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                  },
+                  required: ['id', 'name'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: { schemas: {} },
+});
