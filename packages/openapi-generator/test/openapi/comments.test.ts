@@ -1440,3 +1440,245 @@ testCase(
     },
   },
 );
+
+const ROUTE_WITH_INDIVIDUAL_ENUM_DESCRIPTIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * Transaction Request State Enum with individual descriptions
+ */
+export const TransactionRequestState = t.keyof(
+  {
+    /** Transaction is waiting for approval from authorized users */
+    pendingApproval: 1,
+    /** Transaction was canceled by the user */
+    canceled: 1,
+    /** Transaction was rejected by approvers */
+    rejected: 1,
+    /** Transaction has been initialized but not yet processed */
+    initialized: 1,
+    /** Transaction is ready to be delivered */
+    pendingDelivery: 1,
+    /** Transaction has been successfully delivered */
+    delivered: 1,
+  },
+  'TransactionRequestState',
+);
+
+/**
+ * Route to test individual enum variant descriptions
+ *
+ * @operationId api.v1.enumVariantDescriptions
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/transactions',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      states: t.array(TransactionRequestState),
+    },
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase(
+  'individual enum variant descriptions use x-enumDescriptions extension',
+  ROUTE_WITH_INDIVIDUAL_ENUM_DESCRIPTIONS,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/transactions': {
+        get: {
+          summary: 'Route to test individual enum variant descriptions',
+          operationId: 'api.v1.enumVariantDescriptions',
+          tags: ['Test Routes'],
+          parameters: [
+            {
+              name: 'states',
+              in: 'query',
+              required: true,
+              schema: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  enum: [
+                    'pendingApproval',
+                    'canceled',
+                    'rejected',
+                    'initialized',
+                    'pendingDelivery',
+                    'delivered',
+                  ],
+                  'x-enumDescriptions': {
+                    pendingApproval:
+                      'Transaction is waiting for approval from authorized users',
+                    canceled: 'Transaction was canceled by the user',
+                    rejected: 'Transaction was rejected by approvers',
+                    initialized:
+                      'Transaction has been initialized but not yet processed',
+                    pendingDelivery: 'Transaction is ready to be delivered',
+                    delivered: 'Transaction has been successfully delivered',
+                  },
+                  description:
+                    'Transaction Request State Enum with individual descriptions',
+                },
+              },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      result: {
+                        type: 'string',
+                      },
+                    },
+                    required: ['result'],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        TransactionRequestState: {
+          title: 'TransactionRequestState',
+          description: 'Transaction Request State Enum with individual descriptions',
+          type: 'string',
+          enum: [
+            'pendingApproval',
+            'canceled',
+            'rejected',
+            'initialized',
+            'pendingDelivery',
+            'delivered',
+          ],
+          'x-enumDescriptions': {
+            pendingApproval:
+              'Transaction is waiting for approval from authorized users',
+            canceled: 'Transaction was canceled by the user',
+            rejected: 'Transaction was rejected by approvers',
+            initialized: 'Transaction has been initialized but not yet processed',
+            pendingDelivery: 'Transaction is ready to be delivered',
+            delivered: 'Transaction has been successfully delivered',
+          },
+        },
+      },
+    },
+  },
+);
+
+const ROUTE_WITH_ENUM_WITHOUT_DESCRIPTIONS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * Simple enum without individual descriptions
+ */
+export const SimpleEnum = t.keyof(
+  {
+    value1: 1,
+    value2: 1,
+    value3: 1,
+  },
+  'SimpleEnum',
+);
+
+/**
+ * Route to test enum without individual descriptions
+ *
+ * @operationId api.v1.simpleEnum
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/simple',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      value: SimpleEnum,
+    },
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase(
+  'enum without individual descriptions uses standard enum format',
+  ROUTE_WITH_ENUM_WITHOUT_DESCRIPTIONS,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/simple': {
+        get: {
+          summary: 'Route to test enum without individual descriptions',
+          operationId: 'api.v1.simpleEnum',
+          tags: ['Test Routes'],
+          parameters: [
+            {
+              name: 'value',
+              in: 'query',
+              required: true,
+              schema: {
+                $ref: '#/components/schemas/SimpleEnum',
+              },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      result: {
+                        type: 'string',
+                      },
+                    },
+                    required: ['result'],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        SimpleEnum: {
+          title: 'SimpleEnum',
+          type: 'string',
+          enum: ['value1', 'value2', 'value3'],
+          description: 'Simple enum without individual descriptions',
+        },
+      },
+    },
+  },
+);

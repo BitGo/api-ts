@@ -20,18 +20,32 @@ export function schemaToOpenAPI(
     switch (schema.type) {
       case 'boolean':
       case 'string':
-      case 'number':
-        return {
+      case 'number': {
+        const result: any = {
           type: schema.type,
           ...(schema.enum ? { enum: schema.enum } : {}),
           ...defaultOpenAPIObject,
         };
-      case 'integer':
-        return {
+
+        if (schema.enum && schema.enumDescriptions) {
+          result['x-enumDescriptions'] = schema.enumDescriptions;
+        }
+
+        return result;
+      }
+      case 'integer': {
+        const result: any = {
           type: 'number',
           ...(schema.enum ? { enum: schema.enum } : {}),
           ...defaultOpenAPIObject,
         };
+
+        if (schema.enum && schema.enumDescriptions) {
+          result['x-enumDescriptions'] = schema.enumDescriptions;
+        }
+
+        return result;
+      }
       case 'null':
         // TODO: OpenAPI v3 does not have an explicit null type, is there a better way to represent this?
         // Or should we just conflate explicit null and undefined properties?

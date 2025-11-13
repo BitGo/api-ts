@@ -160,9 +160,13 @@ export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
   const remainder: Schema[] = [];
   innerSchemas.forEach((innerSchema) => {
     if (isPrimitive(innerSchema) && innerSchema.enum !== undefined) {
-      innerSchema.enum.forEach((value) => {
-        literals[innerSchema.type].add(value);
-      });
+      if (innerSchema.comment || innerSchema.enumDescriptions) {
+        remainder.push(innerSchema);
+      } else {
+        innerSchema.enum.forEach((value) => {
+          literals[innerSchema.type].add(value);
+        });
+      }
     } else {
       remainder.push(innerSchema);
     }
