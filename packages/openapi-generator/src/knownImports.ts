@@ -125,14 +125,38 @@ export const KNOWN_IMPORTS: KnownImports = {
       if (arg.type !== 'object') {
         return errorLeft(`Unimplemented keyof type ${arg.type}`);
       }
-      const schemas: Schema[] = Object.keys(arg.properties).map((prop) => ({
-        type: 'string',
-        enum: [prop],
-      }));
-      return E.right({
-        type: 'union',
-        schemas,
-      });
+
+      const enumValues = Object.keys(arg.properties);
+      const enumDescriptions: Record<string, string> = {};
+      let hasDescriptions = false;
+
+      for (const prop of enumValues) {
+        const propertySchema = arg.properties[prop];
+        if (propertySchema?.comment?.description) {
+          enumDescriptions[prop] = propertySchema.comment.description;
+          hasDescriptions = true;
+        }
+      }
+
+      if (hasDescriptions) {
+        return E.right({
+          type: 'string',
+          enum: enumValues,
+          enumDescriptions,
+        });
+      } else {
+        const schemas: Schema[] = enumValues.map((prop) => {
+          return {
+            type: 'string',
+            enum: [prop],
+          };
+        });
+
+        return E.right({
+          type: 'union',
+          schemas,
+        });
+      }
     },
     brand: (_, arg) => E.right(arg),
     UnknownRecord: () => E.right({ type: 'record', codomain: { type: 'any' } }),

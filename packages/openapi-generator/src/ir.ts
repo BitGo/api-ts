@@ -13,6 +13,7 @@ export type UndefinedValue = {
 export type Primitive = {
   type: 'string' | 'number' | 'integer' | 'boolean' | 'null';
   enum?: (string | number | boolean | null | PseudoBigInt)[];
+  enumDescriptions?: Record<string, string>;
 };
 
 export function isPrimitive(schema: Schema): schema is Primitive {
