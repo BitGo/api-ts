@@ -332,6 +332,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
   const isInternal = jsdoc.tags?.private !== undefined;
   const isUnstable = jsdoc.tags?.unstable !== undefined;
   const example = jsdoc.tags?.example;
+  const contentType = jsdoc.tags?.contentType ?? 'application/json';
 
   const knownTags = new Set([
     'operationId',
@@ -342,6 +343,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
     'tag',
     'description',
     'url',
+    'contentType',
   ]);
   const unknownTagsObject = Object.entries(jsdoc.tags ?? {}).reduce(
     (acc, [key, value]) => {
@@ -359,7 +361,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
       : {
           requestBody: {
             content: {
-              'application/json': { schema: schemaToOpenAPI(route.body) },
+              [contentType]: { schema: schemaToOpenAPI(route.body) },
             },
           },
         };
@@ -411,7 +413,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
           [Number(code)]: {
             description,
             content: {
-              'application/json': {
+              [contentType]: {
                 schema: schemaToOpenAPI(response),
                 ...(example !== undefined ? { example } : undefined),
               },
