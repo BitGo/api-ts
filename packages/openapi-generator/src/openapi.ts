@@ -346,9 +346,20 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
       ? {}
       : {
           requestBody: {
-            content: {
-              [contentType]: { schema: schemaToOpenAPI(route.body) },
-            },
+            content: (() => {
+              const emptyBlock: Block = {
+                description: '',
+                tags: [],
+                source: [],
+                problems: [],
+              };
+              const bodyJsdoc = parseCommentBlock(route.body.comment ?? emptyBlock);
+              const requestContentType = bodyJsdoc.tags?.contentType ?? contentType;
+
+              return {
+                [requestContentType]: { schema: schemaToOpenAPI(route.body) },
+              };
+            })(),
           },
         };
 
@@ -394,12 +405,21 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
       responses: Object.entries(route.response).reduce((acc, [code, response]) => {
         const description = STATUS_CODES[code] ?? '';
 
+        const emptyBlock: Block = {
+          description: '',
+          tags: [],
+          source: [],
+          problems: [],
+        };
+        const responseJsdoc = parseCommentBlock(response.comment ?? emptyBlock);
+        const responseContentType = responseJsdoc.tags?.contentType ?? contentType;
+
         return {
           ...acc,
           [Number(code)]: {
             description,
             content: {
-              [contentType]: {
+              [responseContentType]: {
                 schema: schemaToOpenAPI(response),
                 ...(example !== undefined ? { example } : undefined),
               },
