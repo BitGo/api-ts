@@ -1,5 +1,12 @@
 ---
 name: Release
+permissions:
+  # Needed for OIDC Trusted Publishing
+  id-token: write
+  # Needed for semantic-release
+  contents: write
+  pull-requests: write
+  issues: write
 
 on:
   push:
@@ -15,6 +22,7 @@ jobs:
     name: Release
     if: github.repository_owner == 'BitGo'
     runs-on: ubuntu-latest
+    environment: publish-apits
 
     steps:
       - name: Checkout
@@ -48,4 +56,3 @@ jobs:
         run: npx multi-semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
