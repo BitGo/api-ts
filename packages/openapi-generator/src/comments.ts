@@ -93,7 +93,12 @@ export function combineComments(schema: Schema): Block | undefined {
     result.description = comments[0].description;
   }
 
-  // Add all seen tags, problems, and source comments to the result
+  // Only use the first comment's source to avoid duplicates when parsing
+  if (comments[0]?.source) {
+    result.source = comments[0].source;
+  }
+
+  // Add all seen tags and problems to the result
   for (const comment of comments) {
     for (const tag of comment.tags) {
       // Only add the tag if we haven't seen it before. Otherwise, the higher level tag is 'probably' the more relevant tag.
@@ -104,7 +109,6 @@ export function combineComments(schema: Schema): Block | undefined {
     }
 
     result.problems.push(...comment.problems);
-    result.source.push(...comment.source);
   }
 
   return result;

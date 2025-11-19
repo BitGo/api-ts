@@ -266,31 +266,47 @@ export function schemaToOpenAPI(
     const emptyBlock: Block = { description: '', tags: [], source: [], problems: [] };
     const jsdoc = parseCommentBlock(schema.comment ?? emptyBlock);
 
-    const defaultValue = jsdoc?.tags?.default ?? schema.default;
-    const example = jsdoc?.tags?.example ?? schema.example;
-    const maxLength = jsdoc?.tags?.maxLength ?? schema.maxLength;
-    const minLength = jsdoc?.tags?.minLength ?? schema.minLength;
-    const pattern = jsdoc?.tags?.pattern ?? schema.pattern;
-    const minimum = jsdoc?.tags?.minimum ?? schema.maximum;
-    const maximum = jsdoc?.tags?.maximum ?? schema.minimum;
-    const minItems = jsdoc?.tags?.minItems ?? schema.minItems;
-    const maxItems = jsdoc?.tags?.maxItems ?? schema.maxItems;
-    const minProperties = jsdoc?.tags?.minProperties ?? schema.minProperties;
-    const maxProperties = jsdoc?.tags?.maxProperties ?? schema.maxProperties;
-    const exclusiveMinimum = jsdoc?.tags?.exclusiveMinimum ?? schema.exclusiveMinimum;
-    const exclusiveMaximum = jsdoc?.tags?.exclusiveMaximum ?? schema.exclusiveMaximum;
-    const multipleOf = jsdoc?.tags?.multipleOf ?? schema.multipleOf;
-    const uniqueItems = jsdoc?.tags?.uniqueItems ?? schema.uniqueItems;
-    const readOnly = jsdoc?.tags?.readOnly ?? schema.readOnly;
-    const writeOnly = jsdoc?.tags?.writeOnly ?? schema.writeOnly;
-    const format = jsdoc?.tags?.format ?? schema.format ?? schema.format;
-    const title = jsdoc?.tags?.title ?? schema.title;
+    // Use Block.tags directly for combined comments to preserve tags from all schemas
+    const blockTags =
+      schema.comment?.tags?.reduce(
+        (acc, tag) => {
+          const tagName = tag.tag.replace(/^@/, '');
+          acc[tagName] = `${tag.name} ${tag.description}`.trim();
+          return acc;
+        },
+        {} as Record<string, string>,
+      ) ?? {};
+    const tags = { ...blockTags, ...jsdoc?.tags };
+
+    const defaultValue = tags?.default ?? schema.default;
+    const example = tags?.example ?? schema.example;
+    const maxLength = tags?.maxLength ?? schema.maxLength;
+    const minLength = tags?.minLength ?? schema.minLength;
+    const pattern = tags?.pattern ?? schema.pattern;
+    const minimum = tags?.minimum ?? schema.maximum;
+    const maximum = tags?.maximum ?? schema.minimum;
+    const minItems = tags?.minItems ?? schema.minItems;
+    const maxItems = tags?.maxItems ?? schema.maxItems;
+    const minProperties = tags?.minProperties ?? schema.minProperties;
+    const maxProperties = tags?.maxProperties ?? schema.maxProperties;
+    const exclusiveMinimum = tags?.exclusiveMinimum ?? schema.exclusiveMinimum;
+    const exclusiveMaximum = tags?.exclusiveMaximum ?? schema.exclusiveMaximum;
+    const multipleOf = tags?.multipleOf ?? schema.multipleOf;
+    const uniqueItems = tags?.uniqueItems ?? schema.uniqueItems;
+    const readOnly = tags?.readOnly ?? schema.readOnly;
+    const writeOnly = tags?.writeOnly ?? schema.writeOnly;
+    const format = tags?.format ?? schema.format;
+    const title = tags?.title ?? schema.title;
 
     const keys = Object.keys(jsdoc?.tags || {});
 
     const deprecated = keys.includes('deprecated') || !!schema.deprecated;
     const isPrivate = keys.includes('private');
-    const description = schema.comment?.description ?? schema.description;
+    // Combine summary and description for markdown support
+    const description =
+      jsdoc?.summary && jsdoc?.description
+        ? `${jsdoc.summary.trim()}\n\n${jsdoc.description.trim()}`
+        : jsdoc?.summary?.trim() ?? jsdoc?.description?.trim() ?? schema.description;
 
     const defaultOpenAPIObject = {
       ...(defaultValue ? { default: parseField(schema, defaultValue) } : {}),
@@ -390,11 +406,22 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
           delete schema['x-internal'];
         }
 
+        const paramJsDoc =
+          p.schema?.comment !== undefined
+            ? parseCommentBlock(p.schema.comment)
+            : undefined;
+
+        // Combine summary and description for markdown support; use empty string for tag-only comments
+        const paramDescription =
+          paramJsDoc?.summary && paramJsDoc?.description
+            ? `${paramJsDoc.summary.trim()}\n\n${paramJsDoc.description.trim()}`
+            : paramJsDoc?.summary?.trim() ??
+              paramJsDoc?.description?.trim() ??
+              (p.schema?.comment !== undefined ? '' : undefined);
+
         return {
           name: p.name,
-          ...(p.schema?.comment?.description !== undefined
-            ? { description: p.schema.comment.description }
-            : {}),
+          ...(paramDescription !== undefined ? { description: paramDescription } : {}),
           in: p.type,
           ...(isPrivate ? { 'x-internal': true } : {}),
           ...(p.required ? { required: true } : {}),

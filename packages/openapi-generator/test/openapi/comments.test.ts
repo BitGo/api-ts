@@ -1682,3 +1682,139 @@ testCase(
     },
   },
 );
+
+const ROUTE_WITH_MARKDOWN_BULLET_LISTS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * Route to test markdown formatting with bullet lists
+ *
+ * @operationId api.v1.markdownBullets
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/auth/token',
+  method: 'POST',
+  request: h.httpRequest({
+    query: {
+      /** The permissions granted by this access token.
+       *
+       * - \`all\` - Access all actions in the test environment.
+       * - \`crypto_compare\` - Call CryptoCompare API.
+       * - \`enterprise_manage_all\` - Manage users and settings for any enterprise to which the user belongs.
+       * - \`wallet_view\` - View a wallet.
+       * - \`wallet_spend\` - Initiate transactions from a wallet.
+       */
+      scope: t.string,
+    },
+    body: {
+      /** Grant type options.
+       *
+       * - \`authorization_code\` - Use authorization code flow.
+       * - \`refresh_token\` - Use refresh token to get new access token.
+       * - \`client_credentials\` - Use client credentials flow.
+       */
+      grant_type: t.string,
+    },
+  }),
+  response: {
+    200: {
+      /** Access token information.
+       *
+       * - Contains the JWT token
+       * - Includes expiration time
+       * - May include refresh token
+       */
+      access_token: t.string,
+    },
+  },
+});
+`;
+
+testCase(
+  'route with markdown bullet lists in parameter and field descriptions',
+  ROUTE_WITH_MARKDOWN_BULLET_LISTS,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/auth/token': {
+        post: {
+          summary: 'Route to test markdown formatting with bullet lists',
+          operationId: 'api.v1.markdownBullets',
+          tags: ['Test Routes'],
+          parameters: [
+            {
+              name: 'scope',
+              description:
+                'The permissions granted by this access token.\n' +
+                '\n' +
+                '- `all` - Access all actions in the test environment.\n' +
+                '- `crypto_compare` - Call CryptoCompare API.\n' +
+                '- `enterprise_manage_all` - Manage users and settings for any enterprise to which the user belongs.\n' +
+                '- `wallet_view` - View a wallet.\n' +
+                '- `wallet_spend` - Initiate transactions from a wallet.',
+              in: 'query',
+              required: true,
+              schema: {
+                type: 'string',
+              },
+            },
+          ],
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    grant_type: {
+                      type: 'string',
+                      description:
+                        'Grant type options.\n' +
+                        '\n' +
+                        '- `authorization_code` - Use authorization code flow.\n' +
+                        '- `refresh_token` - Use refresh token to get new access token.\n' +
+                        '- `client_credentials` - Use client credentials flow.',
+                    },
+                  },
+                  required: ['grant_type'],
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      access_token: {
+                        type: 'string',
+                        description:
+                          'Access token information.\n' +
+                          '\n' +
+                          '- Contains the JWT token\n' +
+                          '- Includes expiration time\n' +
+                          '- May include refresh token',
+                      },
+                    },
+                    required: ['access_token'],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
+  },
+);
