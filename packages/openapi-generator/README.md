@@ -472,9 +472,13 @@ These are some tags that you can use in your schema JSDocs are custom to this ge
   will have `x-internal: true` for schemas with the `@private` tag.
 - `@deprecated` allows to mark any field in any schema as deprecated. The final spec
   will include `deprecated: true` in the final specificaiton.
+- `@contentType` allows you to override the default `application/json` content type for
+  requests and responses. Can be applied at route level (affects both request and
+  response), request body level, or individual response status code level.
 
 ```typescript
 import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
 
 const Schema = t.type({
   /** @private */
@@ -482,5 +486,26 @@ const Schema = t.type({
   /** @deprecated */
   deprecatedField: t.string,
   publicNonDeprecatedField: t.string,
+});
+
+/**
+ * Route-level content type
+ * @contentType multipart/form-data
+ */
+export const uploadRoute = h.httpRoute({
+  request: h.httpRequest({
+    /**
+     * Request-specific content type
+     * @contentType application/xml
+     */
+    body: t.type({ data: t.string }),
+  }),
+  response: {
+    /**
+     * Response-specific content type
+     * @contentType text/plain
+     */
+    200: t.string,
+  },
 });
 ```
