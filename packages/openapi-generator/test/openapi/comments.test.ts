@@ -693,7 +693,7 @@ export const route = h.httpRoute({
       /** 
        * This is a bar param.
        * @example { "foo": "bar" }
-      */
+       */
       bar: t.record(t.string, t.string),
     },
     body: {
@@ -701,7 +701,7 @@ export const route = h.httpRoute({
        * foo description
        * @pattern ^[1-9][0-9]{4}$
        * @example 12345
-      */
+       */
       foo: t.number,
       child: {
         /** 
@@ -840,7 +840,7 @@ export const route = h.httpRoute({
       /** 
        * This is a foo description. 
        * @example BitGo Inc
-      */
+       */
       foo: Foo,
       bar: Bar,
     },
@@ -979,7 +979,7 @@ export const route = h.httpRoute({
        * @maxLength 10
        * @example SomeInc
        * @default BitgoInc
-      */
+       */
       foo: t.string()
     },
   }),
@@ -1682,3 +1682,77 @@ testCase(
     },
   },
 );
+
+const ROUTE_WITH_MARKDOWN_LIST = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A route with a list in the comment
+ *
+ * @operationId api.v1.list
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/list',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /**
+       * The permissions granted by this access token.
+       *
+       * - \`all\` - Access all actions in the test environment.
+       * - \`crypto_compare\` - Call CryptoCompare API.
+       */
+      permissions: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+testCase('route with markdown list in comment', ROUTE_WITH_MARKDOWN_LIST, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/list': {
+      get: {
+        summary: 'A route with a list in the comment',
+        operationId: 'api.v1.list',
+        tags: ['Test Routes'],
+        parameters: [
+          {
+            name: 'permissions',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+            description:
+              'The permissions granted by this access token.\n\n- `all` - Access all actions in the test environment.\n- `crypto_compare` - Call CryptoCompare API.',
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});

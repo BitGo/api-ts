@@ -40,7 +40,15 @@ export function leadingComment(
     commentString = commentString + endingSubstring;
   }
 
-  const parsedComment = parseComment(commentString);
+  const parsedComment = parseComment(commentString, { spacing: 'preserve' });
+
+  for (const block of parsedComment) {
+    block.description = block.description.trim();
+    for (const tag of block.tags) {
+      tag.description = tag.description.trim();
+    }
+  }
+
   return parsedComment;
 }
 
