@@ -20,7 +20,6 @@
   "scripts": {
     "build": "npm run --workspaces build",
     "test": "npm run --workspaces --if-present test",
-    "distclean": "rm -rf node_modules packages/*/node_modules",
     "postinstall": "patch-package"
   },
   "devDependencies": {
