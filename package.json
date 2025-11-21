@@ -1,6 +1,6 @@
 {
   "name": "@api-ts/base",
-  "version": "0.1.0",
+  "version": "0.0.0-unused-placeholder",
   "description": "Tools for using io-ts to describe and consume APIs",
   "license": "Apache-2.0",
   "private": true,
