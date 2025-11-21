@@ -16,7 +16,6 @@
   "workspaces": [
     "packages/*"
   ],
-  "packageManager": "npm@8.5.0",
   "scripts": {
     "build": "npm run --workspaces build",
     "test": "npm run --workspaces --if-present test",
