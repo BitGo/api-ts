@@ -1,0 +1,42 @@
+This is a patch for the `npm-whoami` issue described here:
+https://github.com/semantic-release/npm/issues/414
+
+It is similar to the workaround done in this package, but supports the latest version of semantic-release:
+https://github.com/semantic-release/npm
+
+diff --git a/node_modules/@semantic-release/npm/lib/verify-auth.js b/node_modules/@semantic-release/npm/lib/verify-auth.js
+index 99e138e..da4c585 100644
+--- a/node_modules/@semantic-release/npm/lib/verify-auth.js
++++ b/node_modules/@semantic-release/npm/lib/verify-auth.js
+@@ -5,6 +5,8 @@ import getError from "./get-error.js";
+ import getRegistry from "./get-registry.js";
+ import setNpmrcAuth from "./set-npmrc-auth.js";
+
++let memo = {};
++
+ export default async function (npmrc, pkg, context) {
+   const {
+     cwd,
+@@ -17,6 +19,11 @@ export default async function (npmrc, pkg, context) {
+   await setNpmrcAuth(npmrc, registry, context);
+
+   if (normalizeUrl(registry) === normalizeUrl(DEFAULT_NPM_REGISTRY)) {
++    const key = npmrc + registry;
++    if (memo[key]) {
++      return memo[key];
++    }
++
+     try {
+       const whoamiResult = execa("npm", ["whoami", "--userconfig", npmrc, "--registry", registry], {
+         cwd,
+@@ -26,7 +33,10 @@ export default async function (npmrc, pkg, context) {
+       whoamiResult.stdout.pipe(stdout, { end: false });
+       whoamiResult.stderr.pipe(stderr, { end: false });
+       await whoamiResult;
++
++      memo[key] = whoamiResult;
+     } catch {
++      memo[key] = undefined;
+       throw new AggregateError([getError("EINVALIDNPMTOKEN", { registry })]);
+     }
+   }
