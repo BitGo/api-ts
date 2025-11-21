@@ -19,17 +19,17 @@
   "packageManager": "npm@8.5.0",
   "scripts": {
     "build": "npm run --workspaces build",
-    "test": "npm run --workspaces --if-present test",
-    "distclean": "rm -rf node_modules packages/*/node_modules",
-    "postinstall": "patch-package"
+    "test": "npm run --workspaces --if-present test"
   },
   "devDependencies": {
     "@semantic-release-extras/github-comment-specific": "1.0.7",
     "@semantic-release/npm": "13.1.2",
     "@types/node": "22.5.0",
-    "multi-semantic-release": "3.0.2",
-    "patch-package": "8.0.0",
+    "multi-semantic-release": "3.1.0",
     "typescript": "4.6.4"
+  },
+  "overrides": {
+    "semantic-release": ">=25.0.0"
   },
   "engines": {
     "npm": ">=7"
