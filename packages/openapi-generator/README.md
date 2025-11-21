@@ -468,6 +468,9 @@ const SampleSchema = t.type({
 
 These are some tags that you can use in your schema JSDocs are custom to this generator.
 
+- `@contentType` allows you to override the default `application/json` content type for
+  requests and responses. Can be applied at route level (affects both request and
+  response), request body level, or individual response status code level.
 - `@private` allows you to mark any field as in any schema as private. The final spec
   will have `x-internal: true` for schemas with the `@private` tag.
 - `@deprecated` allows to mark any field in any schema as deprecated. The final spec
@@ -475,6 +478,28 @@ These are some tags that you can use in your schema JSDocs are custom to this ge
 
 ```typescript
 import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * Route-level content type
+ * @contentType multipart/form-data
+ */
+export const uploadRoute = h.httpRoute({
+  request: h.httpRequest({
+    /**
+     * Request-specific content type
+     * @contentType application/xml
+     */
+    body: t.type({ data: t.string }),
+  }),
+  response: {
+    /**
+     * Response-specific content type
+     * @contentType text/plain
+     */
+    200: t.string,
+  },
+});
 
 const Schema = t.type({
   /** @private */
