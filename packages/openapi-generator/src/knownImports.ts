@@ -2,6 +2,7 @@ import * as E from 'fp-ts/Either';
 
 import { isPrimitive, type Schema } from './ir';
 import { errorLeft } from './error';
+import { parseCommentBlock } from './jsdoc';
 
 export type DerefFn = (ref: Schema) => E.Either<string, Schema>;
 export type KnownCodec = (
@@ -132,9 +133,12 @@ export const KNOWN_IMPORTS: KnownImports = {
 
       for (const prop of enumValues) {
         const propertySchema = arg.properties[prop];
-        if (propertySchema?.comment?.description) {
-          enumDescriptions[prop] = propertySchema.comment.description;
-          hasDescriptions = true;
+        if (propertySchema?.comment) {
+          const jsdoc = parseCommentBlock(propertySchema.comment);
+          if (jsdoc.tags?.description) {
+            enumDescriptions[prop] = jsdoc.tags.description;
+            hasDescriptions = true;
+          }
         }
       }
 
