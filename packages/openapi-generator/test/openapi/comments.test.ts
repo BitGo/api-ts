@@ -1441,157 +1441,33 @@ testCase(
   },
 );
 
-const ROUTE_WITH_INDIVIDUAL_ENUM_DESCRIPTIONS = `
+const ROUTE_WITH_ENUM_DESCRIPTIONS = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
 /**
- * Transaction Request State Enum with individual descriptions
+ * Enum with @description tags - should generate x-enumDescriptions
  */
-export const TransactionRequestState = t.keyof(
+export const StatusWithDescriptions = t.keyof(
   {
-    /** Transaction is waiting for approval from authorized users */
+    /** 
+     * @description Transaction is waiting for approval from authorized users 
+     */
     pendingApproval: 1,
-    /** Transaction was canceled by the user */
+    /** 
+     * @description Transaction was canceled by the user 
+     */
     canceled: 1,
-    /** Transaction was rejected by approvers */
+    /** 
+     * @description Transaction was rejected by approvers 
+     */
     rejected: 1,
-    /** Transaction has been initialized but not yet processed */
-    initialized: 1,
-    /** Transaction is ready to be delivered */
-    pendingDelivery: 1,
-    /** Transaction has been successfully delivered */
-    delivered: 1,
   },
-  'TransactionRequestState',
+  'StatusWithDescriptions',
 );
 
 /**
- * Route to test individual enum variant descriptions
- *
- * @operationId api.v1.enumVariantDescriptions
- * @tag Test Routes
- */
-export const route = h.httpRoute({
-  path: '/transactions',
-  method: 'GET',
-  request: h.httpRequest({
-    query: {
-      states: t.array(TransactionRequestState),
-    },
-  }),
-  response: {
-    200: {
-      result: t.string
-    }
-  },
-});
-`;
-
-testCase(
-  'individual enum variant descriptions use x-enumDescriptions extension',
-  ROUTE_WITH_INDIVIDUAL_ENUM_DESCRIPTIONS,
-  {
-    openapi: '3.0.3',
-    info: {
-      title: 'Test',
-      version: '1.0.0',
-    },
-    paths: {
-      '/transactions': {
-        get: {
-          summary: 'Route to test individual enum variant descriptions',
-          operationId: 'api.v1.enumVariantDescriptions',
-          tags: ['Test Routes'],
-          parameters: [
-            {
-              name: 'states',
-              in: 'query',
-              required: true,
-              schema: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  enum: [
-                    'pendingApproval',
-                    'canceled',
-                    'rejected',
-                    'initialized',
-                    'pendingDelivery',
-                    'delivered',
-                  ],
-                  'x-enumDescriptions': {
-                    pendingApproval:
-                      'Transaction is waiting for approval from authorized users',
-                    canceled: 'Transaction was canceled by the user',
-                    rejected: 'Transaction was rejected by approvers',
-                    initialized:
-                      'Transaction has been initialized but not yet processed',
-                    pendingDelivery: 'Transaction is ready to be delivered',
-                    delivered: 'Transaction has been successfully delivered',
-                  },
-                  description:
-                    'Transaction Request State Enum with individual descriptions',
-                },
-              },
-            },
-          ],
-          responses: {
-            200: {
-              description: 'OK',
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    properties: {
-                      result: {
-                        type: 'string',
-                      },
-                    },
-                    required: ['result'],
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    components: {
-      schemas: {
-        TransactionRequestState: {
-          title: 'TransactionRequestState',
-          description: 'Transaction Request State Enum with individual descriptions',
-          type: 'string',
-          enum: [
-            'pendingApproval',
-            'canceled',
-            'rejected',
-            'initialized',
-            'pendingDelivery',
-            'delivered',
-          ],
-          'x-enumDescriptions': {
-            pendingApproval:
-              'Transaction is waiting for approval from authorized users',
-            canceled: 'Transaction was canceled by the user',
-            rejected: 'Transaction was rejected by approvers',
-            initialized: 'Transaction has been initialized but not yet processed',
-            pendingDelivery: 'Transaction is ready to be delivered',
-            delivered: 'Transaction has been successfully delivered',
-          },
-        },
-      },
-    },
-  },
-);
-
-const ROUTE_WITH_ENUM_WITHOUT_DESCRIPTIONS = `
-import * as t from 'io-ts';
-import * as h from '@api-ts/io-ts-http';
-
-/**
- * Simple enum without individual descriptions
+ * Simple enum without any descriptions - should use standard format
  */
 export const SimpleEnum = t.keyof(
   {
@@ -1603,17 +1479,60 @@ export const SimpleEnum = t.keyof(
 );
 
 /**
- * Route to test enum without individual descriptions
+ * Enum with comments but no @description tags - should NOT generate x-enumDescriptions
+ */
+export const StatusWithComments = t.keyof(
+  {
+    /** processing = a case has been picked up by the Trust Committee Email Worker, and is being...processed */
+    processing: 1,
+    /** approved status */
+    approved: 1,
+    denied: 1,
+  },
+  'StatusWithComments',
+);
+
+/**
+ * Enum with mixed comment types - only @description tags should be used
+ */
+export const MixedCommentStatus = t.keyof(
+  {
+    /** 
+     * This is just an internal comment about pending status
+     */
+    pending: 1,
+    /** 
+     * processing = a case has been picked up by the Trust Committee Email Worker, and is being...processed
+     * @description Transaction is currently being processed by the system
+     */
+    processing: 1,
+    /** approved by the team after review */
+    approved: 1,
+    /** 
+     * @description Transaction was rejected due to validation failures
+     */
+    rejected: 1,
+    /** denied without much explanation */
+    denied: 1,
+  },
+  'MixedCommentStatus',
+);
+
+/**
+ * Route to test all enum description scenarios
  *
- * @operationId api.v1.simpleEnum
+ * @operationId api.v1.enumDescriptionScenarios
  * @tag Test Routes
  */
 export const route = h.httpRoute({
-  path: '/simple',
+  path: '/enum-scenarios',
   method: 'GET',
   request: h.httpRequest({
     query: {
-      value: SimpleEnum,
+      withDescriptions: StatusWithDescriptions,
+      simple: SimpleEnum,
+      withComments: StatusWithComments,
+      mixed: MixedCommentStatus,
     },
   }),
   response: {
@@ -1625,8 +1544,8 @@ export const route = h.httpRoute({
 `;
 
 testCase(
-  'enum without individual descriptions uses standard enum format',
-  ROUTE_WITH_ENUM_WITHOUT_DESCRIPTIONS,
+  'enum description scenarios - @description tags vs regular comments vs mixed',
+  ROUTE_WITH_ENUM_DESCRIPTIONS,
   {
     openapi: '3.0.3',
     info: {
@@ -1634,18 +1553,42 @@ testCase(
       version: '1.0.0',
     },
     paths: {
-      '/simple': {
+      '/enum-scenarios': {
         get: {
-          summary: 'Route to test enum without individual descriptions',
-          operationId: 'api.v1.simpleEnum',
+          summary: 'Route to test all enum description scenarios',
+          operationId: 'api.v1.enumDescriptionScenarios',
           tags: ['Test Routes'],
           parameters: [
             {
-              name: 'value',
+              name: 'withDescriptions',
+              in: 'query',
+              required: true,
+              schema: {
+                $ref: '#/components/schemas/StatusWithDescriptions',
+              },
+            },
+            {
+              name: 'simple',
               in: 'query',
               required: true,
               schema: {
                 $ref: '#/components/schemas/SimpleEnum',
+              },
+            },
+            {
+              name: 'withComments',
+              in: 'query',
+              required: true,
+              schema: {
+                $ref: '#/components/schemas/StatusWithComments',
+              },
+            },
+            {
+              name: 'mixed',
+              in: 'query',
+              required: true,
+              schema: {
+                $ref: '#/components/schemas/MixedCommentStatus',
               },
             },
           ],
@@ -1672,11 +1615,43 @@ testCase(
     },
     components: {
       schemas: {
+        StatusWithDescriptions: {
+          title: 'StatusWithDescriptions',
+          description:
+            'Enum with @description tags - should generate x-enumDescriptions',
+          type: 'string',
+          enum: ['pendingApproval', 'canceled', 'rejected'],
+          'x-enumDescriptions': {
+            pendingApproval:
+              'Transaction is waiting for approval from authorized users',
+            canceled: 'Transaction was canceled by the user',
+            rejected: 'Transaction was rejected by approvers',
+          },
+        },
         SimpleEnum: {
           title: 'SimpleEnum',
           type: 'string',
           enum: ['value1', 'value2', 'value3'],
-          description: 'Simple enum without individual descriptions',
+          description:
+            'Simple enum without any descriptions - should use standard format',
+        },
+        StatusWithComments: {
+          title: 'StatusWithComments',
+          type: 'string',
+          enum: ['processing', 'approved', 'denied'],
+          description:
+            'Enum with comments but no @description tags - should NOT generate x-enumDescriptions',
+        },
+        MixedCommentStatus: {
+          title: 'MixedCommentStatus',
+          type: 'string',
+          enum: ['pending', 'processing', 'approved', 'rejected', 'denied'],
+          'x-enumDescriptions': {
+            processing: 'Transaction is currently being processed by the system',
+            rejected: 'Transaction was rejected due to validation failures',
+          },
+          description:
+            'Enum with mixed comment types - only @description tags should be used',
         },
       },
     },
