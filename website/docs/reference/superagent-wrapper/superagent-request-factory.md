@@ -25,7 +25,6 @@ function superagentRequestFactory(
 ## Parameters
 
 - `agent`: The superagent library object or a pre-configured superagent instance.
-
   - Type: `superagent.SuperAgentStatic | superagent.SuperAgent<any>`
   - Example: `superagent` or a custom agent
 

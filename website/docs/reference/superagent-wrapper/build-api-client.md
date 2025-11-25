@@ -48,7 +48,6 @@ type PreparedRequest<RouteDef> = {
 ## Parameters
 
 - `requestFactory`: A function that creates HTTP requests.
-
   - Type: `RequestFactory`
   - Source: Returned by `superagentRequestFactory` or `supertestRequestFactory`.
 
