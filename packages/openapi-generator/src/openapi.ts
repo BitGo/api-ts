@@ -332,6 +332,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
   const isInternal = jsdoc.tags?.private !== undefined;
   const isUnstable = jsdoc.tags?.unstable !== undefined;
   const example = jsdoc.tags?.example;
+  const contentType = jsdoc.tags?.contentType ?? 'application/json';
 
   const knownTags = new Set([
     'operationId',
@@ -342,6 +343,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
     'tag',
     'description',
     'url',
+    'contentType',
   ]);
   const unknownTagsObject = Object.entries(jsdoc.tags ?? {}).reduce(
     (acc, [key, value]) => {
@@ -358,9 +360,20 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
       ? {}
       : {
           requestBody: {
-            content: {
-              'application/json': { schema: schemaToOpenAPI(route.body) },
-            },
+            content: (() => {
+              const emptyBlock: Block = {
+                description: '',
+                tags: [],
+                source: [],
+                problems: [],
+              };
+              const bodyJsdoc = parseCommentBlock(route.body.comment ?? emptyBlock);
+              const requestContentType = bodyJsdoc.tags?.contentType ?? contentType;
+
+              return {
+                [requestContentType]: { schema: schemaToOpenAPI(route.body) },
+              };
+            })(),
           },
         };
 
@@ -406,12 +419,21 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
       responses: Object.entries(route.response).reduce((acc, [code, response]) => {
         const description = STATUS_CODES[code] ?? '';
 
+        const emptyBlock: Block = {
+          description: '',
+          tags: [],
+          source: [],
+          problems: [],
+        };
+        const responseJsdoc = parseCommentBlock(response.comment ?? emptyBlock);
+        const responseContentType = responseJsdoc.tags?.contentType ?? contentType;
+
         return {
           ...acc,
           [Number(code)]: {
             description,
             content: {
-              'application/json': {
+              [responseContentType]: {
                 schema: schemaToOpenAPI(response),
                 ...(example !== undefined ? { example } : undefined),
               },
