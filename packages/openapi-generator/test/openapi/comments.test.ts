@@ -1658,7 +1658,7 @@ testCase(
   },
 );
 
-const ROUTE_WITH_MARKDOWN_LIST = `
+const ROUTE_WITH_MARKDOWN_LIST_AND_PRESERVE_LINE_BREAKS = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
@@ -1674,6 +1674,7 @@ export const route = h.httpRoute({
   request: h.httpRequest({
     query: {
       /**
+       * @preserveLineBreaks
        * The permissions granted by this access token.
        *
        * - \`all\` - Access all actions in the test environment.
@@ -1688,37 +1689,41 @@ export const route = h.httpRoute({
 });
 `;
 
-testCase('route with markdown list in comment', ROUTE_WITH_MARKDOWN_LIST, {
-  openapi: '3.0.3',
-  info: {
-    title: 'Test',
-    version: '1.0.0',
-  },
-  paths: {
-    '/list': {
-      get: {
-        summary: 'A route with a list in the comment',
-        operationId: 'api.v1.list',
-        tags: ['Test Routes'],
-        parameters: [
-          {
-            name: 'permissions',
-            in: 'query',
-            required: true,
-            schema: {
-              type: 'string',
+testCase(
+  'route with markdown list in comment and @preserveLineBreaks tag',
+  ROUTE_WITH_MARKDOWN_LIST_AND_PRESERVE_LINE_BREAKS,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/list': {
+        get: {
+          summary: 'A route with a list in the comment',
+          operationId: 'api.v1.list',
+          tags: ['Test Routes'],
+          parameters: [
+            {
+              name: 'permissions',
+              in: 'query',
+              required: true,
+              schema: {
+                type: 'string',
+              },
+              description:
+                'The permissions granted by this access token.\n\n- `all` - Access all actions in the test environment.\n- `crypto_compare` - Call CryptoCompare API.',
             },
-            description:
-              'The permissions granted by this access token.\n\n- `all` - Access all actions in the test environment.\n- `crypto_compare` - Call CryptoCompare API.',
-          },
-        ],
-        responses: {
-          200: {
-            description: 'OK',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'string',
+          ],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'string',
+                  },
                 },
               },
             },
@@ -1726,8 +1731,85 @@ testCase('route with markdown list in comment', ROUTE_WITH_MARKDOWN_LIST, {
         },
       },
     },
+    components: {
+      schemas: {},
+    },
   },
-  components: {
-    schemas: {},
+);
+
+const ROUTE_WITH_INLINE_PRESERVE_LINE_BREAKS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A route with inline preserveLineBreaks tag
+ *
+ * @operationId api.v1.inline
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/inline',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /**
+       * @preserveLineBreaks This tag is inline with other text
+       * This is a long description that
+       * spans multiple lines in the source.
+       */
+      field1: t.string,
+    },
+  }),
+  response: {
+    200: t.string
   },
 });
+`;
+
+testCase(
+  'route with inline @preserveLineBreaks tag',
+  ROUTE_WITH_INLINE_PRESERVE_LINE_BREAKS,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/inline': {
+        get: {
+          summary: 'A route with inline preserveLineBreaks tag',
+          operationId: 'api.v1.inline',
+          tags: ['Test Routes'],
+          parameters: [
+            {
+              name: 'field1',
+              in: 'query',
+              required: true,
+              schema: {
+                type: 'string',
+              },
+              description:
+                'This tag is inline with other text\nThis is a long description that\nspans multiple lines in the source.',
+            },
+          ],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {},
+    },
+  },
+);

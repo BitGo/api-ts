@@ -472,6 +472,9 @@ These are some tags that you can use in your schema JSDocs are custom to this ge
   will have `x-internal: true` for schemas with the `@private` tag.
 - `@deprecated` allows to mark any field in any schema as deprecated. The final spec
   will include `deprecated: true` in the final specificaiton.
+- `@preserveLineBreaks` preserves line breaks in descriptions. By default, multiline
+  descriptions are collapsed into a single line. Use this tag when you need to preserve
+  formatting, such as for markdown lists or structured text.
 
 ```typescript
 import * as t from 'io-ts';
@@ -482,5 +485,15 @@ const Schema = t.type({
   /** @deprecated */
   deprecatedField: t.string,
   publicNonDeprecatedField: t.string,
+  /**
+   * @preserveLineBreaks
+   * This description spans multiple lines
+   * and will preserve its line breaks.
+   *
+   * Available options:
+   * - `option1` - First option
+   * - `option2` - Second option
+   */
+  fieldWithFormattedDescription: t.string,
 });
 ```
