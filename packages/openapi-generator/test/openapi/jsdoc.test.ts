@@ -1232,3 +1232,131 @@ testCase(
     },
   },
 );
+
+const ROUTE_WITH_ANY_AND_DESCRIPTION = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: {
+      /**
+       * Test description
+       */
+      test: t.any
+    }
+  },
+});
+`;
+
+testCase('route with example object', ROUTE_WITH_ANY_AND_DESCRIPTION, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        parameters: [],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      description: 'Test description',
+                    },
+                  },
+                  required: ['test'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
+
+const ROUTE_WITH_ANY_AND_FORMAT = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A simple route
+ *
+ * @operationId api.v1.test
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({}),
+  response: {
+    200: {
+      /**
+       * @format binary
+       */
+      test: t.any
+    }
+  },
+});
+`;
+
+testCase('route with example object', ROUTE_WITH_ANY_AND_FORMAT, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/foo': {
+      get: {
+        summary: 'A simple route',
+        operationId: 'api.v1.test',
+        tags: ['Test Routes'],
+        parameters: [],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    test: {
+                      format: 'binary',
+                    },
+                  },
+                  required: ['test'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});

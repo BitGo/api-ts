@@ -234,7 +234,7 @@ export function schemaToOpenAPI(
       case 'undefined':
         return undefined;
       case 'any':
-        return {};
+        return { ...defaultOpenAPIObject };
       default:
         return {};
     }
