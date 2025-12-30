@@ -498,11 +498,16 @@ const Schema = t.type({
 });
 ```
 
-#### 6.2.4 Deprecated Enum Values
+#### 6.2.4 Enum Documentation
 
-When using `t.keyof` to define enums, you can mark specific enum values as deprecated
-using the `@deprecated` tag. Deprecated values will be collected into an
-`x-enumsDeprecated` array in the OpenAPI specification.
+When using `t.keyof` to define enums, you can add descriptions and deprecation notices
+to individual enum values. These will be output as `x-enumDescriptions` and
+`x-enumsDeprecated` in the OpenAPI specification.
+
+- **`@description`** - Adds a description for a specific enum value. All enum value
+  descriptions are collected into an `x-enumDescriptions` object in the OpenAPI spec.
+- **`@deprecated`** - Marks specific enum values as deprecated. All deprecated enum
+  values are collected into an `x-enumsDeprecated` array in the OpenAPI spec.
 
 ```typescript
 import * as t from 'io-ts';
@@ -512,11 +517,23 @@ import * as t from 'io-ts';
  */
 export const TransactionStatus = t.keyof(
   {
+    /**
+     * @description Transaction is waiting for approval from authorized users
+     */
     pendingApproval: 1,
-    /** @deprecated */
+    /**
+     * @description Transaction was canceled by the user
+     * @deprecated
+     */
     canceled: 1,
-    /** @deprecated */
+    /**
+     * @description Transaction was rejected by approvers
+     * @deprecated
+     */
     rejected: 1,
+    /**
+     * @description Transaction has been successfully completed
+     */
     completed: 1,
   },
   'TransactionStatus',
@@ -530,6 +547,12 @@ This will generate the following OpenAPI schema:
   "TransactionStatus": {
     "type": "string",
     "enum": ["pendingApproval", "canceled", "rejected", "completed"],
+    "x-enumDescriptions": {
+      "pendingApproval": "Transaction is waiting for approval from authorized users",
+      "canceled": "Transaction was canceled by the user",
+      "rejected": "Transaction was rejected by approvers",
+      "completed": "Transaction has been successfully completed"
+    },
     "x-enumsDeprecated": ["canceled", "rejected"]
   }
 }
