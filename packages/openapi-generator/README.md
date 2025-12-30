@@ -497,3 +497,40 @@ const Schema = t.type({
   fieldWithFormattedDescription: t.string,
 });
 ```
+
+#### 6.2.4 Deprecated Enum Values
+
+When using `t.keyof` to define enums, you can mark specific enum values as deprecated
+using the `@deprecated` tag. Deprecated values will be collected into an
+`x-enumsDeprecated` array in the OpenAPI specification.
+
+```typescript
+import * as t from 'io-ts';
+
+/**
+ * Transaction status values
+ */
+export const TransactionStatus = t.keyof(
+  {
+    pendingApproval: 1,
+    /** @deprecated */
+    canceled: 1,
+    /** @deprecated */
+    rejected: 1,
+    completed: 1,
+  },
+  'TransactionStatus',
+);
+```
+
+This will generate the following OpenAPI schema:
+
+```json
+{
+  "TransactionStatus": {
+    "type": "string",
+    "enum": ["pendingApproval", "canceled", "rejected", "completed"],
+    "x-enumsDeprecated": ["canceled", "rejected"]
+  }
+}
+```

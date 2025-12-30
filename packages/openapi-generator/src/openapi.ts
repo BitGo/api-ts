@@ -31,6 +31,10 @@ export function schemaToOpenAPI(
           result['x-enumDescriptions'] = schema.enumDescriptions;
         }
 
+        if (schema.enum && schema.enumsDeprecated) {
+          result['x-enumsDeprecated'] = schema.enumsDeprecated;
+        }
+
         return result;
       }
       case 'integer': {
@@ -42,6 +46,10 @@ export function schemaToOpenAPI(
 
         if (schema.enum && schema.enumDescriptions) {
           result['x-enumDescriptions'] = schema.enumDescriptions;
+        }
+
+        if (schema.enum && schema.enumsDeprecated) {
+          result['x-enumsDeprecated'] = schema.enumsDeprecated;
         }
 
         return result;

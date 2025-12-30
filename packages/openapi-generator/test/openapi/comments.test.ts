@@ -1813,3 +1813,149 @@ testCase(
     },
   },
 );
+
+const ROUTE_WITH_ENUM_DEPRECATED = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * Enum with @deprecated tags - should generate x-enumsDeprecated
+ */
+export const StatusWithDeprecated = t.keyof(
+  {
+    /**
+     * @description Transaction is waiting for approval from authorized users
+     */
+    pendingApproval: 1,
+    /**
+     * @description Transaction was canceled by the user
+     * @deprecated
+     */
+    canceled: 1,
+    /**
+     * @description Transaction was rejected by approvers
+     * @deprecated
+     */
+    rejected: 1,
+  },
+  'StatusWithDeprecated',
+);
+
+/**
+ * Enum with only @deprecated tags - should generate x-enumsDeprecated
+ */
+export const StatusOnlyDeprecated = t.keyof(
+  {
+    /** @deprecated */
+    old: 1,
+    current: 1,
+    /** @deprecated */
+    legacy: 1,
+  },
+  'StatusOnlyDeprecated',
+);
+
+/**
+ * Route to test enum deprecated scenarios
+ *
+ * @operationId api.v1.enumDeprecatedScenarios
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/enum-deprecated',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      withDeprecated: StatusWithDeprecated,
+      onlyDeprecated: StatusOnlyDeprecated,
+    },
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase(
+  'enum deprecated scenarios - @deprecated tags with and without @description',
+  ROUTE_WITH_ENUM_DEPRECATED,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/enum-deprecated': {
+        get: {
+          summary: 'Route to test enum deprecated scenarios',
+          operationId: 'api.v1.enumDeprecatedScenarios',
+          tags: ['Test Routes'],
+          parameters: [
+            {
+              name: 'withDeprecated',
+              in: 'query',
+              required: true,
+              schema: {
+                $ref: '#/components/schemas/StatusWithDeprecated',
+              },
+            },
+            {
+              name: 'onlyDeprecated',
+              in: 'query',
+              required: true,
+              schema: {
+                $ref: '#/components/schemas/StatusOnlyDeprecated',
+              },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      result: {
+                        type: 'string',
+                      },
+                    },
+                    required: ['result'],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        StatusWithDeprecated: {
+          title: 'StatusWithDeprecated',
+          description: 'Enum with @deprecated tags - should generate x-enumsDeprecated',
+          type: 'string',
+          enum: ['pendingApproval', 'canceled', 'rejected'],
+          'x-enumDescriptions': {
+            pendingApproval:
+              'Transaction is waiting for approval from authorized users',
+            canceled: 'Transaction was canceled by the user',
+            rejected: 'Transaction was rejected by approvers',
+          },
+          'x-enumsDeprecated': ['canceled', 'rejected'],
+        },
+        StatusOnlyDeprecated: {
+          title: 'StatusOnlyDeprecated',
+          description:
+            'Enum with only @deprecated tags - should generate x-enumsDeprecated',
+          type: 'string',
+          enum: ['old', 'current', 'legacy'],
+          'x-enumsDeprecated': ['old', 'legacy'],
+        },
+      },
+    },
+  },
+);

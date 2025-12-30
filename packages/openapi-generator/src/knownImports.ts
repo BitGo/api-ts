@@ -129,6 +129,7 @@ export const KNOWN_IMPORTS: KnownImports = {
 
       const enumValues = Object.keys(arg.properties);
       const enumDescriptions: Record<string, string> = {};
+      const enumsDeprecated: string[] = [];
       let hasDescriptions = false;
 
       for (const prop of enumValues) {
@@ -139,14 +140,18 @@ export const KNOWN_IMPORTS: KnownImports = {
             enumDescriptions[prop] = jsdoc.tags.description;
             hasDescriptions = true;
           }
+          if (jsdoc.tags && 'deprecated' in jsdoc.tags) {
+            enumsDeprecated.push(prop);
+          }
         }
       }
 
-      if (hasDescriptions) {
+      if (hasDescriptions || enumsDeprecated.length > 0) {
         return E.right({
           type: 'string',
           enum: enumValues,
-          enumDescriptions,
+          ...(hasDescriptions ? { enumDescriptions } : {}),
+          ...(enumsDeprecated.length > 0 ? { enumsDeprecated } : {}),
         });
       } else {
         const schemas: Schema[] = enumValues.map((prop) => {
