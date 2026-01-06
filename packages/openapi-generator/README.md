@@ -497,3 +497,63 @@ const Schema = t.type({
   fieldWithFormattedDescription: t.string,
 });
 ```
+
+#### 6.2.4 Enum Documentation
+
+When using `t.keyof` to define enums, you can add descriptions and deprecation notices
+to individual enum values. These will be output as `x-enumDescriptions` and
+`x-enumsDeprecated` in the OpenAPI specification.
+
+- **`@description`** - Adds a description for a specific enum value. All enum value
+  descriptions are collected into an `x-enumDescriptions` object in the OpenAPI spec.
+- **`@deprecated`** - Marks specific enum values as deprecated. All deprecated enum
+  values are collected into an `x-enumsDeprecated` array in the OpenAPI spec.
+
+```typescript
+import * as t from 'io-ts';
+
+/**
+ * Transaction status values
+ */
+export const TransactionStatus = t.keyof(
+  {
+    /**
+     * @description Transaction is waiting for approval from authorized users
+     */
+    pendingApproval: 1,
+    /**
+     * @description Transaction was canceled by the user
+     * @deprecated
+     */
+    canceled: 1,
+    /**
+     * @description Transaction was rejected by approvers
+     * @deprecated
+     */
+    rejected: 1,
+    /**
+     * @description Transaction has been successfully completed
+     */
+    completed: 1,
+  },
+  'TransactionStatus',
+);
+```
+
+This will generate the following OpenAPI schema:
+
+```json
+{
+  "TransactionStatus": {
+    "type": "string",
+    "enum": ["pendingApproval", "canceled", "rejected", "completed"],
+    "x-enumDescriptions": {
+      "pendingApproval": "Transaction is waiting for approval from authorized users",
+      "canceled": "Transaction was canceled by the user",
+      "rejected": "Transaction was rejected by approvers",
+      "completed": "Transaction has been successfully completed"
+    },
+    "x-enumsDeprecated": ["canceled", "rejected"]
+  }
+}
+```

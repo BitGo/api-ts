@@ -160,7 +160,11 @@ export function simplifyUnion(schema: Schema, optimize: OptimizeFn): Schema {
   const remainder: Schema[] = [];
   innerSchemas.forEach((innerSchema) => {
     if (isPrimitive(innerSchema) && innerSchema.enum !== undefined) {
-      if (innerSchema.comment || innerSchema.enumDescriptions) {
+      if (
+        innerSchema.comment ||
+        innerSchema.enumDescriptions ||
+        innerSchema.enumsDeprecated
+      ) {
         remainder.push(innerSchema);
       } else {
         innerSchema.enum.forEach((value) => {
