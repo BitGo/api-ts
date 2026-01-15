@@ -690,7 +690,7 @@ export const route = h.httpRoute({
   method: 'GET',
   request: h.httpRequest({
     query: {
-      /** 
+      /**
        * This is a bar param.
        * @example { "foo": "bar" }
        */
@@ -704,8 +704,8 @@ export const route = h.httpRoute({
        */
       foo: t.number,
       child: {
-        /** 
-         * child description 
+        /**
+         * child description
         */
         child: t.array(t.union([t.string, t.number])),
       }
@@ -837,8 +837,8 @@ export const route = h.httpRoute({
       bar: t.array(t.string),
     },
     body: {
-      /** 
-       * This is a foo description. 
+      /**
+       * This is a foo description.
        * @example BitGo Inc
        */
       foo: Foo,
@@ -973,8 +973,8 @@ export const route = h.httpRoute({
       bar: t.array(t.string),
     },
     body: {
-      /** 
-       * This is a foo description. 
+      /**
+       * This is a foo description.
        * @minLength 5
        * @maxLength 10
        * @example SomeInc
@@ -1070,7 +1070,7 @@ const ROUTE_WITH_OVERRIDING_COMMENTS = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
-/** 
+/**
  * @example "abc"
  */
 const TargetSchema = t.string;
@@ -1083,8 +1083,8 @@ const ParentSchema = t.type({
 export const route = h.httpRoute({
   path: '/foo',
   method: 'POST',
-  request: h.httpRequest({ 
-    params: {}, 
+  request: h.httpRequest({
+    params: {},
     body: ParentSchema
   }),
   response: {
@@ -1161,7 +1161,7 @@ const ROUTE_WITH_NESTED_OVERRIDEN_COMMENTS = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
-/** 
+/**
  * @example "abc"
  */
 const TargetSchema = t.string;
@@ -1179,8 +1179,8 @@ const GrandParentSchema = t.type({
 export const route = h.httpRoute({
   path: '/foo',
   method: 'POST',
-  request: h.httpRequest({ 
-    params: {}, 
+  request: h.httpRequest({
+    params: {},
     body: GrandParentSchema
   }),
   response: {
@@ -1281,7 +1281,7 @@ const ROUTE_WITH_OVERRIDEN_COMMENTS_IN_UNION = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
 
-/** 
+/**
  * @example "abc"
  */
 const TargetSchema = t.string;
@@ -1297,7 +1297,7 @@ const ParentSchema = t.type({
 })
 
 const SecondaryParentSchema = t.type({
-  /** 
+  /**
    * This description should show with the overriden example
    * @example "overridden example"
    */
@@ -1316,8 +1316,8 @@ const GrandParentSchema = t.type({
 export const route = h.httpRoute({
   path: '/foo',
   method: 'POST',
-  request: h.httpRequest({ 
-    params: {}, 
+  request: h.httpRequest({
+    params: {},
     body: GrandParentSchema
   }),
   response: {
@@ -1450,16 +1450,16 @@ import * as h from '@api-ts/io-ts-http';
  */
 export const StatusWithDescriptions = t.keyof(
   {
-    /** 
-     * @description Transaction is waiting for approval from authorized users 
+    /**
+     * @description Transaction is waiting for approval from authorized users
      */
     pendingApproval: 1,
-    /** 
-     * @description Transaction was canceled by the user 
+    /**
+     * @description Transaction was canceled by the user
      */
     canceled: 1,
-    /** 
-     * @description Transaction was rejected by approvers 
+    /**
+     * @description Transaction was rejected by approvers
      */
     rejected: 1,
   },
@@ -1497,18 +1497,18 @@ export const StatusWithComments = t.keyof(
  */
 export const MixedCommentStatus = t.keyof(
   {
-    /** 
+    /**
      * This is just an internal comment about pending status
      */
     pending: 1,
-    /** 
+    /**
      * processing = a case has been picked up by the Trust Committee Email Worker, and is being...processed
      * @description Transaction is currently being processed by the system
      */
     processing: 1,
     /** approved by the team after review */
     approved: 1,
-    /** 
+    /**
      * @description Transaction was rejected due to validation failures
      */
     rejected: 1,
@@ -1959,3 +1959,155 @@ testCase(
     },
   },
 );
+
+const ROUTE_WITH_MULTIBYTE_CHARS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const Body = t.type({
+  /**
+   * The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
+   * @pattern ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
+   */
+  firstName: t.string,
+  /**
+   * The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
+   * @pattern ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
+   */
+  lastName: t.string,
+  /**
+   * The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
+   * @pattern ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
+   */
+  middleName: t.string,
+  /**
+   * The phone number of the individual
+   * @pattern ^[0-9]{10}$
+   */
+  phoneNumber: t.string,
+});
+
+/**
+ * Route to test multibyte chars
+ *
+ * @operationId api.v1.multibyteChars
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/multibyte-chars',
+  method: 'POST',
+  request: h.httpRequest({
+    body: Body,
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase('route with multibyte chars', ROUTE_WITH_MULTIBYTE_CHARS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/multibyte-chars': {
+      post: {
+        summary: 'Route to test multibyte chars',
+        operationId: 'api.v1.multibyteChars',
+        tags: ['Test Routes'],
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  firstName: {
+                    type: 'string',
+                    description:
+                      'The first name (Latin letters, spaces, hyphens, apostrophes, and periods)',
+                    pattern: "^[A-Za-zÀ-ÿĀ-ſƀ-ɏs'.-]+$",
+                  },
+                  lastName: {
+                    type: 'string',
+                    description:
+                      'The last name (Latin letters, spaces, hyphens, apostrophes, and periods)',
+                    pattern: "^[A-Za-zÀ-ÿĀ-ſƀ-ɏs'.-]+$",
+                  },
+                  middleName: {
+                    type: 'string',
+                    description:
+                      'The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)',
+                    pattern: "^[A-Za-zÀ-ÿĀ-ſƀ-ɏs'.-]+$",
+                  },
+                  phoneNumber: {
+                    type: 'string',
+                    description: 'The phone number of the individual',
+                    pattern: '^[0-9]{10}$',
+                  },
+                },
+                required: ['firstName', 'lastName', 'middleName', 'phoneNumber'],
+                type: 'object',
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    result: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['result'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Body: {
+        title: 'Body',
+        type: 'object',
+        properties: {
+          firstName: {
+            type: 'string',
+            description:
+              'The first name (Latin letters, spaces, hyphens, apostrophes, and periods)',
+            pattern: "^[A-Za-zÀ-ÿĀ-ſƀ-ɏs'.-]+$",
+          },
+          lastName: {
+            type: 'string',
+            description:
+              'The last name (Latin letters, spaces, hyphens, apostrophes, and periods)',
+            pattern: "^[A-Za-zÀ-ÿĀ-ſƀ-ɏs'.-]+$",
+          },
+          middleName: {
+            type: 'string',
+            description:
+              'The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)',
+            pattern: "^[A-Za-zÀ-ÿĀ-ſƀ-ɏs'.-]+$",
+          },
+          phoneNumber: {
+            type: 'string',
+            description: 'The phone number of the individual',
+            pattern: '^[0-9]{10}$',
+          },
+        },
+        required: ['firstName', 'lastName', 'middleName', 'phoneNumber'],
+      },
+    },
+  },
+});

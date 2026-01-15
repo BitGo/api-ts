@@ -1,13 +1,37 @@
 import { parse as parseComment, Block } from 'comment-parser';
 import { Schema } from './ir';
 
+/**
+ * Compute the difference between byte length and character length for a string.
+ * This accounts for multibyte UTF-8 characters.
+ */
+function computeByteLengthDiff(str: string): number {
+  return Buffer.byteLength(str, 'utf8') - str.length;
+}
+
 export function leadingComment(
   src: string,
   srcSpanStart: number,
   start: number,
   end: number,
 ): Block[] {
-  let commentString = src.slice(start - srcSpanStart, end - srcSpanStart).trim();
+  // SWC uses byte offsets, but JavaScript strings use character offsets.
+  // When there are multibyte UTF-8 characters, we need to adjust.
+  // Calculate the byte-to-char difference for the portion of source before our slice.
+  const prefixLength = Math.min(start - srcSpanStart, src.length);
+  const prefix = src.slice(0, prefixLength);
+  const byteDiff = computeByteLengthDiff(prefix);
+
+  // Adjust the slice offsets by the byte difference
+  const adjustedStart = start - srcSpanStart - byteDiff;
+  const adjustedEnd =
+    end -
+    srcSpanStart -
+    computeByteLengthDiff(src.slice(0, Math.min(end - srcSpanStart, src.length)));
+
+  let commentString = src
+    .slice(Math.max(0, adjustedStart), Math.max(0, adjustedEnd))
+    .trim();
 
   if (commentString.includes(' * ') && !/\/\*\*([\s\S]*?)\*\//.test(commentString)) {
     // The comment block seems to be JSDoc but was sliced incorrectly
@@ -16,7 +40,10 @@ export function leadingComment(
     const endingSubstring = '\n */';
 
     if (commentString.includes(beginningSubstring)) {
-      commentString = beginningSubstring + commentString.split(beginningSubstring)[1];
+      // Use lastIndexOf to get the LAST occurrence of '/**\n' to handle cases where
+      // the slice includes parts of previous properties
+      const lastIdx = commentString.lastIndexOf(beginningSubstring);
+      commentString = commentString.substring(lastIdx);
     } else {
       switch (commentString.split('\n')[0]) {
         case '**':
@@ -35,9 +62,12 @@ export function leadingComment(
     }
 
     if (commentString.includes(endingSubstring)) {
-      commentString = commentString.split(endingSubstring)[0] as string;
+      // Use indexOf to get the FIRST occurrence of '\n */' after isolating the last comment block
+      const firstIdx = commentString.indexOf(endingSubstring);
+      commentString = commentString.substring(0, firstIdx + endingSubstring.length);
+    } else {
+      commentString = commentString + endingSubstring;
     }
-    commentString = commentString + endingSubstring;
   }
 
   const shouldPreserveLineBreaks = commentString.includes('@preserveLineBreaks');
