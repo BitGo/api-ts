@@ -1489,3 +1489,505 @@ testCase("route with overriden comments in union", ROUTE_WITH_OVERRIDEN_COMMENTS
     }
   }
 });
+
+// ============================================================================
+// Multibyte Character Tests
+// These tests verify that SWC byte offsets are correctly converted to
+// JavaScript character offsets when the source contains multibyte UTF-8 chars.
+// ============================================================================
+
+// Test case 1: Extended Latin characters (2-byte UTF-8)
+const ROUTE_WITH_LATIN_EXTENDED_CHARS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const Body = t.type({
+  /**
+   * Name with accented characters (À-ÿ, Ā-ſ)
+   * @pattern ^[A-Za-zÀ-ÿĀ-ſ\\s'-]+$
+   */
+  firstName: t.string,
+  /**
+   * Surname field (supports ñ, ü, ø, etc.)
+   * @pattern ^[A-Za-zÀ-ÿĀ-ſ\\s'-]+$
+   */
+  lastName: t.string,
+});
+
+/**
+ * Route testing Latin extended characters
+ *
+ * @operationId api.v1.latinChars
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/latin-chars',
+  method: 'POST',
+  request: h.httpRequest({
+    body: Body,
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase('route with latin extended characters', ROUTE_WITH_LATIN_EXTENDED_CHARS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/latin-chars': {
+      post: {
+        summary: 'Route testing Latin extended characters',
+        operationId: 'api.v1.latinChars',
+        tags: ['Test Routes'],
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  firstName: {
+                    type: 'string',
+                    description: "Name with accented characters (À-ÿ, Ā-ſ)",
+                    pattern: "^[A-Za-zÀ-ÿĀ-ſ\\s'-]+$",
+                  },
+                  lastName: {
+                    type: 'string',
+                    description: "Surname field (supports ñ, ü, ø, etc.)",
+                    pattern: "^[A-Za-zÀ-ÿĀ-ſ\\s'-]+$",
+                  },
+                },
+                required: ['firstName', 'lastName'],
+                type: 'object',
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    result: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['result'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Body: {
+        title: 'Body',
+        type: 'object',
+        properties: {
+          firstName: {
+            type: 'string',
+            description: "Name with accented characters (À-ÿ, Ā-ſ)",
+            pattern: "^[A-Za-zÀ-ÿĀ-ſ\\s'-]+$",
+          },
+          lastName: {
+            type: 'string',
+            description: "Surname field (supports ñ, ü, ø, etc.)",
+            pattern: "^[A-Za-zÀ-ÿĀ-ſ\\s'-]+$",
+          },
+        },
+        required: ['firstName', 'lastName'],
+      },
+    },
+  },
+});
+
+// Test case 2: CJK characters (3-byte UTF-8)
+const ROUTE_WITH_CJK_CHARS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const Body = t.type({
+  /**
+   * 日本語の名前フィールド (Japanese name field)
+   * @example 山田太郎
+   */
+  japaneseName: t.string,
+  /**
+   * 中文名字字段 (Chinese name field)
+   * @example 张三
+   */
+  chineseName: t.string,
+  /**
+   * 한국어 이름 필드 (Korean name field)
+   * @example 김철수
+   */
+  koreanName: t.string,
+});
+
+/**
+ * Route testing CJK characters (日本語, 中文, 한국어)
+ *
+ * @operationId api.v1.cjkChars
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/cjk-chars',
+  method: 'POST',
+  request: h.httpRequest({
+    body: Body,
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase('route with CJK characters', ROUTE_WITH_CJK_CHARS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/cjk-chars': {
+      post: {
+        summary: 'Route testing CJK characters (日本語, 中文, 한국어)',
+        operationId: 'api.v1.cjkChars',
+        tags: ['Test Routes'],
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  japaneseName: {
+                    type: 'string',
+                    description: '日本語の名前フィールド (Japanese name field)',
+                    example: '山田太郎',
+                  },
+                  chineseName: {
+                    type: 'string',
+                    description: '中文名字字段 (Chinese name field)',
+                    example: '张三',
+                  },
+                  koreanName: {
+                    type: 'string',
+                    description: '한국어 이름 필드 (Korean name field)',
+                    example: '김철수',
+                  },
+                },
+                required: ['japaneseName', 'chineseName', 'koreanName'],
+                type: 'object',
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    result: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['result'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Body: {
+        title: 'Body',
+        type: 'object',
+        properties: {
+          japaneseName: {
+            type: 'string',
+            description: '日本語の名前フィールド (Japanese name field)',
+            example: '山田太郎',
+          },
+          chineseName: {
+            type: 'string',
+            description: '中文名字字段 (Chinese name field)',
+            example: '张三',
+          },
+          koreanName: {
+            type: 'string',
+            description: '한국어 이름 필드 (Korean name field)',
+            example: '김철수',
+          },
+        },
+        required: ['japaneseName', 'chineseName', 'koreanName'],
+      },
+    },
+  },
+});
+
+// Test case 3: Mixed multibyte characters at multiple positions
+const ROUTE_WITH_MIXED_MULTIBYTE = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * Café menu item (note: café has 2-byte é)
+ */
+const CaféItem = t.type({
+  /** Item name (日本語 OK) */
+  name: t.string,
+  /** Price in € (euros) */
+  price: t.number,
+});
+
+export const Body = t.type({
+  /**
+   * Order at Müller's café
+   * @example Crème brûlée
+   */
+  item: CaféItem,
+  /**
+   * Customer name (supports: José, François, 田中)
+   */
+  customerName: t.string,
+});
+
+/**
+ * Route with mixed multibyte: é, ü, è, û, 日本語
+ *
+ * @operationId api.v1.mixedMultibyte
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/mixed-multibyte',
+  method: 'POST',
+  request: h.httpRequest({
+    body: Body,
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase('route with mixed multibyte characters', ROUTE_WITH_MIXED_MULTIBYTE, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/mixed-multibyte': {
+      post: {
+        summary: 'Route with mixed multibyte: é, ü, è, û, 日本語',
+        operationId: 'api.v1.mixedMultibyte',
+        tags: ['Test Routes'],
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  item: {
+                    allOf: [
+                      {
+                        $ref: '#/components/schemas/CaféItem',
+                      },
+                    ],
+                    description: "Order at Müller's café",
+                    example: 'Crème brûlée',
+                  },
+                  customerName: {
+                    type: 'string',
+                    description: 'Customer name (supports: José, François, 田中)',
+                  },
+                },
+                required: ['item', 'customerName'],
+                type: 'object',
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    result: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['result'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      CaféItem: {
+        title: 'CaféItem',
+        description: 'Café menu item (note: café has 2-byte é)',
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Item name (日本語 OK)',
+          },
+          price: {
+            type: 'number',
+            description: 'Price in € (euros)',
+          },
+        },
+        required: ['name', 'price'],
+      },
+      Body: {
+        title: 'Body',
+        type: 'object',
+        properties: {
+          item: {
+            allOf: [
+              {
+                $ref: '#/components/schemas/CaféItem',
+              },
+            ],
+            description: "Order at Müller's café",
+            example: 'Crème brûlée',
+          },
+          customerName: {
+            type: 'string',
+            description: 'Customer name (supports: José, François, 田中)',
+          },
+        },
+        required: ['item', 'customerName'],
+      },
+    },
+  },
+});
+
+// Test case 4: Multibyte characters at the very start of the file
+const ROUTE_WITH_MULTIBYTE_AT_START = `/**
+ * 日本語コメント at the very start
+ */
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const Body = t.type({
+  /** Normal field after multibyte start */
+  value: t.string,
+});
+
+/**
+ * Route where file starts with multibyte chars
+ *
+ * @operationId api.v1.multibyteStart
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/multibyte-start',
+  method: 'POST',
+  request: h.httpRequest({
+    body: Body,
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase('route with multibyte at file start', ROUTE_WITH_MULTIBYTE_AT_START, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/multibyte-start': {
+      post: {
+        summary: 'Route where file starts with multibyte chars',
+        operationId: 'api.v1.multibyteStart',
+        tags: ['Test Routes'],
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  value: {
+                    type: 'string',
+                    description: 'Normal field after multibyte start',
+                  },
+                },
+                required: ['value'],
+                type: 'object',
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    result: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['result'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Body: {
+        title: 'Body',
+        type: 'object',
+        properties: {
+          value: {
+            type: 'string',
+            description: 'Normal field after multibyte start',
+          },
+        },
+        required: ['value'],
+      },
+    },
+  },
+});
