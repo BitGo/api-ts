@@ -70,13 +70,6 @@ export function leadingComment(
     }
   }
 
-  const shouldPreserveLineBreaks = commentString.includes('@preserveLineBreaks');
-  if (shouldPreserveLineBreaks) {
-    // This handles both inline and separate line cases
-    commentString = commentString.replace(/^\s*\*\s*@preserveLineBreaks\s*$/gm, '');
-    commentString = commentString.replace(/@preserveLineBreaks\s*/g, '');
-  }
-
   const parsedComment = parseComment(commentString, { spacing: 'preserve' });
 
   for (const block of parsedComment) {
