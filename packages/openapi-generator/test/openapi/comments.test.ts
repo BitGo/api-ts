@@ -2112,6 +2112,137 @@ testCase('route with multibyte chars', ROUTE_WITH_MULTIBYTE_CHARS, {
   },
 });
 
+const ROUTE_WITH_CJK_CHARS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+export const Body = t.type({
+  /**
+   * 日本語の名前フィールド (Japanese name field)
+   * @example 山田太郎
+   */
+  japaneseName: t.string,
+  /**
+   * 中文名字字段 (Chinese name field)
+   * @example 张三
+   */
+  chineseName: t.string,
+  /**
+   * 한국어 이름 필드 (Korean name field)
+   * @example 김철수
+   */
+  koreanName: t.string,
+});
+
+/**
+ * Route testing CJK characters (日本語, 中文, 한국어)
+ *
+ * @operationId api.v1.cjkChars
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/cjk-chars',
+  method: 'POST',
+  request: h.httpRequest({
+    body: Body,
+  }),
+  response: {
+    200: {
+      result: t.string
+    }
+  },
+});
+`;
+
+testCase('route with CJK characters', ROUTE_WITH_CJK_CHARS, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/cjk-chars': {
+      post: {
+        summary: 'Route testing CJK characters (日本語, 中文, 한국어)',
+        operationId: 'api.v1.cjkChars',
+        tags: ['Test Routes'],
+        parameters: [],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                properties: {
+                  japaneseName: {
+                    type: 'string',
+                    description: '日本語の名前フィールド (Japanese name field)',
+                    example: '山田太郎',
+                  },
+                  chineseName: {
+                    type: 'string',
+                    description: '中文名字字段 (Chinese name field)',
+                    example: '张三',
+                  },
+                  koreanName: {
+                    type: 'string',
+                    description: '한국어 이름 필드 (Korean name field)',
+                    example: '김철수',
+                  },
+                },
+                required: ['japaneseName', 'chineseName', 'koreanName'],
+                type: 'object',
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    result: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['result'],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Body: {
+        title: 'Body',
+        type: 'object',
+        properties: {
+          japaneseName: {
+            type: 'string',
+            description: '日本語の名前フィールド (Japanese name field)',
+            example: '山田太郎',
+          },
+          chineseName: {
+            type: 'string',
+            description: '中文名字字段 (Chinese name field)',
+            example: '张三',
+          },
+          koreanName: {
+            type: 'string',
+            description: '한국어 이름 필드 (Korean name field)',
+            example: '김철수',
+          },
+        },
+        required: ['japaneseName', 'chineseName', 'koreanName'],
+      },
+    },
+  },
+});
+
 const ROUTE_WITH_MARKDOWN_LIST = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
