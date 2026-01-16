@@ -77,10 +77,7 @@ export function leadingComment(
     commentString = commentString.replace(/@preserveLineBreaks\s*/g, '');
   }
 
-  const parsedComment = parseComment(
-    commentString,
-    shouldPreserveLineBreaks ? { spacing: 'preserve' } : undefined,
-  );
+  const parsedComment = parseComment(commentString, { spacing: 'preserve' });
 
   for (const block of parsedComment) {
     block.description = block.description.trim();

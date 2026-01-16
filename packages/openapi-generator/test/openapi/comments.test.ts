@@ -2111,3 +2111,77 @@ testCase('route with multibyte chars', ROUTE_WITH_MULTIBYTE_CHARS, {
     },
   },
 });
+
+const ROUTE_WITH_MARKDOWN_LIST = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A route with a list in the comment
+ *
+ * @operationId api.v1.list
+ * @tag Test Routes
+ */
+export const route = h.httpRoute({
+  path: '/list',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      /**
+       * The permissions granted by this access token.
+       *
+       * - \`all\` - Access all actions in the test environment.
+       * - \`crypto_compare\` - Call CryptoCompare API.
+       */
+      permissions: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+testCase('route with markdown list in comment', ROUTE_WITH_MARKDOWN_LIST, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/list': {
+      get: {
+        summary: 'A route with a list in the comment',
+        operationId: 'api.v1.list',
+        tags: ['Test Routes'],
+        parameters: [
+          {
+            name: 'permissions',
+            in: 'query',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+            description:
+              'The permissions granted by this access token.\n\n- `all` - Access all actions in the test environment.\n- `crypto_compare` - Call CryptoCompare API.',
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
