@@ -2,11 +2,27 @@ import { parse as parseComment, Block } from 'comment-parser';
 import { Schema } from './ir';
 
 /**
- * Compute the difference between byte length and character length for a string.
- * This accounts for multibyte UTF-8 characters.
+ * Convert a UTF-8 byte offset to a JavaScript string character offset.
+ * SWC (written in Rust) uses byte offsets, but JavaScript strings use
+ * UTF-16 code unit offsets. This function handles the conversion by
+ * iterating through the string and accumulating byte lengths.
+ *
+ * @param str The source string
+ * @param byteOffset The byte offset to convert
+ * @returns The corresponding character offset
  */
-function computeByteLengthDiff(str: string): number {
-  return Buffer.byteLength(str, 'utf8') - str.length;
+function byteOffsetToCharOffset(str: string, byteOffset: number): number {
+  let charCount = 0;
+  let byteCount = 0;
+
+  for (const char of str) {
+    const charBytes = Buffer.byteLength(char, 'utf8');
+    if (byteCount + charBytes > byteOffset) break;
+    byteCount += charBytes;
+    charCount++;
+  }
+
+  return charCount;
 }
 
 export function leadingComment(
@@ -18,20 +34,13 @@ export function leadingComment(
   // SWC uses byte offsets, but JavaScript strings use character offsets.
   // When there are multibyte UTF-8 characters, we need to adjust.
   // Calculate the byte-to-char difference for the portion of source before our slice.
-  const prefixLength = Math.min(start - srcSpanStart, src.length);
-  const prefix = src.slice(0, prefixLength);
-  const byteDiff = computeByteLengthDiff(prefix);
+  const startByteOffset = start - srcSpanStart;
+  const endByteOffset = end - srcSpanStart;
 
-  // Adjust the slice offsets by the byte difference
-  const adjustedStart = start - srcSpanStart - byteDiff;
-  const adjustedEnd =
-    end -
-    srcSpanStart -
-    computeByteLengthDiff(src.slice(0, Math.min(end - srcSpanStart, src.length)));
+  const startCharOffset = byteOffsetToCharOffset(src, startByteOffset);
+  const endCharOffset = byteOffsetToCharOffset(src, endByteOffset);
 
-  let commentString = src
-    .slice(Math.max(0, adjustedStart), Math.max(0, adjustedEnd))
-    .trim();
+  let commentString = src.slice(startCharOffset, endCharOffset).trim();
 
   if (commentString.includes(' * ') && !/\/\*\*([\s\S]*?)\*\//.test(commentString)) {
     // The comment block seems to be JSDoc but was sliced incorrectly
