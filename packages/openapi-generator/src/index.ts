@@ -1,7 +1,7 @@
 export { parseApiSpec, parseApiSpecComment } from './apiSpec';
 export { parseCodecInitializer, parsePlainInitializer } from './codec';
 export { parseCommentBlock, type JSDoc } from './jsdoc';
-export { convertRoutesToOpenAPI } from './openapi';
+export { convertRoutesToOpenAPI, type ComponentNameMapping } from './openapi';
 export { optimize } from './optimize';
 export { Project } from './project';
 export { getRefs } from './ref';

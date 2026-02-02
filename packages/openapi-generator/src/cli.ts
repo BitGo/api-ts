@@ -157,13 +157,42 @@ const app = command({
         ...Object.values(route.response),
       ];
     });
+    const componentLocations: Record<string, string> = {};
+    const componentCollisionCounters: Record<string, number> = {};
+    const componentNameMapping: Record<string, Record<string, string>> = {};
+
+    // Helper to generate unique component names (name, name1, name2, ...)
+    const getUniqueComponentName = (name: string): string => {
+      if (components[name] === undefined) {
+        return name;
+      }
+      const counter = (componentCollisionCounters[name] ?? 0) + 1;
+      componentCollisionCounters[name] = counter;
+      return `${name}${counter}`;
+    };
+
     let schema: Schema | undefined;
     while (((schema = queue.pop()), schema !== undefined)) {
       const refs = getRefs(schema, project.getTypes());
       for (const ref of refs) {
-        if (components[ref.name] !== undefined) {
+        if (
+          components[ref.name] !== undefined &&
+          componentLocations[ref.name] === ref.location
+        ) {
           continue;
         }
+
+        const componentName =
+          components[ref.name] !== undefined
+            ? getUniqueComponentName(ref.name)
+            : ref.name;
+
+        // Track the mapping: location -> originalName -> finalComponentName
+        if (componentNameMapping[ref.location] === undefined) {
+          componentNameMapping[ref.location] = {};
+        }
+        componentNameMapping[ref.location]![ref.name] = componentName;
+
         const sourceFile = project.get(ref.location);
         if (sourceFile === undefined) {
           logError(`Could not find '${ref.name}' from '${ref.location}'`);
@@ -217,7 +246,8 @@ const app = command({
           codecE.right.comment = comment;
         }
 
-        components[ref.name] = codecE.right;
+        components[componentName] = codecE.right;
+        componentLocations[componentName] = ref.location;
         queue.push(codecE.right);
       }
     }
@@ -231,6 +261,7 @@ const app = command({
       servers,
       apiSpec,
       components,
+      componentNameMapping,
     );
 
     console.log(JSON.stringify(openapi, null, 2));

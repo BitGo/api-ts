@@ -7,8 +7,11 @@ import type { Route } from './route';
 import type { Schema } from './ir';
 import { Block } from 'comment-parser';
 
+export type ComponentNameMapping = Record<string, Record<string, string>>;
+
 export function schemaToOpenAPI(
   schema: Schema,
+  componentNameMapping?: ComponentNameMapping,
 ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined {
   schema = optimize(schema);
 
@@ -59,16 +62,19 @@ export function schemaToOpenAPI(
         // Or should we just conflate explicit null and undefined properties?
         return { nullable: true, enum: [] };
       case 'ref':
+        // Resolve the component name using the mapping (handles collisions)
+        const resolvedName =
+          componentNameMapping?.[schema.location]?.[schema.name] ?? schema.name;
         // if defaultOpenAPIObject is empty, no need to wrap the $ref in an allOf array
         if (Object.keys(defaultOpenAPIObject).length === 0) {
-          return { $ref: `#/components/schemas/${schema.name}` };
+          return { $ref: `#/components/schemas/${resolvedName}` };
         }
         return {
-          allOf: [{ $ref: `#/components/schemas/${schema.name}` }],
+          allOf: [{ $ref: `#/components/schemas/${resolvedName}` }],
           ...defaultOpenAPIObject,
         };
       case 'array':
-        const innerSchema = schemaToOpenAPI(schema.items);
+        const innerSchema = schemaToOpenAPI(schema.items, componentNameMapping);
         if (innerSchema === undefined) {
           return undefined;
         }
@@ -110,7 +116,7 @@ export function schemaToOpenAPI(
           ...defaultOpenAPIObject,
           properties: Object.entries(schema.properties).reduce(
             (acc, [name, prop]) => {
-              const innerSchema = schemaToOpenAPI(prop);
+              const innerSchema = schemaToOpenAPI(prop, componentNameMapping);
               if (innerSchema === undefined) {
                 return acc;
               }
@@ -124,7 +130,7 @@ export function schemaToOpenAPI(
       case 'intersection':
         return {
           allOf: schema.schemas.flatMap((s) => {
-            const innerSchema = schemaToOpenAPI(s);
+            const innerSchema = schemaToOpenAPI(s, componentNameMapping);
             if (innerSchema === undefined) {
               return [];
             }
@@ -149,11 +155,14 @@ export function schemaToOpenAPI(
         const isOptional =
           schema.schemas.length >= 2 && undefinedSchema && nonUndefinedSchema;
         if (isOptional) {
-          return schemaToOpenAPI({
-            ...nonUndefinedSchema,
-            comment: schema.comment,
-            ...(nullSchema ? { nullable: true } : {}),
-          });
+          return schemaToOpenAPI(
+            {
+              ...nonUndefinedSchema,
+              comment: schema.comment,
+              ...(nullSchema ? { nullable: true } : {}),
+            },
+            componentNameMapping,
+          );
         }
 
         // This is an edge case for something like this -> t.union([WellDefinedCodec, t.unknown])
@@ -164,18 +173,24 @@ export function schemaToOpenAPI(
           const nonUnknownSchemas = schema.schemas.filter((s) => s.type !== 'any');
 
           if (nonUnknownSchemas.length === 1 && nonUnknownSchemas[0] !== undefined) {
-            return schemaToOpenAPI({
-              ...nonUnknownSchemas[0],
-              comment: schema.comment,
-              ...(nullSchema ? { nullable: true } : {}),
-            });
+            return schemaToOpenAPI(
+              {
+                ...nonUnknownSchemas[0],
+                comment: schema.comment,
+                ...(nullSchema ? { nullable: true } : {}),
+              },
+              componentNameMapping,
+            );
           } else if (nonUnknownSchemas.length > 1) {
-            return schemaToOpenAPI({
-              type: 'union',
-              schemas: nonUnknownSchemas,
-              comment: schema.comment,
-              ...(nullSchema ? { nullable: true } : {}),
-            });
+            return schemaToOpenAPI(
+              {
+                type: 'union',
+                schemas: nonUnknownSchemas,
+                comment: schema.comment,
+                ...(nullSchema ? { nullable: true } : {}),
+              },
+              componentNameMapping,
+            );
           }
         }
 
@@ -184,7 +199,7 @@ export function schemaToOpenAPI(
             nullable = true;
             continue;
           }
-          const innerSchema = schemaToOpenAPI(s);
+          const innerSchema = schemaToOpenAPI(s, componentNameMapping);
           if (innerSchema !== undefined) {
             oneOf.push(innerSchema);
           }
@@ -215,11 +230,17 @@ export function schemaToOpenAPI(
           return { ...(nullable ? { nullable } : {}), oneOf, ...defaultOpenAPIObject };
         }
       case 'record':
-        const additionalProperties = schemaToOpenAPI(schema.codomain);
+        const additionalProperties = schemaToOpenAPI(
+          schema.codomain,
+          componentNameMapping,
+        );
         if (additionalProperties === undefined) return undefined;
 
         if (schema.domain !== undefined) {
-          const keys = schemaToOpenAPI(schema.domain) as OpenAPIV3.SchemaObject;
+          const keys = schemaToOpenAPI(
+            schema.domain,
+            componentNameMapping,
+          ) as OpenAPIV3.SchemaObject;
           if (keys.type === 'string' && keys.enum !== undefined) {
             const properties = keys.enum.reduce((acc, key) => {
               return { ...acc, [key]: additionalProperties };
@@ -333,7 +354,10 @@ export function schemaToOpenAPI(
   return openAPIObject;
 }
 
-function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObject] {
+function routeToOpenAPI(
+  route: Route,
+  componentNameMapping?: ComponentNameMapping,
+): [string, string, OpenAPIV3.OperationObject] {
   const jsdoc = route.comment !== undefined ? parseCommentBlock(route.comment) : {};
   const operationId = jsdoc.tags?.operationId;
   const tag = jsdoc.tags?.tag ?? '';
@@ -367,7 +391,9 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
       : {
           requestBody: {
             content: {
-              'application/json': { schema: schemaToOpenAPI(route.body) },
+              'application/json': {
+                schema: schemaToOpenAPI(route.body, componentNameMapping),
+              },
             },
           },
         };
@@ -387,7 +413,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
         : {}),
       parameters: route.parameters.map((p) => {
         // Array types not allowed here
-        const schema = schemaToOpenAPI(p.schema);
+        const schema = schemaToOpenAPI(p.schema, componentNameMapping);
 
         if (schema && 'description' in schema) {
           delete schema.description;
@@ -420,7 +446,7 @@ function routeToOpenAPI(route: Route): [string, string, OpenAPIV3.OperationObjec
             description,
             content: {
               'application/json': {
-                schema: schemaToOpenAPI(response),
+                schema: schemaToOpenAPI(response, componentNameMapping),
                 ...(example !== undefined ? { example } : undefined),
               },
             },
@@ -436,10 +462,11 @@ export function convertRoutesToOpenAPI(
   servers: OpenAPIV3.ServerObject[],
   routes: Route[],
   schemas: Record<string, Schema>,
+  componentNameMapping?: ComponentNameMapping,
 ): OpenAPIV3.Document {
   const paths = routes.reduce(
     (acc, route) => {
-      const [path, method, pathItem] = routeToOpenAPI(route);
+      const [path, method, pathItem] = routeToOpenAPI(route, componentNameMapping);
       let pathObject = acc[path] ?? {};
       pathObject[method] = pathItem;
       return { ...acc, [path]: pathObject };
@@ -449,7 +476,7 @@ export function convertRoutesToOpenAPI(
 
   const openapiSchemas = Object.entries(schemas).reduce(
     (acc, [name, schema]) => {
-      const openapiSchema = schemaToOpenAPI(schema);
+      const openapiSchema = schemaToOpenAPI(schema, componentNameMapping);
       if (openapiSchema === undefined) {
         return acc;
       } else if ('$ref' in openapiSchema) {
