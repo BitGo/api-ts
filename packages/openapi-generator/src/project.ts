@@ -16,6 +16,7 @@ export class Project {
   private processedFiles: Record<string, SourceFile>;
   private pendingFiles: Set<string>;
   private types: Record<string, string>;
+  private typeCollisionCounters: Record<string, number>;
   private visitedPackages: Set<string>;
 
   constructor(files: Record<string, SourceFile> = {}, knownImports = KNOWN_IMPORTS) {
@@ -23,6 +24,7 @@ export class Project {
     this.pendingFiles = new Set();
     this.knownImports = knownImports;
     this.types = {};
+    this.typeCollisionCounters = {};
     this.visitedPackages = new Set();
   }
 
@@ -30,10 +32,21 @@ export class Project {
     this.processedFiles[path] = sourceFile;
     this.pendingFiles.delete(path);
 
-    // Update types mapping
+    // Update types mapping with collision handling
     for (const exp of sourceFile.symbols.exports) {
-      this.types[exp.exportedName] = path;
+      const name = this.getUniqueTypeName(exp.exportedName);
+      this.types[name] = path;
     }
+  }
+
+  private getUniqueTypeName(name: string): string {
+    if (this.types[name] === undefined) {
+      return name;
+    }
+
+    const counter = (this.typeCollisionCounters[name] ?? 0) + 1;
+    this.typeCollisionCounters[name] = counter;
+    return `${name}${counter}`;
   }
 
   get(path: string): SourceFile | undefined {
@@ -60,11 +73,6 @@ export class Project {
         if (!sourceFile) {
           console.error(`Error parsing source file: ${path}`);
           continue;
-        }
-
-        // map types to their file path
-        for (const exp of sourceFile.symbols.exports) {
-          this.types[exp.exportedName] = path;
         }
 
         this.add(path, sourceFile);

@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as p from 'node:path';
 
-import { parsePlainInitializer, Project, type Schema } from '../src';
+import {
+  parsePlainInitializer,
+  Project,
+  type Schema,
+  type Route,
+  convertRoutesToOpenAPI,
+  type ComponentNameMapping,
+} from '../src';
 import { KNOWN_IMPORTS } from '../src/knownImports';
 import { stripStacktraceOfErrors } from '../src/error';
 
@@ -199,3 +206,132 @@ testCase(
   {},
   {},
 );
+
+test('parses types from external packages correctly', async () => {
+  const project = new Project({}, KNOWN_IMPORTS);
+  const entryPointPath = p.resolve('test/sample-types/nameCollision.ts');
+  await project.parseEntryPoint(entryPointPath);
+
+  const types = project.getTypes();
+
+  const pkgAPath = p.resolve('test/sample-types/node_modules/@test/pkg-a/src/index.ts');
+  const pkgBPath = p.resolve('test/sample-types/node_modules/@test/pkg-b/src/index.ts');
+
+  // SharedType should map to pkg-a
+  assert.equal(types['SharedType'], pkgAPath);
+
+  // SharedTypeCodec should map to pkg-b
+  assert.equal(types['SharedTypeCodec'], pkgBPath);
+
+  // Verify both files were parsed correctly
+  const pkgAFile = project.get(pkgAPath);
+  const pkgBFile = project.get(pkgBPath);
+
+  assert.notEqual(pkgAFile, undefined, 'pkg-a file should be parsed');
+  assert.notEqual(pkgBFile, undefined, 'pkg-b file should be parsed');
+});
+
+test('generates correct $ref for collided component names in OpenAPI output', async () => {
+  // This test verifies that when two different schemas have the same name but different
+  // locations, the OpenAPI output correctly references the renamed components.
+  // We simulate this by creating mock components with the same name from different "locations"
+
+  const pkgAPath = '/mock/pkg-a/index.ts';
+  const pkgBPath = '/mock/pkg-b/index.ts';
+
+  // Create routes that reference "SharedType" from two different locations
+  const routes: Route[] = [
+    {
+      path: '/route-a',
+      method: 'GET',
+      parameters: [],
+      response: {
+        200: {
+          type: 'ref',
+          name: 'SharedType',
+          location: pkgAPath,
+        },
+      },
+    },
+    {
+      path: '/route-b',
+      method: 'GET',
+      parameters: [],
+      response: {
+        200: {
+          type: 'ref',
+          name: 'SharedType',
+          location: pkgBPath,
+        },
+      },
+    },
+  ];
+
+  // Simulate the component collection with collision handling
+  // First SharedType comes from pkgA, second from pkgB gets renamed to SharedType1
+  const components: Record<string, Schema> = {
+    SharedType: {
+      type: 'string',
+      enum: ['a', 'b', 'c'],
+    },
+    SharedType1: {
+      type: 'string',
+      enum: ['x', 'y', 'z'],
+    },
+  };
+
+  // Build the component name mapping: location -> originalName -> finalComponentName
+  const componentNameMapping: ComponentNameMapping = {
+    [pkgAPath]: {
+      SharedType: 'SharedType',
+    },
+    [pkgBPath]: {
+      SharedType: 'SharedType1',
+    },
+  };
+
+  // Convert to OpenAPI with the component name mapping
+  const openapi = convertRoutesToOpenAPI(
+    { title: 'Test', version: '1.0.0' },
+    [],
+    routes,
+    components,
+    componentNameMapping,
+  );
+
+  // Verify the $ref values in the OpenAPI output
+  const routeAResponse = openapi.paths['/route-a']?.get?.responses?.['200'];
+  const routeBResponse = openapi.paths['/route-b']?.get?.responses?.['200'];
+
+  assert.ok(routeAResponse, 'Route A should have a 200 response');
+  assert.ok(routeBResponse, 'Route B should have a 200 response');
+
+  // Get the schema from the responses
+  const routeASchema = (routeAResponse as any).content?.['application/json']?.schema;
+  const routeBSchema = (routeBResponse as any).content?.['application/json']?.schema;
+
+  assert.ok(routeASchema, 'Route A should have a schema');
+  assert.ok(routeBSchema, 'Route B should have a schema');
+
+  // Verify $ref values point to the correct component
+  assert.equal(
+    routeASchema.$ref,
+    '#/components/schemas/SharedType',
+    'Route A should reference SharedType (from pkg-a)',
+  );
+  assert.equal(
+    routeBSchema.$ref,
+    '#/components/schemas/SharedType1',
+    'Route B should reference SharedType1 (renamed from pkg-b)',
+  );
+
+  // Verify the components are correctly included
+  assert.ok(
+    openapi.components?.schemas?.['SharedType'],
+    'SharedType component should exist',
+  );
+  assert.ok(
+    openapi.components?.schemas?.['SharedType1'],
+    'SharedType1 component should exist',
+  );
+});
