@@ -372,7 +372,8 @@ export const KNOWN_IMPORTS: KnownImports = {
       E.right({ type: 'string', format: 'number', decodedType: 'bigint' }),
     BooleanFromNumber: () =>
       E.right({ type: 'number', enum: [0, 1], decodedType: 'boolean' }),
-    BooleanFromString: () => E.right({ type: 'boolean' }),
+    BooleanFromString: () =>
+      E.right({ type: 'string', enum: ['true', 'false'], decodedType: 'boolean' }),
     DateFromISOString: () =>
       E.right({ type: 'string', format: 'date-time', title: 'ISO Date String' }),
     DateFromNumber: () =>

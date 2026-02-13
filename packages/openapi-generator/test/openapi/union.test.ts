@@ -201,7 +201,10 @@ testCase(
               in: 'query',
               required: true,
               schema: {
-                oneOf: [{ type: 'boolean' }, { type: 'string', format: 'number' }],
+                oneOf: [
+                  { type: 'string', format: 'number' },
+                  { type: 'string', enum: ['true', 'false'] },
+                ],
               },
             },
             {
@@ -209,14 +212,17 @@ testCase(
               in: 'query',
               required: true,
               schema: {
-                oneOf: [{ type: 'string' }, { type: 'boolean' }],
+                oneOf: [
+                  { type: 'string' },
+                  { type: 'string', enum: ['true', 'false'] },
+                ],
               },
             },
             {
               name: 'firstNonUnion',
               in: 'query',
               required: true,
-              schema: { type: 'boolean' },
+              schema: { type: 'string', enum: ['true', 'false'] },
             },
             {
               name: 'secondNonUnion',
