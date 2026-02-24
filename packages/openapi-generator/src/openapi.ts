@@ -385,14 +385,26 @@ function routeToOpenAPI(
     {},
   );
 
+  const bodySchema = route.body !== undefined ? schemaToOpenAPI(route.body, componentNameMapping) : undefined;
+  // Extract description from body schema and move it up to requestBody.description,
+  // matching the same pattern used for path parameter descriptions.
+  const bodyDescription =
+    bodySchema !== undefined && !('$ref' in bodySchema) && 'description' in bodySchema
+      ? bodySchema.description
+      : undefined;
+  if (bodySchema !== undefined && !('$ref' in bodySchema) && 'description' in bodySchema) {
+    delete (bodySchema as OpenAPIV3.SchemaObject).description;
+  }
+
   const requestBody =
     route.body === undefined
       ? {}
       : {
           requestBody: {
+            ...(bodyDescription !== undefined ? { description: bodyDescription } : {}),
             content: {
               'application/json': {
-                schema: schemaToOpenAPI(route.body, componentNameMapping),
+                schema: bodySchema,
               },
             },
           },
