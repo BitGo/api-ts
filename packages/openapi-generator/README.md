@@ -265,6 +265,28 @@ dev-portal.
 const route = h.httpRoute({ ... })
 ```
 
+#### 6.1.5.1 Public Routes
+
+To explicitly mark a route as public (producing `x-internal: false`), use the `@public`
+tag. This is useful when your CI pipeline enforces that all endpoints explicitly declare
+their visibility.
+
+```typescript
+/**
+ * This is the summary
+ * This is description line 1
+ * This is description line 2
+ *
+ * @public
+ * @operationId v2.sample.route
+ * @tag Wallet
+ */
+const route = h.httpRoute({ ... })
+```
+
+> **Note:** Using both `@public` and `@private` on the same route or field will cause an
+> error.
+
 #### 6.1.6 Unstable Routes
 
 If you are working on an endpoint that is unstable, or not completely implemented yet,
@@ -468,8 +490,11 @@ const SampleSchema = t.type({
 
 These are some tags that you can use in your schema JSDocs are custom to this generator.
 
-- `@private` allows you to mark any field as in any schema as private. The final spec
-  will have `x-internal: true` for schemas with the `@private` tag.
+- `@private` allows you to mark any field in any schema as private. The final spec will
+  have `x-internal: true` for schemas with the `@private` tag.
+- `@public` allows you to explicitly mark any field in any schema as public. The final
+  spec will have `x-internal: false` for schemas with the `@public` tag. Using both
+  `@public` and `@private` on the same field will cause an error.
 - `@deprecated` allows to mark any field in any schema as deprecated. The final spec
   will include `deprecated: true` in the final specificaiton.
 
@@ -479,9 +504,11 @@ import * as t from 'io-ts';
 const Schema = t.type({
   /** @private */
   privateField: t.string,
+  /** @public */
+  publicField: t.string,
   /** @deprecated */
   deprecatedField: t.string,
-  publicNonDeprecatedField: t.string,
+  untaggedField: t.string,
 });
 ```
 
