@@ -1,3 +1,16 @@
+import * as E from 'fp-ts/lib/Either';
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {
+  convertRoutesToOpenAPI,
+  parsePlainInitializer,
+  parseSource,
+  parseRoute,
+  Project,
+  type Route,
+  type Schema,
+} from '../../src';
+import { SourceFile } from '../../src/sourceFile';
 import { testCase } from './testHarness';
 
 const SIMPLE = `
@@ -977,4 +990,130 @@ testCase('multiple routes with methods', MULTIPLE_ROUTES_WITH_METHODS, {
   components: {
     schemas: {},
   },
+});
+
+const PUBLIC_ROUTE = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A public route
+ *
+ * @public
+ * @operationId api.v1.public
+ * @tag Public Routes
+ */
+export const publicRoute = h.httpRoute({
+  path: '/public/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      foo: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+testCase('public route', PUBLIC_ROUTE, {
+  openapi: '3.0.3',
+  info: {
+    title: 'Test',
+    version: '1.0.0',
+  },
+  paths: {
+    '/public/foo': {
+      get: {
+        summary: 'A public route',
+        operationId: 'api.v1.public',
+        tags: ['Public Routes'],
+        'x-internal': false,
+        parameters: [
+          {
+            in: 'query',
+            name: 'foo',
+            required: true,
+            schema: {
+              type: 'string',
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {},
+  },
+});
+
+const CONFLICTING_ROUTE = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * A conflicting route
+ *
+ * @public
+ * @private
+ * @operationId api.v1.conflict
+ * @tag Conflict Routes
+ */
+export const conflictRoute = h.httpRoute({
+  path: '/conflict/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    query: {
+      foo: t.string,
+    },
+  }),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+test('conflicting public and private tags on route throws error', async () => {
+  const sourceFile = await parseSource('./index.ts', CONFLICTING_ROUTE);
+  if (sourceFile === undefined) {
+    throw new Error('Failed to parse source file');
+  }
+  const files: Record<string, SourceFile> = { './index.ts': sourceFile };
+  const project = new Project(files);
+  const routes: Route[] = [];
+  const schemas: Record<string, Schema> = {};
+  for (const symbol of sourceFile.symbols.declarations) {
+    if (symbol.init !== undefined) {
+      const routeSchemaE = parsePlainInitializer(project, sourceFile, symbol.init);
+      if (E.isLeft(routeSchemaE)) continue;
+      if (symbol.comment !== undefined) {
+        routeSchemaE.right.comment = symbol.comment;
+      }
+      const result = parseRoute(project, routeSchemaE.right);
+      if (E.isLeft(result)) {
+        schemas[symbol.name] = routeSchemaE.right;
+      } else {
+        routes.push(result.right);
+      }
+    }
+  }
+
+  assert.throws(
+    () =>
+      convertRoutesToOpenAPI({ title: 'Test', version: '1.0.0' }, [], routes, schemas),
+    /Cannot use both @public and @private/,
+  );
 });

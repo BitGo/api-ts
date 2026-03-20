@@ -1,3 +1,16 @@
+import * as E from 'fp-ts/lib/Either';
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {
+  convertRoutesToOpenAPI,
+  parsePlainInitializer,
+  parseSource,
+  parseRoute,
+  Project,
+  type Route,
+  type Schema,
+} from '../../src';
+import { SourceFile } from '../../src/sourceFile';
 import { testCase } from './testHarness';
 
 const TITLE_TAG = `
@@ -1359,4 +1372,179 @@ testCase('route with example object', ROUTE_WITH_ANY_AND_FORMAT, {
   components: {
     schemas: {},
   },
+});
+
+const ROUTE_WITH_PUBLIC_PROPERTIES = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+const SampleType = t.type({
+  foo: t.string,
+  /** @public */
+  bar: t.string,
+});
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    params: {
+      /** @public */
+      path: t.string
+    },
+    query: {
+      /** @public */
+      query: t.string
+    },
+    body: SampleType
+  }),
+  response: {
+    200: SampleType
+  },
+});
+`;
+
+testCase(
+  'route with public properties in request query, params, body, and response',
+  ROUTE_WITH_PUBLIC_PROPERTIES,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          parameters: [
+            {
+              'x-internal': false,
+              description: '',
+              in: 'query',
+              name: 'query',
+              required: true,
+              schema: {
+                type: 'string',
+              },
+            },
+            {
+              'x-internal': false,
+              description: '',
+              in: 'path',
+              name: 'path',
+              required: true,
+              schema: {
+                type: 'string',
+              },
+            },
+          ],
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  properties: {
+                    bar: {
+                      'x-internal': false,
+                      type: 'string',
+                    },
+                    foo: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['foo', 'bar'],
+                  type: 'object',
+                },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/SampleType',
+                  },
+                },
+              },
+              description: 'OK',
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        SampleType: {
+          properties: {
+            bar: {
+              'x-internal': false,
+              type: 'string',
+            },
+            foo: {
+              type: 'string',
+            },
+          },
+          required: ['foo', 'bar'],
+          title: 'SampleType',
+          type: 'object',
+        },
+      },
+    },
+  },
+);
+
+const ROUTE_WITH_CONFLICTING_FIELD_TAGS = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+const SampleType = t.type({
+  /**
+   * @public
+   * @private
+   */
+  conflictField: t.string,
+});
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    body: SampleType
+  }),
+  response: {
+    200: t.string
+  },
+});
+`;
+
+test('conflicting public and private tags on schema field throws error', async () => {
+  const sourceFile = await parseSource('./index.ts', ROUTE_WITH_CONFLICTING_FIELD_TAGS);
+  if (sourceFile === undefined) {
+    throw new Error('Failed to parse source file');
+  }
+  const files: Record<string, SourceFile> = { './index.ts': sourceFile };
+  const project = new Project(files);
+  const routes: Route[] = [];
+  const schemas: Record<string, Schema> = {};
+  for (const symbol of sourceFile.symbols.declarations) {
+    if (symbol.init !== undefined) {
+      const routeSchemaE = parsePlainInitializer(project, sourceFile, symbol.init);
+      if (E.isLeft(routeSchemaE)) continue;
+      if (symbol.comment !== undefined) {
+        routeSchemaE.right.comment = symbol.comment;
+      }
+      const result = parseRoute(project, routeSchemaE.right);
+      if (E.isLeft(result)) {
+        schemas[symbol.name] = routeSchemaE.right;
+      } else {
+        routes.push(result.right);
+      }
+    }
+  }
+
+  assert.throws(
+    () =>
+      convertRoutesToOpenAPI({ title: 'Test', version: '1.0.0' }, [], routes, schemas),
+    /Cannot use both @public and @private/,
+  );
 });

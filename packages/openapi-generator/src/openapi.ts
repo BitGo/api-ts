@@ -319,6 +319,10 @@ export function schemaToOpenAPI(
 
     const deprecated = keys.includes('deprecated') || !!schema.deprecated;
     const isPrivate = keys.includes('private');
+    const isPublic = keys.includes('public');
+    if (isPrivate && isPublic) {
+      throw new Error('Cannot use both @public and @private on the same schema field');
+    }
     const description = schema.comment?.description ?? schema.description;
 
     const defaultOpenAPIObject = {
@@ -343,7 +347,7 @@ export function schemaToOpenAPI(
       ...(writeOnly ? { writeOnly: true } : {}),
       ...(format ? { format } : {}),
       ...(title ? { title } : {}),
-      ...(isPrivate ? { 'x-internal': true } : {}),
+      ...(isPrivate ? { 'x-internal': true } : isPublic ? { 'x-internal': false } : {}),
     };
 
     return defaultOpenAPIObject;
@@ -362,6 +366,12 @@ function routeToOpenAPI(
   const operationId = jsdoc.tags?.operationId;
   const tag = jsdoc.tags?.tag ?? '';
   const isInternal = jsdoc.tags?.private !== undefined;
+  const isPublic = jsdoc.tags?.public !== undefined;
+  if (isInternal && isPublic) {
+    throw new Error(
+      `Cannot use both @public and @private on route ${route.method.toUpperCase()} ${route.path}`,
+    );
+  }
   const isUnstable = jsdoc.tags?.unstable !== undefined;
   const example = jsdoc.tags?.example;
 
@@ -369,6 +379,7 @@ function routeToOpenAPI(
     'operationId',
     'summary',
     'private',
+    'public',
     'unstable',
     'example',
     'tag',
@@ -406,7 +417,11 @@ function routeToOpenAPI(
       ...(jsdoc.description !== undefined ? { description: jsdoc.description } : {}),
       ...(operationId !== undefined ? { operationId } : {}),
       ...(tag !== '' ? { tags: [tag] } : {}),
-      ...(isInternal ? { 'x-internal': true } : {}),
+      ...(isInternal
+        ? { 'x-internal': true }
+        : isPublic
+          ? { 'x-internal': false }
+          : {}),
       ...(isUnstable ? { 'x-unstable': true } : {}),
       ...(Object.keys(unknownTagsObject).length > 0
         ? { 'x-unknown-tags': unknownTagsObject }
@@ -419,8 +434,9 @@ function routeToOpenAPI(
           delete schema.description;
         }
 
-        const isPrivate = schema && 'x-internal' in schema;
-        if (isPrivate) {
+        const hasInternalFlag = schema && 'x-internal' in schema;
+        const internalValue = hasInternalFlag ? schema['x-internal'] : undefined;
+        if (hasInternalFlag) {
           delete schema['x-internal'];
         }
 
@@ -430,7 +446,7 @@ function routeToOpenAPI(
             ? { description: p.schema.comment.description }
             : {}),
           in: p.type,
-          ...(isPrivate ? { 'x-internal': true } : {}),
+          ...(hasInternalFlag ? { 'x-internal': internalValue } : {}),
           ...(p.required ? { required: true } : {}),
           ...(p.explode ? { style: 'form', explode: true } : {}),
           schema: schema as any, // TODO: Something to disallow arrays
