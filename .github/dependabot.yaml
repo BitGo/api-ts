@@ -6,6 +6,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Wait 7 days after a version is released before updating
+    cooldown:
+      default-days: 7
     labels:
       - dependencies
       - github-actions
@@ -17,6 +20,9 @@ updates:
       interval: daily
       # UTC
       time: '08:00'
+    # Wait 7 days after a version is released before updating
+    cooldown:
+      default-days: 7
     labels:
       - dependencies
       - npm
