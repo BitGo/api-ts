@@ -198,13 +198,6 @@ export const requestForRoute =
   (params: h.RequestType<Route>): PatchedRequest<Req, Route> => {
     const reqProps = route.request.encode(params);
 
-    let path = route.path;
-    for (const key in reqProps.params) {
-      if (reqProps.params.hasOwnProperty(key)) {
-        path = path.replace(`{${key}}`, reqProps.params[key]);
-      }
-    }
-
     let request = requestFactory(route, reqProps.params).query(reqProps.query);
 
     const headers = reqProps.headers ?? {};
