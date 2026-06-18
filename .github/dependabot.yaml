@@ -12,6 +12,13 @@ updates:
     labels:
       - dependencies
       - github-actions
+    ignore:
+      # BitGo-owned actions are pinned to major versions only,
+      # so ignore patch and minor updates to reduce toil.
+      - dependency-name: 'BitGo/*'
+        update-types:
+          - 'version-update:semver-patch'
+          - 'version-update:semver-minor'
 
   # Enable npm updates
   - package-ecosystem: npm
