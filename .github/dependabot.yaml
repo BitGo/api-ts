@@ -19,6 +19,18 @@ updates:
         update-types:
           - 'version-update:semver-patch'
           - 'version-update:semver-minor'
+      # actions-org actions are pinned to major versions only,
+      # so ignore patch and minor updates to reduce toil.
+      - dependency-name: 'actions/*'
+        update-types:
+          - 'version-update:semver-patch'
+          - 'version-update:semver-minor'
+      # aws-actions-org actions are pinned to major versions only,
+      # so ignore patch and minor updates to reduce toil.
+      - dependency-name: 'aws-actions/*'
+        update-types:
+          - 'version-update:semver-patch'
+          - 'version-update:semver-minor'
 
   # Enable npm updates
   - package-ecosystem: npm
