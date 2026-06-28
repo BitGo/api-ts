@@ -80,7 +80,7 @@ export type MiddlewareChain =
     ];
 
 export type MiddlewareChainOutput<
-  Input,
+  Input extends {},
   Chain extends MiddlewareChain,
 > = Chain extends []
   ? Input
