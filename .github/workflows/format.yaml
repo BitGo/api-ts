@@ -19,4 +19,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - run: nix flake check
+      - name: Check Nix flake
+        # Retry once on failure: cache.nixos.org occasionally drops a TCP
+        # connection mid-download, causing Nix's built-in resume to receive
+        # HTTP 416 and exhaust all 5 internal retries. A fresh attempt (no
+        # partial-download state) reliably succeeds. The || idiom runs the
+        # second attempt only when the first exits non-zero.
+        run: nix flake check || nix flake check
