@@ -780,6 +780,108 @@ testCase(
   },
 );
 
+const UNION_BODY_WITH_REF_COMMENT = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/** Either a userId or an email */
+const AddMemberRequest = t.union([
+  h.httpRequest({ body: { userId: t.string } }),
+  h.httpRequest({ body: { email: t.string } }),
+]);
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'POST',
+  request: AddMemberRequest,
+  response: {
+    200: t.string,
+  },
+});
+`;
+
+testCase(
+  'union body description propagates from named const ref to requestBody schema',
+  UNION_BODY_WITH_REF_COMMENT,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        post: {
+          parameters: [],
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  description: 'Either a userId or an email',
+                  oneOf: [
+                    {
+                      type: 'object',
+                      properties: { userId: { type: 'string' } },
+                      required: ['userId'],
+                    },
+                    {
+                      type: 'object',
+                      properties: { email: { type: 'string' } },
+                      required: ['email'],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        AddMemberRequest: {
+          title: 'AddMemberRequest',
+          description: 'Either a userId or an email',
+          oneOf: [
+            {
+              type: 'object',
+              properties: {
+                body: {
+                  type: 'object',
+                  properties: { userId: { type: 'string' } },
+                  required: ['userId'],
+                },
+              },
+              required: ['body'],
+            },
+            {
+              type: 'object',
+              properties: {
+                body: {
+                  type: 'object',
+                  properties: { email: { type: 'string' } },
+                  required: ['email'],
+                },
+              },
+              required: ['body'],
+            },
+          ],
+        },
+      },
+    },
+  },
+);
+
 const ROUTE_WITH_REQUEST_UNION = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';

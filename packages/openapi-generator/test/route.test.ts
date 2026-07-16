@@ -719,6 +719,81 @@ testCase('route with operationId', WITH_OPERATION_ID, {
   },
 });
 
+const BODY_UNION_WITH_COMMENT_REF = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/** Either a userId or an email */
+const AddMemberRequest = t.union([
+  h.httpRequest({ body: { userId: t.string } }),
+  h.httpRequest({ body: { email: t.string } }),
+]);
+
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'POST',
+  request: AddMemberRequest,
+  response: {
+    200: t.string
+  },
+});
+`;
+
+testCase(
+  'union body route with comment on named const ref',
+  BODY_UNION_WITH_COMMENT_REF,
+  {
+    route: {
+      path: '/foo',
+      method: 'POST',
+      parameters: [],
+      body: {
+        type: 'union',
+        comment: {
+          description: 'Either a userId or an email',
+          tags: [],
+          source: [
+            {
+              number: 0,
+              source: '/** Either a userId or an email */',
+              tokens: {
+                start: '',
+                delimiter: '/**',
+                postDelimiter: ' ',
+                tag: '',
+                postTag: '',
+                name: '',
+                postName: '',
+                type: '',
+                postType: '',
+                description: 'Either a userId or an email ',
+                end: '*/',
+                lineEnd: '',
+              },
+            },
+          ],
+          problems: [],
+        },
+        schemas: [
+          {
+            type: 'object',
+            properties: { userId: { type: 'string', primitive: true } },
+            required: ['userId'],
+          },
+          {
+            type: 'object',
+            properties: { email: { type: 'string', primitive: true } },
+            required: ['email'],
+          },
+        ],
+      },
+      response: {
+        200: { type: 'string', primitive: true },
+      },
+    },
+  },
+);
+
 const HEADER_PARAM = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
