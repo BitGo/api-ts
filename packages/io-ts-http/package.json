@@ -31,5 +31,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BitGo/api-ts.git",
+    "directory": "packages/io-ts-http"
   }
 }
