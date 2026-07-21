@@ -45,7 +45,7 @@ jobs:
         run: mv .npmrc-release .npmrc
 
       - name: Release
-        run: npx multi-semantic-release
+        run: npx multi-semantic-release --sequential-init
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
