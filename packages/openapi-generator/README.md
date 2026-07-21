@@ -512,6 +512,39 @@ const Schema = t.type({
 });
 ```
 
+#### 6.2.3.1 Union request bodies
+
+When a request body is defined as a `t.union` of `httpRequest` schemas (to accept one of
+several mutually-exclusive shapes), the description must be placed on the **union codec
+itself**, not on the individual variants:
+
+```typescript
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+/**
+ * The member to add — supply either a userId or an email address.
+ */
+const AddMemberRequest = t.union([
+  h.httpRequest({ body: { userId: t.string } }),
+  h.httpRequest({ body: { email: t.string } }),
+]);
+
+const route = h.httpRoute({
+  path: '/enterprise/{enterpriseId}/members',
+  method: 'POST',
+  request: AddMemberRequest,
+  response: { 200: t.string },
+});
+```
+
+This produces `description` on `requestBody.content['application/json'].schema`, which
+satisfies the `missing-request-body-description` quality check.
+
+> **Note:** Putting JSDoc on the individual `httpRequest(...)` members instead of the
+> union wrapper will **not** propagate a description to the body schema — the
+> description must be on the union codec.
+
 #### 6.2.4 Enum Documentation
 
 When using `t.keyof` to define enums, you can add descriptions and deprecation notices

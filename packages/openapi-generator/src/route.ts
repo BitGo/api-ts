@@ -42,8 +42,16 @@ function derefRequestSchema(
     if (E.isLeft(initE)) {
       return initE;
     }
-    const [newSourceFile, init] = initE.right;
-    return parseCodecInitializer(project, newSourceFile, init);
+    const [newSourceFile, init, comment] = initE.right;
+    const resolvedE = parseCodecInitializer(project, newSourceFile, init);
+    if (
+      E.isRight(resolvedE) &&
+      comment !== undefined &&
+      resolvedE.right.comment === undefined
+    ) {
+      resolvedE.right.comment = comment;
+    }
+    return resolvedE;
   } else {
     return E.right(schema);
   }
@@ -139,7 +147,11 @@ function parseRequestUnion(
     }
     if (subSchema.properties['body'] !== undefined) {
       if (body === undefined) {
-        body = { type: 'union', schemas: [] };
+        body = {
+          type: 'union',
+          schemas: [],
+          ...(schema.comment !== undefined ? { comment: schema.comment } : {}),
+        };
       }
       (body as CombinedType).schemas.push(subSchema.properties['body']);
     }
