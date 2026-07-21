@@ -20,7 +20,10 @@ jobs:
           # ships with a segfault when collecting code coverage with
           # Node.js's built-in test runner.
           # - lts/-2
-          - lts/-1
+          # Skip lts/-1 while it resolves to Node.js 22, whose bundled npm 10
+          # unnecessarily complicates peer dependency resolution. Re-enable
+          # once the lts/-1 pointer advances.
+          # - lts/-1
           - lts/*
 
     name: Node.js ${{ matrix.node-version }}
