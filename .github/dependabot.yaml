@@ -45,6 +45,9 @@ updates:
     labels:
       - dependencies
       - npm
+    commit-message:
+      prefix: 'fix'
+      include: 'scope'
     allow:
       - dependency-type: direct
     versioning-strategy: increase-if-necessary
