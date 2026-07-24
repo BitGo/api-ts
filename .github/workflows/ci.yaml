@@ -25,8 +25,11 @@ jobs:
           # Re-enable once lts/-1 bundles npm 11 or newer.
           # - lts/-1
           - lts/*
+        express-version:
+          - 4
+          - 5
 
-    name: Node.js ${{ matrix.node-version }}
+    name: Node.js ${{ matrix.node-version }} (Express ${{ matrix.express-version }})
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -40,6 +43,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm ci
+          npm install express@${{ matrix.express-version }} @types/express@${{ matrix.express-version }} -w @api-ts/typed-express-router -w @api-ts/express-wrapper --no-save
 
       - name: Compile TypeScript
         run: npm run build
