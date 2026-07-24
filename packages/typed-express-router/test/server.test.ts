@@ -76,7 +76,9 @@ const TestApiSpec = apiSpec({
 type TestApiSpec = typeof TestApiSpec;
 
 const appMiddleware: express.RequestHandler = (req, _res, next) => {
-  req.body.appMiddlewareRan = true;
+  if (req.body) {
+    req.body.appMiddlewareRan = true;
+  }
   next();
 };
 

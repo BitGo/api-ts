@@ -67,7 +67,9 @@ const ApiSpec = apiSpec({
 });
 
 const appMiddleware: express.RequestHandler = (req, _res, next) => {
-  req.body.appMiddlewareRan = true;
+  if (req.body) {
+    req.body.appMiddlewareRan = true;
+  }
   next();
 };
 
