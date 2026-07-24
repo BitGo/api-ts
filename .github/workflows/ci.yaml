@@ -20,41 +20,31 @@ jobs:
           # ships with a segfault when collecting code coverage with
           # Node.js's built-in test runner.
           # - lts/-2
-          # Keep lts/-1 as a no-op because branch protection requires its status.
-          # Node.js 22 bundles npm 10, which rejects optional peer entries omitted
-          # by npm 11-generated lockfiles. Run it normally once lts/-1 bundles
-          # npm 11 or newer.
-          - lts/-1
+          # Skip lts/-1 while it resolves to Node.js 22, whose bundled npm 10
+          # rejects optional peer entries omitted by npm 11-generated lockfiles.
+          # Re-enable once lts/-1 bundles npm 11 or newer.
+          # - lts/-1
           - lts/*
 
     name: Node.js ${{ matrix.node-version }}
     steps:
-      - name: Report Node.js lts/-1 compatibility
-        if: matrix.node-version == 'lts/-1'
-        run: 'true'
-
       - name: Checkout
-        if: matrix.node-version != 'lts/-1'
         uses: actions/checkout@v7
 
       - name: Configure Node.js
-        if: matrix.node-version != 'lts/-1'
         uses: actions/setup-node@v7
         with:
           cache: npm
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        if: matrix.node-version != 'lts/-1'
         run: |
           npm ci
 
       - name: Compile TypeScript
-        if: matrix.node-version != 'lts/-1'
         run: npm run build
 
       - name: Test
-        if: matrix.node-version != 'lts/-1'
         run: npm test
 
   # Only run CI for GitHub Pages on Node.js 16 because docusaurus doesn't support
