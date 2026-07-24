@@ -55,6 +55,10 @@ updates:
       dependencies:
         patterns:
           - '@swc/core*'
+      opentelemetry-trace-sdk:
+        patterns:
+          - '@opentelemetry/sdk-trace-base'
+          - '@opentelemetry/sdk-trace-node'
     ignore:
       # Ignore all @types/nodes patch updates, since
       # this package updates so frequently
