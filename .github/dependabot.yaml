@@ -75,3 +75,7 @@ updates:
       # https://github.com/swc-project/swc/blob/main/packages/core/src/index.ts#L12
       - dependency-name: '@swc/*'
         versions: ['>1.5.7']
+      # Since api-ts is a library, we want fp-ts to have as wide a compatibility range
+      # as possible (with dependency deduping) to prevent unnecessary conflicts, and
+      # dependabot is currently updating it too aggressively.
+      - dependency-name: fp-ts
