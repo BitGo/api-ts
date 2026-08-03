@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@swc/core": "1.5.7",
-    "cmd-ts": "0.13.0",
+    "cmd-ts": "0.15.0",
     "comment-parser": "1.4.1",
     "fp-ts": "2.16.9",
     "io-ts": "2.1.3",
