@@ -76,7 +76,8 @@ const TestApiSpec = apiSpec({
 type TestApiSpec = typeof TestApiSpec;
 
 const appMiddleware: express.RequestHandler = (req, _res, next) => {
-  req.body.appMiddlewareRan = true;
+  // express.json() leaves req.body undefined when the request has no body
+  req.body = { ...req.body, appMiddlewareRan: true };
   next();
 };
 
