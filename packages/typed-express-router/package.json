@@ -14,7 +14,7 @@
     "clean": "rm -rf -- dist",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "test": "c8 --all node --require @swc-node/register --test test/*.ts"
+    "test": "node --test --experimental-test-coverage --test-coverage-include=src/**/*.ts --require @swc-node/register test/*.ts"
   },
   "dependencies": {
     "@api-ts/io-ts-http": "0.0.0-semantically-released",
@@ -37,7 +37,6 @@
     "@opentelemetry/sdk-trace-base": "2.10.0",
     "@opentelemetry/sdk-trace-node": "2.10.0",
     "@swc-node/register": "1.12.1",
-    "c8": "12.0.0",
     "typescript": "4.7.4"
   },
   "publishConfig": {
