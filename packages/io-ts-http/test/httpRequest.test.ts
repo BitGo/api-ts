@@ -3,7 +3,12 @@ import { strict as assert } from 'node:assert';
 import * as PathReporter from 'io-ts/lib/PathReporter';
 import * as NEA from 'fp-ts/NonEmptyArray';
 import * as t from 'io-ts';
-import { nonEmptyArray, JsonFromString, NumberFromString } from 'io-ts-types';
+import {
+  nonEmptyArray,
+  BigIntFromString,
+  JsonFromString,
+  NumberFromString,
+} from 'io-ts-types';
 
 import { assertLeft, assertRight } from './utils';
 
@@ -34,6 +39,34 @@ describe('GenericHttpRequest', () => {
     const decoded = codec.decode(example);
     const output = assertRight(decoded);
     assert.deepStrictEqual(output, example);
+  });
+
+  it('accepts route body codecs whose decoded type is not JSON', () => {
+    const Request = t.intersection([
+      h.GenericHttpRequest,
+      t.type({ body: t.type({ amount: BigIntFromString }) }),
+    ]);
+
+    const decoded = assertRight(
+      Request.decode({ params: {}, query: {}, body: { amount: '100' } }),
+    );
+    assert.equal(typeof decoded.body.amount, 'bigint');
+
+    // A bigint body is a valid decoded request, and it encodes back to JSON.
+    const request: t.TypeOf<typeof Request> = {
+      params: {},
+      query: {},
+      body: { amount: decoded.body.amount },
+    };
+    assert.deepStrictEqual(Request.encode(request), {
+      params: {},
+      query: {},
+      body: { amount: '100' },
+    });
+  });
+
+  it('still requires a JSON body when decoding', () => {
+    assertLeft(h.GenericHttpRequest.decode({ params: {}, query: {}, body: () => 0 }));
   });
 });
 

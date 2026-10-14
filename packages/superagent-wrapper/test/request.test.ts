@@ -6,7 +6,7 @@ import * as h from '@api-ts/io-ts-http';
 import express from 'express';
 import * as E from 'fp-ts/Either';
 import * as t from 'io-ts';
-import { NumberFromString } from 'io-ts-types';
+import { BigIntFromString, NumberFromString } from 'io-ts-types';
 import superagent from 'superagent';
 import supertest from 'supertest';
 import { URL } from 'whatwg-url';
@@ -56,12 +56,31 @@ const HeaderGetTestRoute = h.httpRoute({
   },
 });
 
+const BigIntBody = t.type({
+  amount: BigIntFromString,
+});
+
+const PostBigIntRoute = h.httpRoute({
+  path: '/bigint',
+  method: 'POST',
+  request: t.intersection([h.GenericHttpRequest, t.type({ body: BigIntBody })]),
+  response: {
+    200: t.type({
+      amount: BigIntFromString,
+      receivedAs: t.string,
+    }),
+  },
+});
+
 const TestRoutes = h.apiSpec({
   'api.v1.test': {
     post: PostTestRoute,
   },
   'api.v1.getheader': {
     get: HeaderGetTestRoute,
+  },
+  'api.v1.bigint': {
+    post: PostBigIntRoute,
   },
 });
 
@@ -103,6 +122,13 @@ const createTestServer = (port: number) => {
       });
       res.send(response);
     }
+  });
+
+  testApp.post(PostBigIntRoute.path, (req, res) => {
+    res.send({
+      amount: req.body.amount,
+      receivedAs: typeof req.body.amount,
+    });
   });
 
   testApp.get(HeaderGetTestRoute.path, (req, res) => {
@@ -157,6 +183,19 @@ describe('decode', () => {
     assert.deepEqual(response.body, {
       value: 'foobar',
     });
+  });
+
+  it('sends bigint body fields as strings', async () => {
+    const amount = E.getOrElseW(() => {
+      throw new Error('Failed to decode amount');
+    })(BigIntFromString.decode('100'));
+
+    const response = await apiClient['api.v1.bigint']
+      .post({ params: {}, query: {}, body: { amount } })
+      .decodeExpecting(200);
+
+    assert.equal(response.body.receivedAs, 'string');
+    assert.equal(response.body.amount, amount);
   });
 
   it('gracefully handles unknown status codes', async () => {
