@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@api-ts/superagent-wrapper": "0.0.0-semantically-released",
-    "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/api": "1.10.0",
     "@opentelemetry/sdk-trace-base": "2.10.0",
     "@opentelemetry/sdk-trace-node": "2.10.0",
     "@swc-node/register": "1.12.1",
