@@ -12,13 +12,15 @@ export type ComponentNameMapping = Record<string, Record<string, string>>;
 export function schemaToOpenAPI(
   schema: Schema,
   componentNameMapping?: ComponentNameMapping,
+  // Items inherit a @private route's privacy; per-item markers are dropped.
+  inheritInternal = false,
 ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined {
   schema = optimize(schema);
 
   const createOpenAPIObject = (
     schema: Schema,
   ): OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined => {
-    const defaultOpenAPIObject = buildDefaultOpenAPIObject(schema);
+    const defaultOpenAPIObject = buildDefaultOpenAPIObject(schema, inheritInternal);
 
     switch (schema.type) {
       case 'boolean':
@@ -74,7 +76,11 @@ export function schemaToOpenAPI(
           ...defaultOpenAPIObject,
         };
       case 'array':
-        const innerSchema = schemaToOpenAPI(schema.items, componentNameMapping);
+        const innerSchema = schemaToOpenAPI(
+          schema.items,
+          componentNameMapping,
+          inheritInternal,
+        );
         if (innerSchema === undefined) {
           return undefined;
         }
@@ -116,7 +122,11 @@ export function schemaToOpenAPI(
           ...defaultOpenAPIObject,
           properties: Object.entries(schema.properties).reduce(
             (acc, [name, prop]) => {
-              const innerSchema = schemaToOpenAPI(prop, componentNameMapping);
+              const innerSchema = schemaToOpenAPI(
+                prop,
+                componentNameMapping,
+                inheritInternal,
+              );
               if (innerSchema === undefined) {
                 return acc;
               }
@@ -130,7 +140,11 @@ export function schemaToOpenAPI(
       case 'intersection':
         return {
           allOf: schema.schemas.flatMap((s) => {
-            const innerSchema = schemaToOpenAPI(s, componentNameMapping);
+            const innerSchema = schemaToOpenAPI(
+              s,
+              componentNameMapping,
+              inheritInternal,
+            );
             if (innerSchema === undefined) {
               return [];
             }
@@ -162,6 +176,7 @@ export function schemaToOpenAPI(
               ...(nullSchema ? { nullable: true } : {}),
             },
             componentNameMapping,
+            inheritInternal,
           );
         }
 
@@ -180,6 +195,7 @@ export function schemaToOpenAPI(
                 ...(nullSchema ? { nullable: true } : {}),
               },
               componentNameMapping,
+              inheritInternal,
             );
           } else if (nonUnknownSchemas.length > 1) {
             return schemaToOpenAPI(
@@ -190,6 +206,7 @@ export function schemaToOpenAPI(
                 ...(nullSchema ? { nullable: true } : {}),
               },
               componentNameMapping,
+              inheritInternal,
             );
           }
         }
@@ -199,7 +216,7 @@ export function schemaToOpenAPI(
             nullable = true;
             continue;
           }
-          const innerSchema = schemaToOpenAPI(s, componentNameMapping);
+          const innerSchema = schemaToOpenAPI(s, componentNameMapping, inheritInternal);
           if (innerSchema !== undefined) {
             oneOf.push(innerSchema);
           }
@@ -233,6 +250,7 @@ export function schemaToOpenAPI(
         const additionalProperties = schemaToOpenAPI(
           schema.codomain,
           componentNameMapping,
+          inheritInternal,
         );
         if (additionalProperties === undefined) return undefined;
 
@@ -240,6 +258,7 @@ export function schemaToOpenAPI(
           const keys = schemaToOpenAPI(
             schema.domain,
             componentNameMapping,
+            inheritInternal,
           ) as OpenAPIV3.SchemaObject;
           if (keys.type === 'string' && keys.enum !== undefined) {
             const properties = keys.enum.reduce((acc, key) => {
@@ -291,7 +310,10 @@ export function schemaToOpenAPI(
     }
   };
 
-  function buildDefaultOpenAPIObject(schema: Schema): OpenAPIV3.SchemaObject {
+  function buildDefaultOpenAPIObject(
+    schema: Schema,
+    inheritInternal: boolean,
+  ): OpenAPIV3.SchemaObject {
     const emptyBlock: Block = { description: '', tags: [], source: [], problems: [] };
     const jsdoc = parseCommentBlock(schema.comment ?? emptyBlock);
 
@@ -347,7 +369,13 @@ export function schemaToOpenAPI(
       ...(writeOnly ? { writeOnly: true } : {}),
       ...(format ? { format } : {}),
       ...(title ? { title } : {}),
-      ...(isPrivate ? { 'x-internal': true } : isPublic ? { 'x-internal': false } : {}),
+      ...(inheritInternal
+        ? {}
+        : isPrivate
+          ? { 'x-internal': true }
+          : isPublic
+            ? { 'x-internal': false }
+            : {}),
     };
 
     return defaultOpenAPIObject;
@@ -403,7 +431,7 @@ function routeToOpenAPI(
           requestBody: {
             content: {
               'application/json': {
-                schema: schemaToOpenAPI(route.body, componentNameMapping),
+                schema: schemaToOpenAPI(route.body, componentNameMapping, isInternal),
               },
             },
           },
@@ -428,7 +456,7 @@ function routeToOpenAPI(
         : {}),
       parameters: route.parameters.map((p) => {
         // Array types not allowed here
-        const schema = schemaToOpenAPI(p.schema, componentNameMapping);
+        const schema = schemaToOpenAPI(p.schema, componentNameMapping, isInternal);
 
         if (schema && 'description' in schema) {
           delete schema.description;
@@ -462,7 +490,7 @@ function routeToOpenAPI(
             description,
             content: {
               'application/json': {
-                schema: schemaToOpenAPI(response, componentNameMapping),
+                schema: schemaToOpenAPI(response, componentNameMapping, isInternal),
                 ...(example !== undefined ? { example } : undefined),
               },
             },
@@ -492,7 +520,8 @@ export function convertRoutesToOpenAPI(
 
   const openapiSchemas = Object.entries(schemas).reduce(
     (acc, [name, schema]) => {
-      const openapiSchema = schemaToOpenAPI(schema, componentNameMapping);
+      // Components are emitted without route context; per-item markers stay.
+      const openapiSchema = schemaToOpenAPI(schema, componentNameMapping, false);
       if (openapiSchema === undefined) {
         return acc;
       } else if ('$ref' in openapiSchema) {

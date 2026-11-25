@@ -1246,6 +1246,135 @@ testCase(
   },
 );
 
+const ROUTE_PRIVATE_WITH_PRIVATE_PROPERTIES = `
+import * as t from 'io-ts';
+import * as h from '@api-ts/io-ts-http';
+
+const SampleType = t.type({
+  foo: t.string,
+  /** @private */
+  bar: t.string,
+  /** @public */
+  baz: t.string,
+});
+
+/**
+ * @private
+ */
+export const route = h.httpRoute({
+  path: '/foo',
+  method: 'GET',
+  request: h.httpRequest({
+    params: {
+      /** @private */
+      path: t.string
+    },
+    query: {
+      /** @private */
+      query: t.string
+    },
+    body: SampleType
+  }),
+  response: {
+    200: SampleType
+  },
+});
+`;
+
+testCase(
+  'private route omits field-level x-internal markers on its items',
+  ROUTE_PRIVATE_WITH_PRIVATE_PROPERTIES,
+  {
+    openapi: '3.0.3',
+    info: {
+      title: 'Test',
+      version: '1.0.0',
+    },
+    paths: {
+      '/foo': {
+        get: {
+          'x-internal': true,
+          parameters: [
+            {
+              description: '',
+              in: 'query',
+              name: 'query',
+              required: true,
+              schema: {
+                type: 'string',
+              },
+            },
+            {
+              description: '',
+              in: 'path',
+              name: 'path',
+              required: true,
+              schema: {
+                type: 'string',
+              },
+            },
+          ],
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  properties: {
+                    bar: {
+                      type: 'string',
+                    },
+                    baz: {
+                      type: 'string',
+                    },
+                    foo: {
+                      type: 'string',
+                    },
+                  },
+                  required: ['foo', 'bar', 'baz'],
+                  type: 'object',
+                },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/SampleType',
+                  },
+                },
+              },
+              description: 'OK',
+            },
+          },
+        },
+      },
+    },
+    components: {
+      schemas: {
+        SampleType: {
+          properties: {
+            bar: {
+              'x-internal': true,
+              type: 'string',
+            },
+            baz: {
+              'x-internal': false,
+              type: 'string',
+            },
+            foo: {
+              type: 'string',
+            },
+          },
+          required: ['foo', 'bar', 'baz'],
+          title: 'SampleType',
+          type: 'object',
+        },
+      },
+    },
+  },
+);
+
 const ROUTE_WITH_ANY_AND_DESCRIPTION = `
 import * as t from 'io-ts';
 import * as h from '@api-ts/io-ts-http';
