@@ -252,6 +252,11 @@ field, which marks the field to be stripped out in a preprocessing
 [step](https://github.com/BitGo/dev-portal/blob/master/scripts/filterSpec.js) on
 dev-portal.
 
+Items inside a private route (parameters, request body fields, and response fields)
+inherit the route's privacy: field-level `@private`/`@public` tags on them produce no
+`x-internal` marker, since the whole route is already internal. Field-level tags still
+apply on public routes, and in reusable schemas under `components`.
+
 ```typescript
 /**
  * This is the summary
@@ -491,7 +496,9 @@ const SampleSchema = t.type({
 These are some tags that you can use in your schema JSDocs are custom to this generator.
 
 - `@private` allows you to mark any field in any schema as private. The final spec will
-  have `x-internal: true` for schemas with the `@private` tag.
+  have `x-internal: true` for schemas with the `@private` tag. On routes already marked
+  `@private`, these tags are omitted from the generated spec: items inherit the route's
+  `x-internal: true`.
 - `@public` allows you to explicitly mark any field in any schema as public. The final
   spec will have `x-internal: false` for schemas with the `@public` tag. Using both
   `@public` and `@private` on the same field will cause an error.
